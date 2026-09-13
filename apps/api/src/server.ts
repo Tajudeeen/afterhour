@@ -1,17 +1,9 @@
 import './env.js';
 import { serve } from '@hono/node-server';
-import { getConfig } from '@ambit/config';
-import { createApp, logOperationalEvent } from './index.js';
+import { app, apiConfig } from './index.js';
 
-const config = getConfig();
-const app = createApp({ logger: logOperationalEvent });
-
-serve({ fetch: app.fetch, port: config.apiPort }, (info) => {
-  logOperationalEvent({
-    event: 'startup',
-    service: 'ambit-api',
-    releaseId: process.env.AMBIT_RELEASE_ID ?? null,
-    port: info.port,
-    timestamp: new Date().toISOString(),
-  });
+const port = apiConfig.apiPort;
+serve({ fetch: app.fetch, port }, (info) => {
+  console.log(`[afterhours-api] listening on port ${info.port}`);
+  console.log(`[afterhours-api] Solana RPC: ${apiConfig.solana.rpcUrl}`);
 });

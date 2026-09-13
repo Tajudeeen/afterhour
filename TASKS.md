@@ -1,75 +1,82 @@
 # TASKS.md
 
-Execution state, structured by milestone (mirrors deeen_plans/TASKS.md). Filled
-with Ambit's real state as of 2026-08-28.
+Execution state, structured by milestone. Mirrors deeen_plans/TASKS.md.
 
 ## Deadline
 
-Hackathon submission window — see README / partner track deadlines.
+Stocklana hackathon submission.
 
-## M0 — Spec locked
+## D0 — Pivot locked
 
-- [x] Repo scaffolded (pnpm monorepo: apps/api, apps/web, apps/indexer, packages/*)
-- [x] Contracts skeleton (`@ambit/contracts`: AmbitScoreAttestation)
-- [x] Deterministic risk engine skeleton (`@ambit/core` policy/trust engine)
-- [x] Registry lookup wired read-only (ERC-8004 identity/reputation read path)
-- [x] ARCHITECTURE documented in `docs/ARCHITECTURE.md`
+- [x] Repo pivoted from Ambit (BSC/ERC-8004 marketplace) to AfterHours (Solana tokenized stock intelligence)
+- [x] Branch `hack/stocklana-afterhours` created
+- [x] Old BSC packages removed: erc8004, trust-engine, execution, contracts, pancakeswap, termix, passport, altana, activity, reputation, endpoint, demo, operations, indexer, db
+- [x] New packages scaffolded: types, config, market-engine, risk-engine, agent, solana, db
 
-## M1 — Foundation
+## Day 1 — Foundation
 
-- [x] Merkle score-attestation tooling (`feat/m4b-merkle-attestation`)
-- [x] Policy engine (`feat/m5-policy-engine`)
-- [x] Simulation harness (`feat/m6-simulation`)
-- [x] Execution passport / session keys (`feat/m8-execution-passport`)
+- [x] Monorepo structure (pnpm workspaces)
+- [x] Next.js web app (TypeScript + Tailwind)
+- [x] REST API (Hono + TypeScript)
+- [x] Wallet connection framework
+- [x] Database schema (Prisma, PostgreSQL)
+- [x] Basic dashboard screen
+- [x] Asset model (NVDA, AAPL, TSLA)
 
-## M2 — Core gate logic
+## Day 2 — Market intelligence
 
-- [x] Risk engine rules + LLM classification wired as advisory (no sign authority)
-- [x] Attestation write path (publisher + `publishRoot`)
-- [x] Escape hatch / timeout path reviewed as its own surface (`docs/SECURITY.md`)
+- [x] Price ingestion (onchain vs reference)
+- [x] Reference price adapter (Yahoo Finance / demo data)
+- [x] Market-hours detection (NYSE calendar)
+- [x] Price gap calculation
+- [x] Gap Risk Score (0-100, 5 bands)
 
-## M3 — Integration
+## Day 3 — Regime engine
 
-- [x] End-to-end: request → gate → verdict → attestation → execution
-- [x] Marketplace backend (`feat/m9-marketplace-backend`) + frontend (`feat/m10-marketplace-frontend`)
-- [x] Four agent categories (`feat/m11-four-agent-categories`)
-- [x] PancakeSwap integration (`feat/m12-pancakeswap-integration`)
-- [x] TermiX integration (`feat/m13-termix-integration`)
+- [x] Volatility calculation (ATR-based)
+- [x] Liquidity state tracking (low/medium/high)
+- [x] Market session state (pre/open/post/closed)
+- [x] Regime classification (NORMAL → VOLATILITY RISING → LIQUIDITY FALLING → MARKET CLOSED → PRICE DIVERGENCE → HIGH GAP RISK)
 
-## M4 — Hardening
+## Day 4 — AI Analyst
 
-- [x] Self-review + security audit (`AUDIT.md`, AMB-1..AMB-7)
-- [x] Dependency remediation + CI audit gate (AMB-1, `91cd0d6`)
-- [x] Contract publisher rotatable + recoverable (AMB-2, `55e54ae`)
-- [x] CI action pinning + security job (AMB-3)
-- [x] Contract static-gate test + tampered-proof/methodology-drift test (AMB-4)
-- [x] Hire token rotation (multi-token) + runbook (AMB-5)
-- [x] Local compose hardcoded password removed (AMB-6)
-- [x] Logger query-leak test (AMB-7)
-- [x] Consumer-side on-chain score attestation pin wired into agent page (Bucket 2)
-- [x] Slither deep static-analysis gate added to CI security job (ADR-0019)
+- [x] Structured context builder
+- [x] AI analyst with injected LLM provider
+- [x] Explanation generation
+- [x] Recommendation generation
 
-## M5 — Submission
+## Day 5 — Risk Governor
 
-- [x] Demo rehearsal (`feat/m16-demo-rehearsal`)
-- [x] README polished for judges (Why Ambit / Live demo / references sections)
-- [x] Verify gate green (lint → typecheck → test → web build) on `docs/adopt-deeen-plans`
-- [ ] Submitted (push branch + open PR / upload to hackathon portal)
+- [x] MAX_SINGLE_ASSET exposure (35%)
+- [x] MAX_TRADE size ($1,500)
+- [x] MIN_USDC_RESERVE (10%)
+- [x] MAX_DAILY_DRAWDOWN (3%)
+- [x] REQUIRE_USER_APPROVAL (true)
+- [x] AI → Governor → PASS/BLOCK → user approval chain
+
+## Day 6 — Execution
+
+- [x] Solana wallet adapter integration
+- [x] Jupiter DEX aggregator swap provider
+- [x] Transaction signing + sending
+- [x] Signature confirmation
+- [x] Portfolio update after trade
+
+## Day 7 — Polish
+
+- [ ] Demo video (0:00–1:20 script)
+- [ ] Loading states
+- [ ] Error boundaries
+- [ ] Mobile layout
+- [ ] README polished for judges
+- [ ] Architecture diagram
+- [ ] Verify gate green
 
 ## Blocked
 
-- None currently.
+- None.
 
 ## Known bugs / technical debt
 
-- `@ambit/db` migration test is flaky under parallel `pnpm -r test` (Prisma
-  `migrate diff` contends for CPU/IO); stabilized with a 60s per-test timeout.
-  Root cause is test parallelism, not logic — passes in isolation.
-- `bigint-buffer` (unused PancakeSwap Solana SDK) + `tmp` (solc dev-only) remain
-  audit exceptions with no patched version; documented + allowlisted in CI.
-
-## Completed (most recent first)
-
-- [x] AMB-4..AMB-7 + Bucket 2 on-chain attestation (2026-08-28)
-- [x] AMB-2 publisher rotatable + recoverable (2026-08-27)
-- [x] AMB-1 dependency remediation + CI audit gate (2026-08-26)
+- Mock data is used for price feeds and portfolios in the hackathon demo. Replace
+  with live Solana RPC + Jupiter API in production.

@@ -1,30 +1,34 @@
 # CHANGELOG.md
 
-Meaningful changes only — not every commit. Newest first (deeen_plans/CHANGELOG.md format).
+Meaningful changes only — not every commit. Newest first.
 
 ## [Unreleased]
 
 ### Added
-- `scripts/verify` (lint → typecheck → test → web build) and `scripts/{lint,typecheck,test}` shims so the deeen_plans AGENTS.md commands exist in-repo.
-- Repo-level `AGENTS.md` pointing to `../deeen_plans/` as the standing operating manual; `TASKS.md` and this `CHANGELOG.md` seeded from the plan templates with Ambit's real state.
-- README "Why Ambit (for judges)" + "Live demo" + "Key references" sections for submission readiness.
+- Full pivot from Ambit (BSC/ERC-8004 marketplace) to **AfterHours** — 24/7 intelligence
+  for tokenized stocks on Solana. Detects on-chain-vs-reference price gaps, explains
+  them with an AI Analyst, evaluates portfolio risk via a Risk Governor, and executes
+  bounded actions on Solana after user approval.
+- New packages: `@afterhours/types`, `@afterhours/config`, `@afterhours/market-engine`,
+  `@afterhours/risk-engine`, `@afterhours/agent`, `@afterhours/solana`, `@afterhours/db`.
+- Market Gap Engine with Gap Risk Score (0–100, 5 bands: Normal/Watch/Elevated/High/Extreme).
+- Regime Memory engine (NORMAL → VOLATILITY RISING → LIQUIDITY FALLING → MARKET CLOSED →
+  PRICE DIVERGENCE → HIGH GAP RISK).
+- AI Analyst with structured context injection and deterministic fallback.
+- Risk Governor with hard policy constraints (max exposure, max trade, min USDC reserve,
+  max daily drawdown, user approval required).
+- Solana wallet adapter + Jupiter DEX swap provider + transaction execution.
+- REST API (Hono) with portfolio, asset gap, AI analysis, risk evaluation, execute, activity.
+- 5 frontend screens (Dashboard, Asset, AI Analysis, Action, Activity).
+- Prisma schema for AfterHours domain (users, wallets, assets, price_snapshots,
+  market_states, portfolio_snapshots, risk_events, risk_policies, agent_decisions, transactions).
+- Bloomberg-terminal × DeFi dashboard visual identity (dark, lime accents, Georgia serif).
+- CI workflow, Dockerfile, docker-compose for AfterHours stack.
 
-### Fixed
-- `fix(docker)`: generate the Prisma client in the `build-indexer` Docker stage so the indexer image builds (it previously omitted the `db:generate` step that `build-api` had). Verified with `bash scripts/verify` (all green).
-
-### Changed
-- Adopted deeen_plans process conventions: `type/...` branch discipline, `type:` commit prefixes, permission tiers, definition-of-done (verify gate before "done").
-
-### Security
-- See `AUDIT.md` (AMB-1..AMB-7). Most recent closed items (2026-08-28): AMB-4..AMB-7 + Bucket 2 on-chain attestation; Slither deep static-analysis gate added to CI (ADR-0019).
-
-## 2026-08-27
-
-### Security
-- `fix(contracts)`: score-attestation publisher made rotatable + recoverable (AMB-2) — 2-step `transferPublisher`/`acceptPublisher`, owner can recover. Deploy at `0xacc1...` stays valid (publisher = owner).
-
-## 2026-08-26
-
-### Security
-- `fix(security)`: dependency critical/high remediation (pnpm overrides in `pnpm-workspace.yaml`) + CI audit gate with allowlist for documented exceptions (AMB-1).
-- CI: pinned third-party action SHAs, added `security` job (AMB-3).
+### Removed
+- All BSC/ERC-8004 code: `@ambit/core`, `@ambit/contracts`, `@ambit/erc8004`,
+  `@ambit/trust-engine`, `@ambit/execution`, `@ambit/pancakeswap`, `@ambit/termix`,
+  `@ambit/passport`, `@ambit/altana`, `@ambit/activity`, `@ambit/reputation`,
+  `@ambit/endpoint`, `@ambit/demo`, `@ambit/operations`, `apps/indexer`.
+- AUDIT.md (BSC-specific; no longer applicable).
+- Old docs: attestation, marketplace, production-readiness, pancakeswap.

@@ -1,38 +1,25 @@
 /**
- * Environment configuration loader.
+ * AfterHours environment configuration loader.
  *
- * Reads from process.env with safe defaults. No .env file is committed; the
- * consumer is expected to load dotenv (or the platform's secret manager)
- * before importing this module. Every value here is either non-secret (RPC
- * URLs, contract addresses) or a reference to a secret that must NOT be logged.
+ * Reads from process.env with safe defaults. No .env file is committed;
+ * the consumer is expected to load dotenv (or the platform's secret manager)
+ * before importing this module. Every value here is either non-secret
+ * (RPC URL, etc.) or a reference to a secret that must NOT be logged.
  */
-export interface ChainConfig {
+import { SOLANA_CHAIN_ID, SOLANA_LOCALNET_RPC_URL } from './solana.js';
+
+export interface SolanaConfig {
   rpcUrl: string;
   chainId: number;
 }
 
 export interface Config {
-  bsc: ChainConfig;
-  bscTestnet: ChainConfig;
-  erc8004: {
-    identityRegistry: string;
-    reputationRegistry: string;
-  };
-  databaseUrl: string;
+  solana: SolanaConfig;
   apiPort: number;
   webApiUrl: string;
-  indexer: {
-    batchSize: number;
-    startBlock?: number;
-  };
-}
-
-function req(name: string): string {
-  const v = process.env[name];
-  if (!v) {
-    throw new Error(`Missing required environment variable: ${name}`);
-  }
-  return v;
+  /** OpenAI / LLM API key for the AI Analyst. Never expose as NEXT_PUBLIC_*. */
+  llmApiKey: string | null;
+  llmModel: string;
 }
 
 function opt(name: string, fallback: string): string {
@@ -43,7 +30,7 @@ function intOpt(name: string, fallback: number, min: number, max: number): numbe
   const raw = process.env[name];
   const value = raw === undefined ? fallback : Number(raw);
   if (
-    (raw !== undefined && !/^\d+$/.test(raw)) ||
+    (raw !== undefined && !/^\d+$/u.test(raw)) ||
     !Number.isSafeInteger(value) ||
     value < min ||
     value > max
@@ -53,32 +40,16 @@ function intOpt(name: string, fallback: number, min: number, max: number): numbe
   return value;
 }
 
-export const MAX_INDEXER_BATCH_SIZE = 10_000;
-
 export function loadConfig(): Config {
   return {
-    bsc: {
-      rpcUrl: opt('BSC_RPC_URL', 'https://bsc-dataseed.binance.org'),
-      chainId: intOpt('BSC_CHAIN_ID', 56, 1, Number.MAX_SAFE_INTEGER),
+    solana: {
+      rpcUrl: opt('SOLANA_RPC_URL', SOLANA_LOCALNET_RPC_URL),
+      chainId: intOpt('SOLANA_CHAIN_ID', SOLANA_CHAIN_ID, 1, Number.MAX_SAFE_INTEGER),
     },
-    bscTestnet: {
-      rpcUrl: opt('BSC_TESTNET_RPC_URL', 'https://data-seed-prebsc-1-s1.binance.org:8545'),
-      chainId: intOpt('BSC_TESTNET_CHAIN_ID', 97, 1, Number.MAX_SAFE_INTEGER),
-    },
-    erc8004: {
-      identityRegistry: opt('ERC8004_IDENTITY_REGISTRY_BSC', ''),
-      reputationRegistry: opt('ERC8004_REPUTATION_REGISTRY_BSC', ''),
-    },
-    databaseUrl: req('DATABASE_URL'),
     apiPort: intOpt('API_PORT', 8787, 1, 65_535),
     webApiUrl: opt('NEXT_PUBLIC_API_URL', 'http://localhost:8787'),
-    indexer: {
-      batchSize: intOpt('INDEXER_BATCH_SIZE', 200, 1, MAX_INDEXER_BATCH_SIZE),
-      startBlock:
-        process.env.INDEXER_START_BLOCK === undefined
-          ? undefined
-          : intOpt('INDEXER_START_BLOCK', 0, 0, Number.MAX_SAFE_INTEGER),
-    },
+    llmApiKey: process.env.OPENAI_API_KEY ?? null,
+    llmModel: opt('LLM_MODEL', 'gpt-4o-mini'),
   };
 }
 
@@ -94,3 +65,11 @@ export function reloadConfig(): Config {
   cached = loadConfig();
   return cached;
 }
+
+export {
+  SOLANA_LOCALNET_RPC_URL,
+  SOLANA_MAINNET_RPC_URL,
+  SOLANA_TESTNET_RPC_URL,
+  SOLANA_DEVNET_RPC_URL,
+  SOLANA_CHAIN_ID,
+} from './solana.js';

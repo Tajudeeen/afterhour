@@ -1,326 +1,400 @@
-import { randomUUID, timingSafeEqual } from 'node:crypto';
-import { buildAgentActivationMessage } from '@ambit/core';
-import { prisma } from '@ambit/db';
-import { Hono, type Context } from 'hono';
-import { isAddressEqual, recoverMessageAddress } from 'viem';
-import { bodyLimit } from 'hono/body-limit';
-import { secureHeaders } from 'hono/secure-headers';
+/**
+ * AfterHours API — REST API for the AfterHours hackathon product.
+ *
+ * Endpoints:
+ *   GET  /health                    — liveness
+ *   GET  /version                   — release identity
+ *   GET  /ready                     — repository readiness
+ *   GET  /api/portfolio/:wallet     — portfolio snapshot + risk summary
+ *   GET  /api/assets/:symbol        — asset gap analysis (onchain vs reference)
+ *   GET  /api/assets/:symbol/analysis — AI Analyst explanation + recommendation
+ *   GET  /api/assets/:symbol/risk   — Risk Governor evaluation
+ *   POST /api/execute               — execute a trade (after user approval)
+ *   GET  /api/activity/:wallet      — activity log
+ *
+ * The AI Analyst explains. The Risk Governor enforces. The user approves.
+ * Solana executes.
+ */
+import { getConfig } from '@afterhours/config';
 import {
-  MarketplaceConflictError,
-  MarketplaceNotFoundError,
-  MarketplacePolicyError,
-  MarketplaceUnavailableError,
-  RequestValidationError,
-  isAgentRegistry,
-  parseAgentSearchQuery,
-  parseExecutionListQuery,
-  parseHireAgentInput,
-  type MarketplaceRepository,
-} from './marketplace.js';
-import { createPrismaMarketplaceRepository } from './prisma-repository.js';
+  calculateGapPercent,
+  classifyLiquidity,
+  classifyRegime,
+  classifyVolatility,
+  computeGapRiskScore,
+  getMarketHours,
+  RegimeMemory,
+  SUPPORTED_STOCKS,
+  buildPriceSnapshot,
+} from '@afterhours/market-engine';
+import { evaluateRisk, DEFAULT_RISK_POLICY, RiskGovernor } from '@afterhours/risk-engine';
+import { AIAnalyst, type LLMProvider } from '@afterhours/agent';
+import type {
+  AIAnalysisContext,
+  Portfolio,
+  RiskPolicy,
+} from '@afterhours/types';
+import { Hono, type Context } from 'hono';
+import { cors } from 'hono/cors';
+import { logger } from 'hono/logger';
 
-export const health = (context: Context) => context.json({ status: 'ok', service: 'ambit-api' });
-export const HIRE_REQUEST_BODY_LIMIT_BYTES = 16 * 1024;
-export const HIRE_AUTH_ENV = 'AMBIT_HIRE_TOKEN';
-export const RELEASE_ID_ENV = 'AMBIT_RELEASE_ID';
-// Accept a comma-separated list of usable hire tokens (primary, rotated, or
-// per-environment). AMB-5: enables zero-downtime rotation — issue a new token,
-// add it to the list, deploy, then remove the old one. All tokens must still
-// meet the same length/character constraints in isUsableHireToken.
-export const HIRE_TOKEN_SEPARATOR = ',';
+export const health = (context: Context) =>
+  context.json({ status: 'ok', service: 'afterhours-api' });
 
-export interface HttpRequestEvent {
-  event: 'http-request';
-  service: 'ambit-api';
-  requestId: string;
-  method: string;
-  path: string;
-  status: number;
-  durationMs: number;
+export { DEFAULT_RISK_POLICY, RiskGovernor };
+export { AIAnalyst, type LLMProvider };
+export type { RiskPolicy };
+
+// --- Module-level state (for hackathon; replaced with PostgreSQL in production) ---
+const config = getConfig();
+const _regimeMemory = new RegimeMemory();
+
+// Mock portfolio data (in production, read from Solana on-chain)
+const mockPortfolios: Record<string, Portfolio> = {
+  demo: {
+    wallet: 'demo',
+    totalValueUsd: 10420,
+    holdings: [
+      { symbol: 'NVDA', mint: SUPPORTED_STOCKS[0]!.mint, amount: 26.34, valueUsd: 4800, weightPercent: 46 },
+      { symbol: 'AAPL', mint: SUPPORTED_STOCKS[1]!.mint, amount: 9.8, valueUsd: 2100, weightPercent: 20 },
+      { symbol: 'TSLA', mint: SUPPORTED_STOCKS[2]!.mint, amount: 5.6, valueUsd: 1500, weightPercent: 14 },
+      { symbol: 'USDC', mint: 'EPjFWdd5AufqSSqeM2qN1xB9qMLM6kq7K3e8n1W4c2X', amount: 2020, valueUsd: 2020, weightPercent: 19 },
+    ],
+    timestamp: new Date().toISOString(),
+  },
+};
+
+// Activity log (audit trail)
+const mockActivities: Record<string, ActivityItem[]> = {
+  demo: [
+    { id: '1', timestamp: new Date(Date.now() - 30_000).toISOString(), description: 'Gap detected: NVDA +4.02%', status: 'info' },
+    { id: '2', timestamp: new Date(Date.now() - 24_000).toISOString(), description: 'AI analysis generated', status: 'info' },
+    { id: '3', timestamp: new Date(Date.now() - 18_000).toISOString(), description: 'Risk policy approved', status: 'success' },
+    { id: '4', timestamp: new Date(Date.now() - 12_000).toISOString(), description: 'Trade executed on Solana', txSignature: '5xAbCdEf8F2', status: 'success' },
+  ],
+};
+
+interface ActivityItem {
+  id: string;
   timestamp: string;
+  description: string;
+  txSignature?: string;
+  status: 'info' | 'success' | 'warning' | 'error';
 }
 
-export interface StartupEvent {
-  event: 'startup';
-  service: 'ambit-api';
-  releaseId: string | null;
-  port: number;
-  timestamp: string;
-}
+// --- LLM provider (OpenAI-compatible) ---
+const llmProvider: LLMProvider = config.llmApiKey
+  ? {
+      async generate(prompt: string, options?: { maxTokens?: number; temperature?: number }): Promise<string> {
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${config.llmApiKey}`,
+          },
+          body: JSON.stringify({
+            model: config.llmModel,
+            messages: [{ role: 'user', content: prompt }],
+            max_tokens: options?.maxTokens ?? 500,
+            temperature: options?.temperature ?? 0.3,
+          }),
+        });
+        if (!res.ok) {
+          throw new Error(`LLM request failed: ${res.status}`);
+        }
+        const data = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
+        return data.choices?.[0]?.message?.content ?? '';
+      },
+    }
+  : {
+      // Mock provider — returns deterministic JSON for the hackathon demo
+      async generate(_prompt: string): Promise<string> {
+        return JSON.stringify({
+          explanation: 'NVDA is trading 4% above its reference price while the underlying market is closed. Liquidity is currently thin and your portfolio has elevated exposure. This creates gap risk at the next market open.',
+          primaryRisk: 'Portfolio concentration in NVDA exceeds policy limits during thin liquidity',
+          recommendation: { action: 'sell', asset: 'NVDA', amountUsd: 1150 },
+          confidence: 0.87,
+        });
+      },
+    };
 
-export type OperationalEvent = HttpRequestEvent | StartupEvent;
-export type OperationalLogger = (event: OperationalEvent) => void;
+// --- App factory ---
 
 export interface CreateAppOptions {
-  repository?: MarketplaceRepository;
-  hireToken?: string | null;
-  releaseId?: string | null;
-  logger?: OperationalLogger;
-  requestIdFactory?: () => string;
+  portfolios?: Record<string, Portfolio>;
+  activities?: Record<string, ActivityItem[]>;
 }
 
+/**
+ * Create the AfterHours Hono app. Accepts optional overrides for testing.
+ */
 export function createApp(options: CreateAppOptions = {}): Hono {
-  const repository = options.repository ?? createPrismaMarketplaceRepository(prisma);
-  const hireToken = options.hireToken ?? process.env[HIRE_AUTH_ENV] ?? null;
-  const releaseId = options.releaseId ?? process.env[RELEASE_ID_ENV] ?? null;
-  const logger = options.logger ?? (() => undefined);
-  const requestIdFactory = options.requestIdFactory ?? randomUUID;
   const app = new Hono();
+  const portfolios = { ...mockPortfolios, ...options.portfolios };
+  const activities = { ...mockActivities, ...options.activities };
 
-  app.onError((error, context) => errorResponse(error, context));
-  app.use('*', secureHeaders());
-  app.use('*', async (context, next) => {
-    const requestId = requestIdFactory();
-    const startedAt = Date.now();
-    context.header('x-request-id', requestId);
-    try {
-      await next();
-    } finally {
-      try {
-        logger({
-          event: 'http-request',
-          service: 'ambit-api',
-          requestId,
-          method: context.req.method,
-          path: safePath(context.req.url),
-          status: context.res.status,
-          durationMs: Math.max(0, Date.now() - startedAt),
-          timestamp: new Date().toISOString(),
-        });
-      } catch (error) {
-        void error;
-      }
-    }
+  app.use('*', cors());
+  app.use('*', logger());
+  // Security headers on all responses
+  app.use('*', async (c, next) => {
+    await next();
+    c.res.headers.set('x-content-type-options', 'nosniff');
+    c.res.headers.set('x-frame-options', 'SAMEORIGIN');
+    c.res.headers.set('referrer-policy', 'no-referrer');
   });
+
   app.get('/health', health);
-  app.get('/version', (context) => {
-    if (!isUsableReleaseId(releaseId)) {
-      return context.json(
-        {
-          status: 'unavailable',
-          service: 'ambit-api',
-          error: {
-            code: 'release-identity-unavailable',
-            message: 'release identity is not configured',
-          },
-        },
-        503,
-      );
-    }
-    return context.json({ status: 'ok', service: 'ambit-api', releaseId });
-  });
-  app.get('/ready', async (context) => {
-    try {
-      await repository.ready();
-      return context.json({ status: 'ok', service: 'ambit-api' });
-    } catch {
-      return context.json(
-        {
-          status: 'unavailable',
-          service: 'ambit-api',
-          error: {
-            code: 'repository-unavailable',
-            message: 'marketplace repository is unavailable',
-          },
-        },
-        503,
-      );
-    }
-  });
 
-  app.get('/agents', async (context) => {
-    const query = parseAgentSearchQuery(context.req.query());
-    return context.json(await repository.listAgents(query));
-  });
-
-  app.get('/agents/:agentRegistry/executions', async (context) => {
-    const agentRegistry = requireAgentRegistry(context.req.param('agentRegistry'));
-    const query = parseExecutionListQuery(context.req.query());
-    return context.json(await repository.listExecutions(agentRegistry, query));
-  });
-
-  app.post(
-    '/agents/:agentRegistry/hire',
-    (context, next) => requireHireAuthorization(context, hireToken, next),
-    bodyLimit({
-      maxSize: HIRE_REQUEST_BODY_LIMIT_BYTES,
-      onError: (context) =>
-        context.json(
-          {
-            error: {
-              code: 'payload-too-large',
-              message: `request body exceeds ${HIRE_REQUEST_BODY_LIMIT_BYTES} byte limit`,
-            },
-          },
-          413,
-        ),
-    }),
-    async (context) => {
-      requireJsonContentType(context);
-      const agentRegistry = requireAgentRegistry(context.req.param('agentRegistry'));
-      let body: unknown;
-      try {
-        body = await context.req.json();
-      } catch {
-        throw new RequestValidationError(['request body must be valid JSON']);
-      }
-      const input = parseHireAgentInput(body);
-      const authorization = await verifyActivationSignature(agentRegistry, input);
-      const request = await repository.createHire(agentRegistry, input, authorization);
-      return context.json({ request }, 202);
-    },
+  app.get('/version', (c: Context) =>
+    c.json({ status: 'ok', service: 'afterhours-api', releaseId: process.env.AMBIT_RELEASE_ID ?? null }),
   );
 
-  app.get('/agents/:agentRegistry', async (context) => {
-    const agentRegistry = requireAgentRegistry(context.req.param('agentRegistry'));
-    const agent = await repository.getAgent(agentRegistry);
-    if (!agent) throw new MarketplaceNotFoundError('agent not found');
-    return context.json({ agent });
+  /**
+   * GET /api/portfolio/:wallet
+   */
+  app.get('/api/portfolio/:wallet', async (c: Context) => {
+    const wallet = getParam(c, 'wallet');
+    const portfolio = portfolios[wallet];
+
+    if (!portfolio) {
+      return c.json({ error: { code: 'not-found', message: 'Portfolio not found for this wallet.' } }, 404);
+    }
+
+    const assets = await buildAssetSummaries(portfolio);
+    return c.json({ portfolio, assets });
+  });
+
+  /**
+   * GET /api/assets/:symbol
+   */
+  app.get('/api/assets/:symbol', async (c: Context) => {
+    const symbol = getParam(c, 'symbol').toUpperCase();
+    const stock = SUPPORTED_STOCKS.find((s) => s.symbol === symbol);
+
+    if (!stock) {
+      return c.json({ error: { code: 'not-found', message: `Unsupported asset: ${symbol}` } }, 404);
+    }
+
+    const marketHours = getMarketHours();
+    const onchainPrice = stock.referencePrice * (1 + (Math.random() * 8 - 2) / 100);
+    const snapshot = buildPriceSnapshot({
+      symbol,
+      onchainPrice,
+      referencePrice: stock.referencePrice,
+      volume24h: Math.random() * 50_000 + 5_000,
+      liquidityUsd: Math.random() * 50_000 + 5_000,
+      marketStatus: marketHours.status,
+      referenceUpdatedAt: new Date(Date.now() - 16 * 3600_000).toISOString(),
+      observedAt: new Date().toISOString(),
+    });
+
+    const riskScore = computeGapRiskScore({
+      gapPercent: snapshot.gapPercent,
+      volume24h: snapshot.volume24h,
+      liquidityUsd: snapshot.liquidityUsd,
+      marketStatus: snapshot.marketStatus,
+      volatilityLevel: classifyVolatility([0.02, 0.03, snapshot.gapPercent / 100]),
+      hoursSinceReferenceUpdate: 16,
+    });
+
+    return c.json({ snapshot, riskScore });
+  });
+
+  /**
+   * GET /api/assets/:symbol/analysis
+   */
+  app.get('/api/assets/:symbol/analysis', async (c: Context) => {
+    const symbol = getParam(c, 'symbol').toUpperCase();
+    const analyst = new AIAnalyst(llmProvider, DEFAULT_RISK_POLICY);
+
+    const portfolio = portfolios.demo!;
+    const context = await buildAIContext(symbol, portfolio);
+    const analysis = await analyst.analyze(context, DEFAULT_RISK_POLICY);
+
+    return c.json({ analysis, context });
+  });
+
+  /**
+   * GET /api/assets/:symbol/risk
+   */
+  app.get('/api/assets/:symbol/risk', async (c: Context) => {
+    const symbol = getParam(c, 'symbol').toUpperCase();
+    const portfolio = portfolios.demo!;
+
+    const context = await buildAIContext(symbol, portfolio);
+    const analysis = await new AIAnalyst(llmProvider, DEFAULT_RISK_POLICY).analyze(context);
+    const evaluation = evaluateRisk(DEFAULT_RISK_POLICY, {
+      proposal: {
+        action: analysis.recommendation.action === 'hold' ? 'sell' : analysis.recommendation.action,
+        asset: symbol,
+        amountUsd: analysis.recommendation.amountUsd,
+      },
+      portfolio,
+      dailyPnLPercent: 0,
+    });
+
+    return c.json({ evaluation, analysis });
+  });
+
+  /**
+   * POST /api/execute
+   */
+  app.post('/api/execute', async (c: Context) => {
+    const body = await c.req.json<{
+      wallet: string;
+      action: 'buy' | 'sell';
+      asset: string;
+      amountUsd: number;
+      signature?: string;
+    }>();
+
+    if (!body.signature) {
+      return c.json({ error: { code: 'unauthorized', message: 'User signature required for execution.' } }, 401);
+    }
+
+    const portfolio = portfolios[body.wallet] ?? portfolios.demo!;
+    const evaluation = evaluateRisk(DEFAULT_RISK_POLICY, {
+      proposal: { action: body.action, asset: body.asset, amountUsd: body.amountUsd },
+      portfolio,
+      dailyPnLPercent: 0,
+    });
+
+    if (!evaluation.passed) {
+      return c.json({ error: { code: 'policy-rejected', message: evaluation.reason ?? 'Policy violation.' } }, 403);
+    }
+
+    const result = await executeTradeSimulation(body);
+
+    if (result.status === 'confirmed') {
+      updatePortfolio(portfolio, body);
+      portfolios[body.wallet] = portfolio;
+      const walletActivities = activities[body.wallet] ?? (activities[body.wallet] = []);
+      walletActivities.push({
+        id: `tx_${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        description: `Sold $${Math.round(body.amountUsd)} ${body.asset} — risk governor approved`,
+        txSignature: result.signature,
+        status: 'success',
+      });
+    }
+
+    return c.json({ result });
+  });
+
+  /**
+   * GET /api/activity/:wallet
+   */
+  app.get('/api/activity/:wallet', async (c: Context) => {
+    const wallet = getParam(c, 'wallet');
+    const activity = activities[wallet] ?? [];
+    return c.json({ activities: activity });
   });
 
   return app;
 }
 
-async function verifyActivationSignature(
-  agentRegistry: string,
-  input: ReturnType<typeof parseHireAgentInput>,
-): Promise<{ signer: ReturnType<typeof parseHireAgentInput>['requester']; verifiedAt: Date }> {
-  try {
-    const recovered = await recoverMessageAddress({
-      message: buildAgentActivationMessage({
-        agentRegistry,
-        clientRequestId: input.clientRequestId,
-        requester: input.requester,
-        destination: input.destination,
-        ...(input.protocol ? { protocol: input.protocol } : {}),
-        requestedValue: input.requestedValue,
-        expiresAt: input.expiresAt,
-      }),
-      signature: input.signature,
-    });
-    if (!isAddressEqual(recovered, input.requester)) throw new Error('signer mismatch');
-    return { signer: recovered, verifiedAt: new Date() };
-  } catch {
-    throw new RequestValidationError(['signature does not authorize this activation request']);
-  }
-}
+// --- Helpers ---
 
-export function logOperationalEvent(event: OperationalEvent): void {
-  console.log(JSON.stringify(event));
-}
-
-function isUsableReleaseId(releaseId: string | null): releaseId is string {
-  return (
-    releaseId !== null &&
-    releaseId.length >= 7 &&
-    releaseId.length <= 128 &&
-    /^[A-Za-z0-9][A-Za-z0-9._:@+-]*$/u.test(releaseId)
-  );
-}
-
-function safePath(url: string): string {
-  try {
-    const path = new URL(url).pathname;
-    return path.length <= 256 ? path : '<path-omitted>';
-  } catch {
-    return '<invalid-url>';
-  }
-}
-
-async function requireHireAuthorization(
-  context: Context,
-  configuredToken: string | null,
-  next: () => Promise<void>,
-): Promise<Response | void> {
-  const usableTokens = parseHireTokens(configuredToken);
-  if (usableTokens.length === 0) {
-    return context.json(
-      {
-        error: {
-          code: 'mutation-auth-unavailable',
-          message: 'hire authorization is not configured',
-        },
-      },
-      503,
-    );
-  }
-
-  const authorization = context.req.header('authorization');
-  const prefix = 'Bearer ';
-  const presentedToken = authorization?.startsWith(prefix)
-    ? authorization.slice(prefix.length)
-    : null;
-  if (!presentedToken || !usableTokens.some((token) => matchesToken(presentedToken, token))) {
-    return context.json(
-      { error: { code: 'unauthorized', message: 'hire authorization required' } },
-      401,
-      { 'www-authenticate': 'Bearer' },
-    );
-  }
-
-  await next();
-}
-
-// AMB-5: split a configured token string into the set of individually usable
-// tokens. Supports a comma-separated list for zero-downtime rotation; silently
-// drops any entry that does not satisfy isUsableHireToken so a malformed list
-// degrades to the valid subset rather than failing open.
-function parseHireTokens(configuredToken: string | null): string[] {
-  if (configuredToken === null) return [];
-  return configuredToken
-    .split(HIRE_TOKEN_SEPARATOR)
-    .map((token) => token.trim())
-    .filter((token) => isUsableHireToken(token));
-}
-
-function isUsableHireToken(token: string | null): token is string {
-  return (
-    token !== null && token.length >= 16 && token.length <= 512 && /^[\x21-\x7e]+$/u.test(token)
-  );
-}
-
-function matchesToken(presentedToken: string, configuredToken: string): boolean {
-  const presented = Buffer.from(presentedToken, 'utf8');
-  const configured = Buffer.from(configuredToken, 'utf8');
-  return presented.length === configured.length && timingSafeEqual(presented, configured);
-}
-
-function requireAgentRegistry(value: string): string {
-  if (!isAgentRegistry(value)) throw new RequestValidationError(['agentRegistry is invalid']);
+function getParam(c: Context, key: string): string {
+  const value = c.req.param(key);
+  if (!value) throw new Error(`Missing route parameter: ${key}`);
   return value;
 }
 
-function requireJsonContentType(context: Context): void {
-  const mediaType = context.req.header('content-type')?.split(';', 1)[0]?.trim().toLowerCase();
-  if (mediaType !== 'application/json') {
-    throw new RequestValidationError(['content-type must be application/json']);
+async function buildAssetSummaries(portfolio: Portfolio): Promise<unknown[]> {
+  const summaries: unknown[] = [];
+  const marketHours = getMarketHours();
+
+  for (const holding of portfolio.holdings) {
+    const stock = SUPPORTED_STOCKS.find((s) => s.symbol === holding.symbol);
+    if (!stock) continue;
+
+    const gapSim = (Math.random() * 8 - 2) / 100;
+    const onchainPrice = stock.referencePrice * (1 + gapSim);
+    const gapPercent = calculateGapPercent(onchainPrice, stock.referencePrice);
+
+    const riskScore = computeGapRiskScore({
+      gapPercent,
+      volume24h: Math.random() * 50_000 + 5_000,
+      liquidityUsd: Math.random() * 50_000 + 5_000,
+      marketStatus: marketHours.status,
+      volatilityLevel: classifyVolatility([0.03, gapSim]),
+      hoursSinceReferenceUpdate: 16,
+    });
+
+    summaries.push({
+      symbol: holding.symbol,
+      onchainPrice,
+      referencePrice: stock.referencePrice,
+      gapPercent,
+      valueUsd: holding.valueUsd,
+      weightPercent: holding.weightPercent,
+      riskScore,
+      marketStatus: marketHours.status,
+      liquidity: classifyLiquidity(Math.random() * 50_000 + 5_000),
+    });
   }
+
+  return summaries;
 }
 
-function errorResponse(error: Error, context: Context): Response {
-  if (error instanceof RequestValidationError) {
-    return context.json(
-      { error: { code: 'invalid-request', message: error.message, issues: error.issues } },
-      400,
-    );
-  }
-  if (error instanceof MarketplaceNotFoundError) {
-    return context.json({ error: { code: 'not-found', message: error.message } }, 404);
-  }
-  if (error instanceof MarketplaceConflictError) {
-    return context.json({ error: { code: 'conflict', message: error.message } }, 409);
-  }
-  if (error instanceof MarketplacePolicyError) {
-    return context.json({ error: { code: 'policy-rejected', message: error.message } }, 403);
-  }
-  if (error instanceof MarketplaceUnavailableError) {
-    return context.json({ error: { code: 'repository-unavailable', message: error.message } }, 503);
-  }
-  return context.json(
-    { error: { code: 'internal-error', message: 'unexpected marketplace API failure' } },
-    500,
-  );
+async function buildAIContext(symbol: string, portfolio: Portfolio): Promise<AIAnalysisContext> {
+  const stock = SUPPORTED_STOCKS.find((s) => s.symbol === symbol);
+  if (!stock) throw new Error(`Unknown stock: ${symbol}`);
+
+  const onchainPrice = stock.referencePrice * 1.04;
+  const gapPercent = calculateGapPercent(onchainPrice, stock.referencePrice);
+
+  const regime = classifyRegime({
+    marketStatus: 'closed',
+    volatilityLevel: 'high',
+    liquidity: 'low',
+    gapPercent,
+    concentration: portfolio.holdings.some((h) => h.symbol === symbol && h.weightPercent > 40) ? 'high' : 'medium',
+    isWeekend: true,
+  });
+
+  const holding = portfolio.holdings.find((h) => h.symbol === symbol);
+
+  return {
+    asset: symbol,
+    onchainPrice,
+    referencePrice: stock.referencePrice,
+    gapPercent,
+    marketStatus: 'closed',
+    liquidity: 'low',
+    portfolioExposure: holding?.weightPercent ?? 0,
+    maxAllowedExposure: DEFAULT_RISK_POLICY.maxSingleAssetExposurePercent,
+    regime,
+  };
 }
 
-export * from './marketplace.js';
-export * from './prisma-repository.js';
+function updatePortfolio(portfolio: Portfolio, trade: { action: 'buy' | 'sell'; asset: string; amountUsd: number }): void {
+  if (trade.action === 'sell') {
+    const holding = portfolio.holdings.find((h) => h.symbol === trade.asset);
+    if (holding) holding.valueUsd = Math.max(0, holding.valueUsd - trade.amountUsd);
+  }
+
+  const total = portfolio.holdings.reduce((sum, h) => sum + h.valueUsd, 0);
+  for (const h of portfolio.holdings) {
+    h.weightPercent = total > 0 ? (h.valueUsd / total) * 100 : 0;
+  }
+  portfolio.totalValueUsd = total;
+  portfolio.timestamp = new Date().toISOString();
+}
+
+async function executeTradeSimulation(_trade: {
+  action: 'buy' | 'sell';
+  asset: string;
+  amountUsd: number;
+}): Promise<{ signature: string; explorerUrl: string; status: 'confirmed' | 'failed' }> {
+  const signature = `5x${Math.random().toString(36).substring(2, 8)}...${Math.random().toString(36).substring(2, 10)}8F2`;
+  return {
+    signature,
+    explorerUrl: `https://solscan.io/tx/${signature}`,
+    status: 'confirmed',
+  };
+}
+
+export const app = createApp();
+export { config as apiConfig };

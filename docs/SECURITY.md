@@ -1,103 +1,69 @@
-# Security Hardening (M14)
-
-## Goal
-
-Reduce Ambit's exposed attack surface at deterministic trust boundaries without
-inventing identity, authentication, authorization, proxy, or infrastructure
-assumptions that the repository cannot verify.
-
-M14 focuses on public HTTP request handling and fail-closed runtime
-configuration. Existing execution, evidence, and visibility rules remain in
-force.
+# Security Policy
 
 ## Threat model
 
-The public marketplace API may receive malformed, oversized, mislabeled, or
-adversarial requests from unauthenticated network clients. Environment variables
-may be missing, malformed, out of range, or accidentally configured with values
-that JavaScript cannot represent safely.
+AfterHours handles:
+- Wallet connections (read-only balance reading)
+- Trade proposals (AI-generated, user-approved)
+- On-chain execution (Solana transactions)
+- Portfolio data (user-specific)
 
-M14 protects these boundaries:
+## In-scope
 
-- request metadata and bodies accepted by `apps/api`
-- numeric environment values parsed by `@ambit/config`
-- error responses returned before marketplace or execution logic runs
+- AI Analyst prompt injection (the LLM could produce malicious recommendations)
+- Risk Governor bypass (AI overrides policy)
+- Front-run detection (gap trading is profitable for insiders)
+- Transaction replay
+- Wallet signature phishing
 
-The hardening controls must be deterministic, testable, and independent of
-caller-controlled forwarding headers.
+## Out-of-scope
 
-## Public API controls
+- Solana consensus attacks
+- RPC provider compromise
+- Smart contract bugs in tokenized stock contracts (we don't deploy any)
 
-The API applies standard defensive response headers to all routes. Hire mutation
-requests have a 16 KiB body limit and require a JSON media type before parsing.
-Oversized bodies and unsupported media types return structured errors without
-reflecting request contents.
+## Security controls
 
-These controls limit parser and accidental payload abuse; they do not replace
-authentication, authorization, rate limiting, or upstream denial-of-service
-protection. Health, discovery, profile, and execution-history reads remain public
-by design.
+### 1. Risk Governor as security boundary
 
-M14 does not use `X-Forwarded-For` or similar caller-provided headers for a
-security decision. A future deployment may use trusted proxy metadata only after
-the proxy boundary and hop behavior are explicitly configured and tested.
+The AI can propose. The Governor enforces. The AI cannot override:
+- Max single asset exposure
+- Max trade size
+- Min USDC reserve
+- Max daily drawdown
 
-## Configuration controls
+These are hardcoded in the backend, not in the frontend or the AI prompt.
 
-Security-relevant numeric configuration fails closed before an application
-starts:
+### 2. User approval
 
-- chain IDs are positive safe integers
-- API ports are integers from 1 through 65,535
-- indexer batch sizes are positive bounded integers
-- indexer start blocks are non-negative safe integers
+`REQUIRE_USER_APPROVAL = true` is the default and cannot be disabled.
 
-Malformed, fractional, unsafe, zero, negative, or out-of-range values are
-rejected with configuration errors. Defaults pass through the same validation as
-explicit environment values.
+### 3. No autonomous trading
 
-## Explicit non-goals
+The system never executes without a user signature. The AI recommendation is
+always advisory.
 
-M14 does not add or imply:
+### 4. No secrets in code
 
-- user identity, sessions, API keys, wallet authentication, or authorization
-- per-user or per-IP rate limiting without a verified identity or proxy boundary
-- a web application firewall, reverse proxy, TLS termination, or deployment
-  topology
-- secret rotation, key custody, or infrastructure access controls
-- expanded transaction, endpoint, or external protocol support
+Environment variables are loaded from `.env` (gitignored).
 
-## Deferred endpoint rebinding risk
+### 5. Transaction simulation
 
-The endpoint verifier currently resolves a hostname before making an HTTP
-request, while the HTTP client may resolve the hostname again when connecting.
-An attacker controlling DNS could change the answer between those operations and
-redirect the connection to a disallowed address.
+Trades are simulated before sending to the blockchain. The user always sees:
+- The exact asset
+- The exact amount
+- The expected output
+- The price impact
 
-M14 records this DNS rebinding/time-of-check-time-of-use risk but does not apply
-a superficial hostname recheck. A complete fix requires the verified address to
-be pinned to the actual connection, with redirect targets and address families
-validated under the same policy. Until that transport boundary exists, endpoint
-verification must not be represented as connection-level SSRF protection.
+## Off-limits
 
-## Hire bearer token rotation (AMB-5)
+- Do NOT access production wallets or private keys
+- Do NOT modify risk policy limits without review
+- Do NOT deploy to mainnet without audit
+- Do NOT store API keys in code
+- Do NOT send real funds in the hackathon demo
 
-`AMBIT_HIRE_TOKEN` is the server-to-server credential for `POST /agents/:id/hire`.
-The API accepts a **comma-separated list** of tokens so rotation needs no downtime:
+## Reporting
 
-1. Generate a new token (16–512 printable ASCII chars, cryptographically random).
-2. Append it to `AMBIT_HIRE_TOKEN` with a comma: `OLD,NEW`.
-3. Deploy/restart the API. Both tokens are now accepted (constant-time compare per token).
-4. After the old token is confirmed unused (no `unauthorized` spikes, no old deploys live),
-   remove it: `AMBIT_HIRE_TOKEN=NEW`.
-5. Never reuse a token across environments; scope per deployment.
-
-The requester wallet **signature** remains the primary authorization — the bearer
-token only proves "came from our frontend." A leaked token cannot authorize
-activations for wallets the attacker does not hold.
-
-## Verification
-
-Adversarial tests cover request size, media type, security headers, and invalid
-numeric configuration. Full workspace typecheck, lint, and tests remain the merge
-gate for M14.
+Security issues should be documented in `AUDIT.md` (if the project grows to that
+complexity) and raised with the team before the submission deadline.

@@ -1,169 +1,144 @@
-# Ambit — Verified Marketplace for Autonomous Agents on BNB Smart Chain
+# AfterHours
 
-> The verified marketplace for autonomous agents on BNB Smart Chain.
+**24/7 intelligence for tokenized stocks on Solana.**
 
-Ambit turns ERC-8004 agent identity into **evidence**, evidence into **trust**,
-and trust into **bounded execution**. It is a trust and controlled-execution
-infrastructure layer for autonomous agents, with a marketplace as its reference
-application — built for the BNB Chain _Build the Era_ hackathon.
+When Wall Street closes, Solana keeps trading. Tokenized stocks (NVDA, AAPL, TSLA)
+continue to change hands on-chain while traditional markets sleep — creating price
+divergence between what the on-chain market is pricing and what the last close
+reflected.
 
-## Positioning
+AfterHours is an intelligent risk and execution layer that:
 
-BNB Agent Studio makes agents easy to **create**. Ambit makes those agents easy
-to **discover, evaluate, hire, and safely operate**. Ambit is the nervous system
-of BNB's agent economy — it does not replace Agent Studio.
+1. **Detects abnormal market gaps** between on-chain prices and traditional reference prices
+2. **Explains them** with an AI Analyst that reasons over regime, liquidity, volatility, and concentration
+3. **Assesses portfolio risk** via a deterministic Risk Governor with hard policy bounds
+4. **Executes bounded actions** on Solana — only after human approval
 
-## Product thesis (non-negotiable)
+> AI interprets. The Governor enforces. The human approves. Solana executes.
 
-- **Tier 1 — Data-verified agents:** independently evaluate agents registered
-  through ERC-8004 on BSC (identity, metadata, capabilities, endpoint liveness,
-  activity, reputation, payment evidence, category, freshness). We do **not**
-  blindly trust ERC-8004 reputation; methodology is transparent.
-- **Tier 2 — Execution-verified agents:** agents that opt into execution receive
-  a stronger layer — deterministic policy + risk + supported simulation, with
-  onchain enforcement (Altana sessions). The deterministic engine is authoritative;
-  LLMs may _explain_, never _decide_.
+## Why this matters
 
-## Hard rules
+Traditional equity markets close at 4pm ET. Tokenized equities on Solana trade 24/7.
+That creates an information gap: on-chain prices can drift from reference prices
+while liquidity thins and volatility rises. AfterHours turns that gap into
+actionable intelligence.
 
-1. **Recon before build.** Verify the real ecosystem (Agent Studio, ERC-8004,
-   Altana, PancakeSwap, TermiX) before integrating. See `docs/RECON.md`.
-2. **The trust engine is NEVER a visibility gate.** A weak-evidence agent stays
-   discoverable — it simply has a low score and low confidence. (See
-   `docs/ARCHITECTURE.md`, rule R-VIS.)
-3. **No fake data.** No hardcoded agents, no fabricated reputation, no invented
-   addresses/SDKs. Real BSC data only.
-4. **LLM is never a security boundary.** Policy, risk, custody, settlement are
-   deterministic.
-5. **Fail closed.** When policy/simulation/authorization/evidence cannot be
-   established, reject.
-
-## Repository architecture
+The product chain:
 
 ```
-apps/
-  web/        Next.js evidence marketplace + pending hire flow (M10)
-  api/        Hono marketplace API + Prisma repository (M9)
-  indexer/    BSC ERC-8004 indexer + category evidence worker (M1/M11)
-packages/
-  core/       canonical agent model + category/methodology versioning
-  config/     env config loader
-  erc8004/    ERC-8004 ABIs (from spec) + registration-file types
-  activity/   registered-wallet activity evidence (M4a)
-  db/         Prisma schema + client (brief §24 entities)
-  altana/     official Altana registered-session authorization (M7)
-  passport/   receipt verification + immutable execution passports (M8)
-  trust-engine/   deterministic scoring (M3)
-  risk-engine/    deterministic risk modules (M5)
-  execution/      policy + simulation pipeline (M5/M6)
-  contracts/      Merkle attestation contract (M4b)
-  pancakeswap/    quote-bound official PancakeSwap Universal Router adapter (M12)
-  termix/      deterministic advantage reports + read-only AACP discovery (M13)
-  demo/        read-only live deployment rehearsal (M16)
-  operations/  read-only production deployment verifier (M17)
-  sdk/        shared client SDK
-  ui/         shared UI components
-  testing/    shared test fixtures/utilities
-docs/         architecture, security, methodology, recon, runbooks
+NEW MARKET STRUCTURE  →  INFORMATION GAP  →  AI INTERPRETATION  →  RISK CONTROL  →  ONCHAIN EXECUTION
+     24/7 trading            price vs ref       explain + propose      hard limits      Solana tx
 ```
 
-## Milestone plan
-
-M0 repository baseline → M1 BSC+ERC-8004 → M2 discovery pipeline → M3 trust
-engine → M4 on-chain activity evidence + Merkle attestation → M5 policy engine → M6 simulation → M7 Altana →
-M8 execution passport → M9 marketplace backend → M10 frontend → M11 four
-categories → M12 PancakeSwap → M13 TermiX → M14 security hardening → M15 deploy →
-M16 demo rehearsal -> M17 production readiness.
-
-Each milestone is implemented, tested, reviewed, committed, then **STOP** until
-verification passes. See `docs/ARCHITECTURE.md`.
-
-## Getting started (M0)
+## Quick start
 
 ```bash
+# Install
 pnpm install
-cp .env.example .env        # fill DATABASE_URL etc.
-pnpm typecheck && pnpm lint && pnpm test
-docker compose up -d        # Postgres for M1+
+
+# Copy env
+cp .env.example .env
+
+# Run everything
+pnpm dev              # API on :8787, web on :3000
+
+# Or run individually
+pnpm --filter @afterhours/api dev     # REST API
+pnpm --filter @afterhours/web dev     # Next.js app
 ```
 
-## Verification status
+## Repository structure
 
-- [x] M0 Repository + architecture baseline
-- [x] M1 BNB Chain + ERC-8004 foundation (live registry addresses, viem reader, checkpointed indexer)
-- [x] M2 Agent discovery + data pipeline (metadata validation, SSRF-safe endpoint liveness, reputation normalization, provenance)
-- [x] M3 Trust engine (deterministic, versioned, transparent score+confidence; R-VIS preserved; Sybil concentration penalty; per-signal breakdown)
-- [x] M4a Registered-wallet activity evidence (transaction count only; no execution claims)
-- [x] M4b Merkle score attestation contract (append-only roots, deterministic proofs, compiler-verified ABI)
-- [x] M5 Deterministic execution policy engine (fail-closed validation, identity/call/value/token/slippage limits, explicit usage state)
-- [x] M6 Supported transaction simulation (registered deterministic decoders, M5 short-circuit, explicit-block evidence, fail-closed provider/revert handling)
-- [x] M7 Altana registered-session execution (official SDK boundary, exact approved calldata relay, bounded permissions, fail-closed validation)
-- [x] M8 Execution passport (exact transaction/receipt binding, canonical block checks, explicit confirmations, idempotent persistence)
-- [x] M9 Marketplace backend (search/profile/history routes, pending-only hires, deterministic ranking, injected Prisma repository)
-- [x] M10 Marketplace frontend (live URL-driven discovery, evidence profiles, same-origin pending-hire proxy, explicit empty/error states)
-- [x] M11 Four agent categories (versioned deterministic metadata classifier, ambiguity evidence, explicit marketplace category entry points)
-- [x] M12 PancakeSwap integration (pinned official SDKs, quote-bound exact-input V2/V3 calldata, decoded spend/slippage, fail-closed simulation path)
-- [x] M13 TermiX integration (three-task paired advantage reports, evidence references, deterministic integer metrics, read-only public config/stats client)
-- [x] M14 Security hardening (bounded JSON mutations, defensive API headers, fail-closed numeric configuration, adversarial regression coverage)
-- [x] M15 Deployment (Node 24 container targets, committed Prisma migration, fail-closed Compose topology, Linux CI image verification)
-- [x] M16 Demo rehearsal (read-only live preflight, real discovery/profile/history evidence, deterministic failure on empty or inconsistent deployments)
-- [x] M17 Production readiness (connection-pinned endpoint verification, authenticated write boundary, operational telemetry, read-only production evidence verifier, external deployment evidence contract)
-
-## Why Ambit (for judges)
-
-Ambit is not a dashboard that *displays* agent reputation — it is infrastructure
-that **verifies** it and turns that verification into **bounded execution**.
-
-- **Evidence, not trust.** Every score is a deterministic function of independently
-  observed BSC evidence (identity, activity, endpoint liveness, payment proof). We
-  do not blindly trust ERC-8004 reputation — the methodology is versioned and
-  transparent, and consumers pin the methodology hash they accept.
-- **On-chain proof.** Trust scores are published as append-only Merkle roots to a
-  deployed BSC-testnet contract (`AmbitScoreAttestation`). A score is not a claim;
-  it is a verifiable inclusion proof against an on-chain root. The web UI reads that
-  root and *rejects* it if its methodology hash drifts from what this build trusts.
-- **Bounded execution, fail-closed.** Hiring an agent proxies through a deterministic
-  policy + risk + simulation engine. The model may *explain*, never *decide*. When
-  policy, simulation, authorization, or evidence cannot be established, the action is
-  rejected — there is no "just send it" path.
-- **Security is built in, not bolted on.** A full audit (`AUDIT.md`, AMB-1..AMB-7)
-  closed every finding: dependency remediation with a CI audit gate, a rotatable
-  contract publisher, a hire-token rotation runbook, no hardcoded secrets, a logger
-  that can never leak query strings, and a Slither + in-repo static gate in CI.
-
-## Live demo
-
-```bash
-pnpm install
-cp .env.example .env          # supply DATABASE_URL + a BSC testnet RPC
-docker compose up -d          # Postgres
-pnpm --filter @ambit/db db:generate
-pnpm --filter @ambit/indexer start   # (or use the committed indexer state)
-pnpm --filter @ambit/web dev         # open http://localhost:3000
-pnpm --filter @ambit/api dev         # marketplace API on :8787
+```
+afterhours/
+├── apps/
+│   ├── web/          # Next.js + Tailwind dashboard (5 screens)
+│   ├── api/          # REST API (Hono + TypeScript)
+├── packages/
+│   ├── types/        # Shared domain types
+│   ├── config/       # Environment configuration
+│   ├── market-engine/ # Gap detection, regime memory, scoring
+│   ├── risk-engine/  # Risk Governor (deterministic policy enforcement)
+│   ├── agent/        # AI Analyst (structured context → LLM → recommendation)
+│   ├── solana/       # Wallet adapter, DEX integration, execution
+│   └── db/           # Prisma schema
+├── docs/             # Architecture, product, risk model, demo script
+├── .env.example
+├── CHANGELOG.md
+├── TASKS.md
+├── AGENTS.md
+└── pnpm-workspace.yaml
 ```
 
-What to show a judge:
+## The five engines
 
-1. **Discover** a BSC agent at `/agents/<erc8004-registry>` — evidence profile,
-   trust score + confidence, category, freshness.
-2. **On-chain attestation panel** on that page — reads the deployed
-   `AmbitScoreAttestation` root, shows the pinned methodology as *verified* (or
-   *methodology-mismatch* if drifted), and links to BSC testnet explorer.
-3. **Hire flow** — a pending hire is gated by the deterministic policy/risk/sim
-   engine and signed via an Altana session; the LLM output is logged but cannot
-   approve the action.
-4. **Trust is transparent** — open `docs/ARCHITECTURE.md` / `trust-engine` to see
-   the exact scoring methodology and per-signal breakdown.
+### 1. Market Gap Engine
+```
+gap = (onchain_price - reference_price) / reference_price
+```
+Combined with gap %, volume, liquidity, volatility, market status, and time since
+reference update into a Gap Risk Score (0–100, 5 bands).
 
-## Key references
+### 2. Regime Memory
+Remembers the recent market state: market session, volatility, liquidity, gap, and
+concentration. Classifies into regimes (NORMAL → VOLATILITY RISING → LIQUIDITY
+FALLING → MARKET CLOSED → PRICE DIVERGENCE → HIGH GAP RISK). The AI Analyst sees
+the current regime, not just the current price.
 
-- `AUDIT.md` — full security audit (AMB-1..AMB-7), all resolved.
-- `docs/ARCHITECTURE.md` — system map, trust boundaries, data flow.
-- `docs/SECURITY.md` — threat model and off-limits rules.
-- `docs/ADRs.md` — architectural decision records.
-- `TASKS.md` / `CHANGELOG.md` — milestone state and change history.
+### 3. AI Analyst
+Does NOT calculate. The deterministic backend computes all percentages, exposures,
+risk scores, and limits. The AI receives structured JSON and produces:
+- An explanation of why this matters
+- The primary risk
+- A bounded recommendation
 
-> Built for the BNB Chain _Build the Era_ hackathon. Real BSC data only — no
-> fabricated agents, addresses, or reputation.
+### 4. Risk Governor
+Hard policy constraints the AI cannot override:
+- `MAX_SINGLE_ASSET = 35%` (max portfolio exposure to one stock)
+- `MAX_TRADE = $1,500` (max single trade)
+- `MIN_USDC_RESERVE = 10%` (minimum stablecoin reserve)
+- `MAX_DAILY_DRAWDOWN = 3%` (max daily portfolio loss)
+- `REQUIRE_USER_APPROVAL = true` (human must sign every trade)
 
+### 5. Solana Execution
+Wallet adapter → Jupiter DEX aggregator quote → user signs → on-chain swap →
+portfolio updates.
+
+## The user journey (7 days, end-to-end)
+
+1. **Connect wallet** → see portfolio ($10,420 across NVDA/AAPL/TSLA/USDC)
+2. **Gap detected** → NVDA trading +4.0% above reference while market is closed
+3. **AI explains** → thin liquidity, 46% concentration, elevated gap risk
+4. **Governor evaluates** → exposure 46% > 35% limit, proposes sell $1,150
+5. **User approves** → wallet signs → Solana executes
+6. **Dashboard updates** → NVDA exposure 35%, USDC 31%
+
+## Supported assets
+
+| Symbol | Name               | Status     |
+|--------|--------------------|------------|
+| NVDA   | NVIDIA Corporation | Supported  |
+| AAPL   | Apple Inc.         | Supported  |
+| TSLA   | Tesla, Inc.        | Supported  |
+
+*(Hackathon: 3 stocks. Not 50.)*
+
+## Tech stack
+
+| Layer        | Tech                                    |
+|-------------|-----------------------------------------|
+| Frontend    | Next.js 15, TypeScript, TailwindCSS    |
+| Wallet      | @solana/web3.js + wallet-adapter-react  |
+| Backend     | Hono (Node.js)                          |
+| Engines     | TypeScript packages (market, risk, agent)|
+| DEX         | Jupiter aggregator                       |
+| Database    | PostgreSQL (Prisma)                     |
+| AI          | OpenAI-compatible (or mock for demo)    |
+
+## Demo script
+
+See `docs/demo.md` for the full 90-second demo flow.
+
+## License
+
+MIT.

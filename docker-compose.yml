@@ -1,24 +1,50 @@
+version: '3.9'
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: ambit-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ambit
-      # Local dev only. Read from the environment; never commit or reuse this value
-      # on any non-loopback host. For shared/staging/prod use docker-compose.deploy.yml,
-      # which requires POSTGRES_PASSWORD from the environment (${POSTGRES_PASSWORD:?...}).
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ambit-local-dev-only}
-      POSTGRES_DB: ambit
+  api:
+    build:
+      context: .
+      target: builder
+    command: pnpm --filter @afterhours/api dev
     ports:
-      - '5432:5432'
+      - "8787:8787"
+    env_file: .env
+    depends_on:
+      - db
     volumes:
-      - ambit-pg-data:/var/lib/postgresql/data
+      - .:/app
+      - /app/node_modules
+    working_dir: /app/apps/api
+
+  web:
+    build:
+      context: .
+      target: builder
+    command: pnpm --filter @afterhours/web dev
+    ports:
+      - "3000:3000"
+    env_file: .env
+    depends_on:
+      - api
+    volumes:
+      - .:/app
+      - /app/node_modules
+    working_dir: /app/apps/web
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: afterhours
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ambit -d ambit']
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
       timeout: 5s
       retries: 5
 
 volumes:
-  ambit-pg-data:
+  db_data:

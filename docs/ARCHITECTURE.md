@@ -1,134 +1,136 @@
-# Architecture
+# AfterHours Architecture
 
-Ambit is production infrastructure with a marketplace reference application.
+## Overview
 
-## Logical architecture
+AfterHours is a pnpm monorepo with two apps and seven packages:
 
 ```
-BNB SMART CHAIN
-  |-- ERC-8004 Identity Registry
-  |-- ERC-8004 Reputation Registry
-  |-- x402 / payment evidence (where reliably queryable)
-  |-- Altana execution infrastructure
-  |-- PancakeSwap protocols
-        |
-        v
-INDEXING + EVIDENCE LAYER  (apps/indexer, packages/erc8004)
-  discovery, metadata ingestion, endpoint verification, reputation ingestion,
-  registered-wallet linkage, transaction-count activity evidence, payment
-  evidence, deterministic category classification, evidence normalization, freshness
-        |
-        v
-TRUST ENGINE  (packages/trust-engine)         M3
-  identity, liveness, activity, reputation quality, economic evidence, recency, confidence
-        |
-        v
-EXECUTION CONTROL PLANE  (packages/execution) M5/M6
-  policy -> tx decode -> validation -> risk -> supported simulation -> approve/reject -> execute
-        |
-        v
-PANCAKESWAP ADAPTER  (packages/pancakeswap)   M12
-  official quote/call SDK -> quote-bound calldata validation -> M6 decoder
-        |
-        v
-TERMIX EVIDENCE ADAPTER  (packages/termix)    M13
-  public AACP config/stats -> paired task evidence -> deterministic advantage report
-        |
-        v
-EXECUTION PASSPORT  (packages/passport) M8
-  receipt + canonical block verification -> idempotent passport persistence
-        |
-        v
-ATTESTATION LAYER  (packages/contracts)       M4b
-  score snapshots -> Merkle tree -> root -> BNB attestation contract
-        |
-        v
-MARKETPLACE API  (apps/api)                   M9
-  validated HTTP -> repository -> search/rank, profiles, activation requests, execution history
-        |
-        v
-MARKETPLACE WEB APP  (apps/web)               M10
-        |
-        v
-PRODUCTION READINESS  (cross-cutting)          M17
-  pinned outbound transport, authenticated writes, redacted telemetry,
-  operator-supplied deployment evidence
+afterhours/
+├── apps/
+│   ├── web/          Next.js + Tailwind frontend (5 screens)
+│   └── api/          Hono REST API
+├── packages/
+│   ├── types/        Shared TypeScript types
+│   ├── config/       Environment configuration
+│   ├── market-engine/ Gap detection + regime memory + scoring
+│   ├── risk-engine/  Deterministic Risk Governor
+│   ├── agent/        AI Analyst (LLM + structured context)
+│   ├── solana/       Wallet adapter + DEX + execution
+│   └── db/           Prisma schema
 ```
 
-## Architectural rules
+## Data flow
 
-- **R-VIS (visibility, not gated by trust):** The trust engine is NEVER a
-  visibility gate. Every indexed agent — regardless of evidence strength — is
-  discoverable. Weak evidence simply yields a low Trust Score and low Confidence,
-  and a `verificationTier` of `unverified`. This directly serves BNB's stated
-  goal of making the existing agent population discoverable, while our
-  infrastructure adds the missing layer of judgment and safety.
-- **R-EVIDENCE:** Every derived value is traceable to a source with provenance
-  (block, txHash, timestamp, methodologyVersion). See `Evidence` in
-  `packages/core/src/agent.ts`.
-- **R-ACTIVITY:** Tier-1 wallet activity means only that the ERC-8004 registered
-  `agentWallet` has sent an observable number of transactions at a recorded
-  chain head. Account nonce alone does not prove recency, successful execution,
-  agent-directed execution, volume, or protocol interaction. Those claims need
-  transaction receipts, decoded calls, or Tier-2 execution evidence.
-- **R-DET:** Policy and risk enforcement are deterministic. LLMs may explain,
-  never decide (custody, approval, limits, allowlists, simulation, settlement).
-- **R-FAILCLOSED:** When policy/simulation/authorization/required evidence
-  cannot be established, the operation is rejected.
-- **R-SEP:** Identity, indexing, scoring, policy, execution, attestation, and UI
-  are independently testable.
-- **R-NOCUSTODY:** No custom custody unless architecture strictly requires it;
-  use Altana for agent authority.
-- **R-NOFAKE:** No hardcoded/fictional agents, reputations, or transactions.
-- **R-TRANSPORT:** Endpoint policy applies to the address used by the actual
-  connection. A DNS preflight followed by an independently resolved request is
-  not connection-level SSRF protection.
-- **R-INGRESS:** Public reads remain discoverable. Mutation authorization uses
-  explicit server-to-server credentials and never trusts forwarding headers as
-  caller identity without a configured proxy boundary.
-- **R-OPS:** Logs and readiness evidence are structured, bounded, and redacted.
-  Repository checks may establish release readiness but never prove a public
-  deployment, uptime, monitoring coverage, or operator response.
-- **R-PASSPORT:** A relay hash is not an execution claim. Successful execution
-  requires a receipt matched to the exact approved request, a canonical block,
-  explicit confirmations, and durable passport persistence.
-- **R-API:** Marketplace routes validate and present persisted evidence; they do
-  not recompute trust, bypass execution controls, accept session secrets, or hide
-  agents unless the caller explicitly requests a filter.
-- **R-WEB:** Marketplace pages render live M9 evidence, explicit empty/error
-  states, and opt-in filters. They never use fictional fallback agents or present
-  a pending hire as approved, executed, or passport verified.
-- **R-CATEGORY:** Category is derived only from valid registration metadata by a
-  versioned deterministic classifier. Unknown or conflicting signals remain
-  uncategorized and discoverable; category never changes trust or authority.
-- **R-SWAP:** PancakeSwap calls are approved only when the official router,
-  exact-input calldata, token path, recipient, deadline, and minimum output match
-  explicit quote evidence. Decoded effects drive policy; caller-provided swap
-  labels or slippage never weaken the execution boundary.
-- **R-TERMIX:** TermiX report values are derived from at least three explicit
-  with/without task pairs using versioned integer arithmetic and evidence
-  references. Read-only AACP discovery never implies job funding, delivery,
-  evaluation, settlement, trust, or execution authorization.
-- **R-HARDEN:** Public mutation requests are bounded and media-type validated
-  before parsing, defensive response headers apply consistently, and
-  security-relevant numeric configuration accepts only explicit bounded safe
-  integers. Unknown identity, proxy, or transport guarantees are never invented;
-  ambiguous security state fails closed.
-- **R-DEPLOY:** Releases use immutable dependency resolution, committed database
-  migrations, explicit runtime configuration, and separate health/readiness
-  gates. Images contain no secrets, migration failure stops startup, and local
-  artifacts never imply that public infrastructure has been provisioned.
-- **R-DEMO:** Rehearsals use only live API and web responses from the selected
-  deployment. Empty, unavailable, or inconsistent evidence fails the preflight;
-  fixtures, stale screenshots, fabricated agents, and pending-to-executed claims
-  never substitute for a deterministic release boundary.
+```
+User connects wallet
+        │
+        ▼
+Portfolio (mock/demo → Solana RPC in production)
+        │
+        ▼
+Market Gap Engine  ←─── Price snapshots (onchain vs reference)
+        │                    │
+        ▼                    │
+Regime Memory                  │
+        │                    │
+        ▼                    │
+AI Analyst                     │
+        │                      │
+        ▼                      │
+Risk Governor ◄────────────────┘
+        │
+   PASS? ──yes──▶ User approval
+         └─no───▶ BLOCK (explain why)
+        │
+        ▼
+Solana execution (Jupiter DEX swap)
+        │
+        ▼
+Portfolio update + activity log
+```
 
-## Why this wins the main BNB prize
+## Engine design
 
-The headline prize is _adoption as the official BNB Agent Studio marketplace_.
-Adoption requires (a) coverage of the existing 256k+ BSC agents, (b) a first-time
-user being able to discover and hire an agent without blockchain internals, and
-(c) a product BNB could keep operating. Ambit delivers breadth (R-VIS) + judgment
-(trust engine) + safety (execution control) without competing with Agent Studio.
+### Market Gap Engine (`packages/market-engine`)
 
-See `docs/RECON.md` for the ecosystem verification that shaped this design.
+- `calculateGapPercent(onchain, reference)` — the core formula
+- `buildPriceSnapshot(...)` — assembles a snapshot from onchain + reference data
+- `classifyLiquidity(volume)` — low/medium/high based on USD thresholds
+- `classifyVolatility(prices[])` — ATR-based volatility classification
+- `classifyMarketStatus(date)` — pre-market / open / post-market / closed
+- `classifyRegime(inputs)` — maps current state to a regime label
+- `computeGapRiskScore(inputs)` — 0–100 score with 5 bands
+- `RegimeMemory` — tracks regime transitions over time
+
+The engine is deterministic. No LLM needed for computation.
+
+### Risk Engine (`packages/risk-engine`)
+
+- `DEFAULT_RISK_POLICY` — hardcoded policy (35% max exposure, $1500 max trade, etc.)
+- `RiskGovernor` — class wrapping the policy; `evaluate(...)` checks every constraint
+- `evaluateRisk(...)` — pure function that returns `{ passed, reason, proposedState }`
+
+The Governor checks:
+1. Trade size within `MAX_TRADE`
+2. Exposure after trade within `MAX_SINGLE_ASSET`
+3. USDC reserve after trade >= `MIN_USDC_RESERVE`
+4. Daily PnL within `MAX_DAILY_DRAWDOWN`
+5. `REQUIRE_USER_APPROVAL` — the AI proposes, the Governor checks, the user signs
+
+The AI cannot override these. They are enforced deterministically.
+
+### AI Analyst (`packages/agent`)
+
+- `AIContextBuilder` — converts engine output into structured JSON for the LLM
+- `AIAnalyst` — class that formats a prompt, calls the LLM, parses the response
+- `LLMProvider` — interface that can be injected (OpenAI, Azure, local, or mock)
+- Falls back to deterministic recommendation if LLM output is unparseable
+
+The AI receives structured data (gap %, volatility, regime, exposure, policy limits)
+and returns: explanation, primary risk, recommendation, confidence.
+
+### Solana (`packages/solana`)
+
+- `SUPPORTED_STOCKS` — verified tokenized stock mint addresses (NVDA, AAPL, TSLA)
+- `WalletManager` / `WalletAdapter` — connects Phantom, Solflare, Backpack, etc.
+- `readBalances(connection, wallet)` — reads SPL token balances
+- `JupiterSwapProvider` — queries Jupiter for swap quotes, builds transactions
+- `executeSwap(connection, input)` — signs and sends the swap on Solana
+
+### API (`apps/api`)
+
+Hono server with REST endpoints:
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Liveness |
+| GET | `/version` | Release identity |
+| GET | `/api/portfolio/:wallet` | Portfolio + asset risk summaries |
+| GET | `/api/assets/:symbol` | Gap analysis (onchain vs reference) |
+| GET | `/api/assets/:symbol/analysis` | AI Analyst explanation + recommendation |
+| GET | `/api/assets/:symbol/risk` | Risk Governor evaluation |
+| POST | `/api/execute` | Execute trade (requires signature) |
+| GET | `/api/activity/:wallet` | Activity log |
+
+### Web (`apps/web`)
+
+Next.js 15 app router with 5 screens:
+
+| Route | Screen |
+|-------|--------|
+| `/` | Dashboard |
+| `/assets/:symbol` | Asset page |
+| `/assets/:symbol/analysis` | AI Analysis |
+| `/assets/:symbol/action` | Action screen |
+| `/activity` | Activity |
+
+## Security model
+
+The Risk Governor is the security boundary. The AI Analyst is advisory.
+
+- AI can propose, but cannot execute
+- Governor enforces hard limits (deterministic, no AI involvement)
+- User must sign every transaction (`REQUIRE_USER_APPROVAL = true`)
+- Policy is defined in code, not configurable by end users in the MVP
+
+See `docs/SECURITY.md` for the threat model.

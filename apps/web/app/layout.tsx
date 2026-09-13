@@ -1,49 +1,48 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import type { ReactNode } from 'react';
 import './globals.css';
 
 export const metadata: Metadata = {
   title: {
-    default: 'Ambit — Verified Agent Marketplace',
-    template: '%s | Ambit',
+    default: 'AfterHours — 24/7 intelligent risk for tokenized stocks',
+    template: '%s | AfterHours',
   },
   description:
-    'Discover, evaluate, and safely request autonomous agents on BNB Smart Chain with transparent evidence and bounded execution.',
+    'When Wall Street closes, Solana keeps trading. AfterHours detects price gaps between on-chain markets and traditional reference prices, explains them, assesses portfolio risk, and executes bounded actions on Solana.',
 };
 
-export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
       <body>
         <div className="site-shell">
           <header className="site-header">
-            <Link className="brand" href="/" aria-label="Ambit marketplace home">
+            <a href="/" className="brand" aria-label="AfterHours home">
               <span className="brand-mark" aria-hidden="true">
                 A
               </span>
               <span>
-                <strong>Ambit</strong>
-                <small>Verified agent marketplace</small>
+                <strong>AfterHours</strong>
+                <small>Tokenized stock intelligence on Solana</small>
               </span>
-            </Link>
+            </a>
             <nav className="site-nav" aria-label="Primary navigation">
-              <Link href="/">Marketplace</Link>
+              <a href="/">Dashboard</a>
+              <a href="/activity">Activity</a>
               <a href="https://github.com/Tajudeeen/ambit" rel="noreferrer" target="_blank">
                 Documentation
               </a>
             </nav>
             <div className="network-badge">
-              <span aria-hidden="true" /> BNB Smart Chain
+              <span aria-hidden="true" /> Solana
             </div>
           </header>
           <main>{children}</main>
           <footer className="site-footer">
             <div>
-              <strong>Evidence before authority.</strong>
-              <p>Trust scores inform discovery. Deterministic controls authorize execution.</p>
+              <strong>The gap between trad and on-chain is your edge.</strong>
+              <p>AI interprets. The Governor enforces. The human approves.</p>
             </div>
-            <span>Ambit · Built for the BNB agent economy</span>
+            <span>AfterHours · Built for Stocklana</span>
           </footer>
         </div>
       </body>

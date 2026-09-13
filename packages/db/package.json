@@ -1,27 +1,17 @@
 {
-  "name": "@ambit/db",
+  "name": "@afterhours/db",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "main": "src/index.ts",
   "scripts": {
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
-    "test": "vitest run",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:deploy": "prisma migrate deploy"
-  },
-  "prisma": {
-    "schema": "prisma/schema.prisma"
+    "generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev"
   },
   "dependencies": {
-    "@prisma/client": "^6.1.0",
-    "viem": "^2.55.16"
+    "@prisma/client": "^7.10.0"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
-    "prisma": "^6.1.0",
-    "typescript": "^5.7.2"
+    "prisma": "^7.10.0"
   }
 }

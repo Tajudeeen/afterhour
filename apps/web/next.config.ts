@@ -1,10 +1,14 @@
-import path from 'node:path';
+import type { NextConfig } from 'next';
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+const nextConfig: NextConfig = {
+  experimental: {
+    // Required for Next.js 15 turbo
+  },
+  images: {
+    remotePatterns: [],
+  },
   reactStrictMode: true,
-  output: process.platform === 'win32' ? undefined : ('standalone' as const),
-  outputFileTracingRoot: path.join(process.cwd(), '../..'),
+  swcMinify: true,
 };
 
 export default nextConfig;

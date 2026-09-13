@@ -1,5 +1,5 @@
 {
-  "name": "@ambit/api",
+  "name": "@afterhours/api",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -12,17 +12,22 @@
     "start": "tsx src/server.ts"
   },
   "dependencies": {
-    "@ambit/core": "workspace:*",
-    "@ambit/config": "workspace:*",
-    "@ambit/db": "workspace:*",
-    "@hono/node-server": "2.0.12",
+    "@afterhours/agent": "workspace:*",
+    "@afterhours/config": "workspace:*",
+    "@afterhours/market-engine": "workspace:*",
+    "@afterhours/risk-engine": "workspace:*",
+    "@afterhours/solana": "workspace:*",
+    "@afterhours/types": "workspace:*",
+    "@hono/node-server": "^2.0.12",
+    "@solana/web3.js": "^1.98.1",
     "dotenv": "^16.6.1",
-    "hono": "^4.6.0",
-    "viem": "^2.55.16"
+    "hono": "^4.6.0"
   },
   "devDependencies": {
+    "@afterhours/db": "workspace:*",
     "@types/node": "^22.10.0",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^3.2.6"
   }
 }

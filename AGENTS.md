@@ -4,28 +4,20 @@
 
 Any AI coding agent (Claude, GPT, DeepSeek, a local model, or a subagent) working
 in this repo MUST read `../deeen_plans/AGENTS.md` first, then follow its read order:
-`PROJECT → ARCHITECTURE → DECISIONS → TASKS → SECURITY → TESTING`. Those files
-define the process this project is built under (workflow stages, permission tiers,
-definition of done, security off-limits). They are templates filled for this repo
-below.
+`PROJECT → ARCHITECTURE → DECISIONS → TASKS → SECURITY → TESTING`.
 
-This repo is **Ambit** — an ERC-8004 agent marketplace (BSC). The authoritative
-in-repo references are:
-
-- `AUDIT.md` — full security audit (AMB-1..AMB-7), resolution status.
-- `docs/` — ADRs (`docs/ADRs.md` = the DECISIONS record), architecture, security
-  policy (`docs/SECURITY.md`), attestation, marketplace, deployment, production-readiness.
-- `.env.example` — required environment variables (never commit real `.env`).
+This repo is **AfterHours** — 24/7 intelligence for tokenized stocks on Solana.
+The product detects price gaps between on-chain markets and traditional reference
+prices, explains them with an AI Analyst, evaluates portfolio risk via a Risk
+Governor, and executes bounded actions on Solana after user approval.
 
 ## Differences from the generic deeen_plans template
 
-- **Verify command:** deeen_plans references `scripts/verify`. This repo now ships
-  `scripts/verify` (lint → typecheck → test → web build), plus `scripts/lint`,
-  `scripts/typecheck`, `scripts/test` shims. Run `bash scripts/verify` before reporting done.
-- **Decisions:** recorded in `docs/ADRs.md` (not a repo-root `DECISIONS.md`). Same
-  discipline — new dated entry for any architectural change, never a silent override.
+- **Verify command:** `bash scripts/verify` (lint → typecheck → test → web build).
+  Shims exist at `scripts/{lint,typecheck,test}`. Run before reporting done.
+- **Decisions:** recorded in `docs/ADRs.md` (not repo-root `DECISIONS.md`).
 - **Changelog:** `CHANGELOG.md` at repo root, seeded from the deeen_plans format.
-- **Tasks/milestones:** `TASKS.md` at repo root, filled with Ambit's real state.
+- **Tasks/milestones:** `TASKS.md` at repo root, filled with AfterHours' real state.
 - **Security off-limits:** follow `../deeen_plans/SECURITY.md` (no `.env`/keys/prod
   creds) AND `docs/SECURITY.md` (project threat model). Both apply.
 - **Permission tiers:** Restricted (ask first) = dependency changes, migrations, CI
@@ -38,5 +30,4 @@ in-repo references are:
 bash scripts/verify      # lint + typecheck + test + web build, all green
 ```
 
-Do not report a task complete without having run `scripts/verify` (or its
-equivalent) and seen it pass.
+Do not report a task complete without having run `scripts/verify` and seen it pass.

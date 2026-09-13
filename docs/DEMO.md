@@ -1,79 +1,61 @@
-# Demo Rehearsal (M16)
+# Demo Script
 
-## Goal
+**Target length:** 90 seconds.
 
-Give the operator a repeatable, evidence-first rehearsal for the deployed
-marketplace without creating synthetic agents, fake trust scores, fabricated
-execution history, or unreviewed transactions.
+## Script
 
-M16's rehearsal is read-only. The UI hire flow may be demonstrated separately,
-but a successful rehearsal never implies that an activation was executed,
-executed, settled, or passport verified.
+### 0:00 — Opening
 
-## Preflight
+> "U.S. stock markets close. Solana doesn't."
 
-Run the live smoke report against the deployed origins:
+Show: Dashboard with market status = "US CLOSED" and risk score.
 
-```bash
-DEMO_API_URL=https://api.example \
-DEMO_WEB_URL=https://app.example \
-pnpm demo:rehearse
-```
+### 0:10 — The problem
 
-The command emits deterministic JSON with the rehearsal version, check names,
-HTTP status codes, durations, the discovered real agent registry, and an overall
-pass/fail result. It checks:
+> "That creates a new problem. Tokenized stocks can continue trading while the
+> underlying market is asleep."
 
-1. API process liveness at `/health`.
-2. API repository readiness at `/ready`.
-3. A non-empty real discovery response from `/agents?limit=1`.
-4. The discovered agent profile and its registry identity.
-5. Public execution-history shape for the discovered agent.
-6. Web root availability and HTML content type.
+Show: NVDA asset card with +4.02% gap badge.
 
-The command exits non-zero when a required check fails. It never substitutes a
-fixture agent or treats an empty index as a successful demo state.
+### 0:20 — Gap detection
 
-## Six-minute rehearsal
+> "AfterHours detects the divergence."
 
-1. Run the preflight and save the JSON output as the release evidence artifact.
-2. Open the marketplace home and show URL-driven discovery and explicit filters.
-3. Open the discovered profile and explain provenance, endpoint state, trust,
-   category, and verification tier as separate evidence fields.
-4. Point out that low or missing trust does not hide an indexed agent.
-5. Submit an activation only when the operator intentionally wants a signed request;
-   show the `202` activation-confirmed result and do not call it execution.
-6. Show public history if persisted evidence exists; an explicit empty history is
-   acceptable and must remain visibly empty.
+Show: Asset page — Onchain $189.70 vs Reference $182.40, Gap +4.0%, Market: CLOSED,
+Liquidity: LOW, Risk: HIGH.
 
-## Stop conditions
+### 0:30 — AI explains
 
-Stop the rehearsal when:
+Show: AI Analysis page — explanation + primary risk + recommendation.
 
-- `/ready` fails or the repository is unavailable;
-- discovery returns no real indexed agents;
-- profile identity does not match the discovered registry;
-- the web page renders a fallback agent or stale fabricated score;
-- an activation request is described as executed, paid, or passport verified;
-- a partner integration is presented without its documented evidence boundary.
+### 0:45 — Risk Governor catches it
 
-The correct fallback is to show the failed preflight and explain the missing
-evidence—not to edit data, invent a response, or bypass a deterministic gate.
+Show: Action screen — "NVDA exposure: 46% — Policy limit: 35% — PASS" with the
+before/after exposure table.
 
-## Evidence checklist
+### 0:55 — User approves
 
-- rehearsal JSON from the deployed API and web origins
-- commit SHA and container image digest used for the run
-- database migration completion result
-- API `/health` and `/ready` results
-- the discovered agent registry and profile URL
-- any explicitly labeled activation response
+Show: User clicks "Sign & execute" — wallet modal appears.
 
-Do not include secrets, wallet keys, private session material, or unrestricted
-upstream responses in screenshots or submitted demo artifacts.
+### 1:00 — Solana transaction
 
-## Explicit non-claims
+Show: Transaction confirmation — Solana signature, Solscan link.
 
-M16 does not prove uptime, user adoption, successful on-chain execution, partner
-settlement, or production monitoring. Those claims require separate evidence from
-the selected deployment and protocol systems.
+### 1:10 — Portfolio updates
+
+Show: Dashboard — NVDA exposure now 35%, USDC 31%.
+
+### 1:20 — End
+
+Text overlay: "AfterHours — 24/7 intelligence for tokenized stocks on Solana."
+
+## Rehearsal checklist
+
+- [ ] API starts in <3s
+- [ ] Portfolio loads in <2s
+- [ ] AI analysis renders in <5s
+- [ ] Risk evaluation is instant
+- [ ] Execute simulates confirmation in <2s
+- [ ] No console errors
+- [ ] Mobile layout works
+- [ ] All 5 screens reachable via click path

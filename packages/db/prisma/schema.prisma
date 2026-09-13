@@ -1,6 +1,3 @@
-// Prisma schema — Ambit derived/indexed state (brief §24).
-// Migrations only; never modify production schema manually.
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,211 +7,136 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Canonical agent row, keyed by agentRegistry (eip155:chainId:registry:agentId).
-model Agent {
-  id                      String    @id
-  agentRegistry           String    @unique
-  agentId                 String
-  chainId                 Int
-  identityRegistry        String
-  owner                   String
-  agentWallet             String?
-  agentURI                String
-  name                    String
-  description             String
-  image                   String?
-  category                String? // 'rebalancing' | 'grid-trading' | 'health-factor' | 'yield' | null
-  capabilities            String[] // JSON-encoded array via app layer
-  supportedProtocols      String[]
-  verificationTier        String    @default("unverified")
-  supportedExecution      Boolean   @default(false)
-  executionVerified       Boolean   @default(false)
-  verifiedActivity        Boolean   @default(false)
-  activityTransactionCount Int?
-  activityObservedAtBlock  Int?
-  activityObservedAt       DateTime?
-  trustScoreValue         Int?
-  trustConfidence         String    @default("none")
-  trustConfidenceRank     Int       @default(0)
-  trustMethodologyVersion String?
-  trustComputedAt         DateTime?
-  lastIndexedBlock        Int?
-  lastIndexedAt           DateTime?
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-
-  metadata    AgentMetadata[]
-  endpoint    AgentEndpoint[]
-  reputation  ReputationEvent[]
-  activity    ActivityEvent[]
-  payment     PaymentEvidence[]
-  trustScores TrustScore[]
-  policy      ExecutionPolicy[]
-  executions  ExecutionRequest[]
-
-  @@index([category])
-  @@index([verificationTier])
-  @@index([chainId])
-  @@index([trustScoreValue, trustConfidenceRank])
-  @@index([executionVerified])
+model User {
+  id          String   @id @default(uuid())
+  wallet      String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  policies    RiskPolicy[]
+  decisions    AgentDecision[]
+  transactions Transaction[]
 }
 
-model AgentMetadata {
-  id          String   @id @default(cuid())
-  agentId     String
-  agent       Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  data        String // JSON-encoded registration file
-  source      String
-  blockNumber Int?
-  txHash      String
-  timestamp   DateTime @default(now())
+model Wallet {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  address   String   @unique
+  chain     String   @default("solana")
+  createdAt DateTime @default(now())
 
-  @@unique([agentId, source, txHash])
+  @@index([userId])
 }
 
-model AgentEndpoint {
-  id          String    @id @default(cuid())
-  agentId     String
-  agent       Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  url         String
-  status      String    @default("unknown") // unknown | up | down | degraded
-  lastChecked DateTime?
-  latencyMs   Int?
-
-  @@unique([agentId, url])
+model Asset {
+  id               String    @id @default(uuid())
+  symbol           String    @unique
+  name             String
+  mint             String    @unique
+  decimals         Int       @default(6)
+  referencePrice   Decimal  @db.Decimal(12, 4)
+  referenceSource  String
+  referenceUpdatedAt DateTime
+  isSupported      Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  prices           PriceSnapshot[]
+  riskEvents       RiskEvent[]
 }
 
-model ReputationEvent {
-  id            String   @id @default(cuid())
-  agentId       String
-  agent         Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  clientAddress String
-  value         String // decimal string (int128 scaled)
-  valueDecimals Int
-  tag1          String?
-  tag2          String?
-  endpoint      String?
-  feedbackURI   String?
-  feedbackHash  String?
-  blockNumber   Int
-  txHash        String
-  logIndex      Int
-  timestamp     DateTime @default(now())
+model PriceSnapshot {
+  id               String   @id @default(uuid())
+  asset            Asset    @relation(fields: [assetId], references: [id])
+  assetId          String
+  onchainPrice     Decimal  @db.Decimal(12, 4)
+  referencePrice   Decimal  @db.Decimal(12, 4)
+  gapPercent       Decimal  @db.Decimal(8, 4)
+  volume24h        Decimal  @db.Decimal(16, 2)
+  liquidityUsd     Decimal  @db.Decimal(16, 2)
+  liquidity        String
+  marketStatus     String
+  volatilityLevel  String
+  observedAt       DateTime
+  createdAt        DateTime @default(now())
 
-  @@index([agentId])
-  @@index([clientAddress])
-  @@unique([txHash, logIndex])
+  @@index([assetId, observedAt])
+  @@index([observedAt])
 }
 
-model ActivityEvent {
-  id          String   @id @default(cuid())
-  agentId     String
-  agent       Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  kind        String
-  blockNumber Int
-  txHash      String
-  timestamp   DateTime @default(now())
+model MarketState {
+  id           String   @id @default(uuid())
+  session      String   // "pre-market" | "open" | "post-market" | "closed"
+  volatility   String   // "low" | "medium" | "high"
+  liquidity    String   // "low" | "medium" | "high"
+  isWeekend    Boolean  @default(false)
+  regimeLabel  String
+  createdAt    DateTime @default(now())
 
-  @@index([agentId])
+  @@index([createdAt])
 }
 
-model PaymentEvidence {
-  id           String   @id @default(cuid())
-  agentId      String
-  agent        Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  source       String   @default("x402")
-  linkedTxHash String?
-  chainId      Int?
-  reliable     Boolean  @default(false)
-  observedAt   DateTime @default(now())
+model PortfolioSnapshot {
+  id            String    @id @default(uuid())
+  wallet        String
+  totalValueUsd Decimal   @db.Decimal(14, 2)
+  holdings      Json
+  createdAt     DateTime  @default(now())
 
-  @@index([agentId])
+  @@index([wallet, createdAt])
 }
 
-model TrustScore {
-  id                 String   @id @default(cuid())
-  agentId            String
-  agent              Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  score              Int
-  confidence         String // none | low | medium | high
-  methodologyVersion String
-  evidence           String // JSON-encoded Evidence[]
-  computedAt         DateTime @default(now())
+model RiskEvent {
+  id            String   @id @default(uuid())
+  asset         Asset    @relation(fields: [assetId], references: [id])
+  assetId       String
+  eventType     String   // "gap_detected" | "high_volatility" | "liquidity_drop" | "concentration"
+  severity      String   // "info" | "warning" | "critical"
+  gapPercent    Decimal? @db.Decimal(8, 4)
+  metadata      Json?
+  detectedAt    DateTime @default(now())
+  resolvedAt    DateTime?
 
-  @@unique([agentId, methodologyVersion, computedAt])
-  @@index([agentId])
+  @@index([assetId, detectedAt])
+  @@index([eventType, severity])
 }
 
-model ExecutionPolicy {
-  id               String    @id @default(cuid())
-  agentId          String
-  agent            Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  maxTxValue       String? // decimal string
-  dailySpend       String?
-  allowedTokens    String[]
-  allowedProtocols String[]
-  allowedTargets   String[]
-  expiry           DateTime?
-  maxSlippageBps   Int?
-  minHealthFactor  String?
-  createdAt        DateTime  @default(now())
+model RiskPolicy {
+  id                              String   @id @default(uuid())
+  user            User?    @relation(fields: [userId], references: [id])
+  userId          String?
+  maxSingleAssetExposurePercent   Int      @default(35)
+  maxTradeUsd                     Int      @default(1500)
+  minUsdcReservePercent           Int      @default(10)
+  maxDailyDrawdownPercent         Int      @default(3)
+  requireUserApproval             Boolean  @default(true)
+  createdAt                       DateTime @default(now())
+  updatedAt                       DateTime @updatedAt
 }
 
-model ExecutionRequest {
-  id                String    @id @default(cuid())
-  agentId           String
-  agent             Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  clientRequestId   String?   @unique
-  requester         String?
-  sessionId         String?
-  destination       String
-  calldata          String?
-  protocol          String?
-  requestedValue    String
-  authorizationSignature String?
-  authorizationVerifiedAt DateTime?
-  authorizationExpiresAt DateTime?
-  requestStatus     String    @default("pending-authorization")
-  policyResult      String    @default("pending") // pending | approved | rejected
-  riskResult        String?
-  simulationResult  String?
-  approvalRejection String    @default("pending") // pending | approved | rejected
-  rejectionReason   String?
-  callsId           String?
-  txHash            String?
-  blockNumber       Int?
-  blockHash         String?
-  executionStatus   String?
-  gas               String?
-  outcome           String?
-  passportId        String?   @unique
-  verifiedAt        DateTime?
-  timestamp         DateTime  @default(now())
-
-  @@index([agentId])
-  @@index([agentId, timestamp])
-  @@index([timestamp])
-  @@index([txHash])
+model AgentDecision {
+  id            String   @id @default(uuid())
+  user          User?    @relation(fields: [userId], references: [id])
+  userId        String?
+  asset         String
+  recommendation Json
+  explanation   String
+  confidence    Float
+  riskScore     Int
+  createdAt     DateTime @default(now())
 }
 
-model Attestation {
-  id                 String   @id @default(cuid())
-  epoch              Int
-  merkleRoot         String
-  agentCount         Int
-  methodologyVersion String
-  timestamp          DateTime
-  txHash             String?
+model Transaction {
+  id            String   @id @default(uuid())
+  user          User?    @relation(fields: [userId], references: [id])
+  userId        String?
+  wallet        String
+  action        String   // "buy" | "sell"
+  asset         String
+  amountUsd     Decimal  @db.Decimal(10, 2)
+  signature     String
+  status        String   // "pending" | "confirmed" | "failed"
+  createdAt     DateTime @default(now())
 
-  @@unique([epoch])
-}
-
-model IndexerCheckpoint {
-  id        String   @id @default(cuid())
-  chainId   Int
-  contract  String
-  lastBlock Int
-  updatedAt DateTime @default(now())
-
-  @@unique([chainId, contract])
+  @@index([wallet, createdAt])
+  @@index([signature])
 }

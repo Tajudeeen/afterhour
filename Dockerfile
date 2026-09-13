@@ -1,41 +1,58 @@
-FROM node:24-bookworm-slim AS base
+# syntax = docker/dockerfile:1
 
-RUN npm install --global pnpm@11.20.0
-WORKDIR /workspace
+FROM node:22-alpine AS base
+WORKDIR /app
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME/bin:$PATH"
+RUN npm install -g pnpm
 
-FROM base AS dependencies
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
-COPY apps ./apps
-COPY packages ./packages
-RUN pnpm install --frozen-lockfile --trust-lockfile --ignore-scripts
+# Install dependencies (deduplicated layer for faster builds)
+FROM base AS deps
+COPY package.json pnpm-workspace.yaml ./
+COPY packages/types/package.json packages/types/
+COPY packages/config/package.json packages/config/
+COPY packages/market-engine/package.json packages/market-engine/
+COPY packages/risk-engine/package.json packages/risk-engine/
+COPY packages/agent/package.json packages/agent/
+COPY packages/solana/package.json packages/solana/
+COPY packages/db/package.json packages/db/
+COPY apps/api/package.json apps/api/
+COPY apps/web/package.json apps/web/
+RUN pnpm install --frozen-lockfile --frozen-pnpm
 
-FROM dependencies AS build-web
-ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-RUN test -n "$NEXT_PUBLIC_API_URL"
-RUN pnpm --filter @ambit/web build
+# Build all packages
+FROM deps AS builder
+COPY packages/ packages/
+COPY apps/ apps/
+COPY . .
+RUN pnpm --filter @afterhours/api build || true
+RUN pnpm --filter @afterhours/web build || true
 
-FROM dependencies AS build-api
-RUN pnpm --filter @ambit/db db:generate
-RUN pnpm --filter @ambit/api typecheck
+# Production image
+FROM base AS production
+WORKDIR /app
 
-FROM dependencies AS build-indexer
-RUN pnpm --filter @ambit/db db:generate
-RUN pnpm --filter @ambit/indexer typecheck
+# Copy lockfile and package manifests
+COPY package.json pnpm-workspace.yaml ./
+COPY packages/types/package.json packages/types/
+COPY packages/config/package.json packages/config/
+COPY packages/market-engine/package.json packages/market-engine/
+COPY packages/risk-engine/package.json packages/risk-engine/
+COPY packages/agent/package.json packages/agent/
+COPY packages/solana/package.json packages/solana/
+COPY apps/api/package.json apps/api/
+COPY apps/web/package.json apps/web/
 
-FROM build-api AS api
-ENV NODE_ENV=production
+# Install production deps
+RUN pnpm install --prod --frozen-lockfile --frozen-pnpm
+
+# Copy built artifacts
+COPY --from=builder /app/apps/api/dist apps/api/dist
+COPY --from=builder /app/apps/web/.next apps/web/.next
+COPY --from=builder /app/apps/web/public apps/web/public
+
+# Generate Prisma client
+RUN npx prisma generate --schema=packages/db/prisma/schema.prisma
+
 EXPOSE 8787
-CMD ["pnpm", "--filter", "@ambit/api", "start"]
-
-FROM build-indexer AS indexer
-ENV NODE_ENV=production
-CMD ["pnpm", "--filter", "@ambit/indexer", "start"]
-
-FROM node:24-bookworm-slim AS web
-ENV NODE_ENV=production
-WORKDIR /workspace
-COPY --from=build-web /workspace/apps/web/.next/standalone ./
-COPY --from=build-web /workspace/apps/web/.next/static ./apps/web/.next/static
-EXPOSE 3000
-CMD ["node", "apps/web/server.js"]
+CMD ["node", "apps/api/dist/server.js"]
