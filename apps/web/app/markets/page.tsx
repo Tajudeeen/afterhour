@@ -14,19 +14,76 @@ interface PreStocksAsset {
   image: string;
 }
 
-async function fetchMarkets(): Promise<PreStocksAsset[]> {
+const FALLBACK_PRESTOCKS_ASSETS: PreStocksAsset[] = [
+  {
+    name: 'SpaceX PreStocks',
+    symbol: 'SPACEX',
+    contract_address: 'PreANxuXjsy2pvisWWMNB6YaJNzr7681wJJr2rHsfTh',
+    markPrice: 152.59,
+    tokenPrice: 118.45,
+    supply: 43712,
+    image: 'https://www.prestocks.com/logos/spacex.png',
+  },
+  {
+    name: 'Neuralink PreStocks',
+    symbol: 'NEURALINK',
+    contract_address: 'PrekqLJvJ3qVdXmBGDiexvwUTF4rLFDa6HWS4HJbw9S',
+    markPrice: 335.26,
+    tokenPrice: 424.72,
+    supply: 2595,
+    image: 'https://www.prestocks.com/logos/neuralink.png',
+  },
+  {
+    name: 'OpenAI PreStocks',
+    symbol: 'OPENAI',
+    contract_address: 'PreweJYECqtQwBtpxHL171nL2K6umo692gTm7Q3rpgF',
+    markPrice: 994.16,
+    tokenPrice: 1155.65,
+    supply: 2826,
+    image: 'https://www.prestocks.com/logos/openai.png',
+  },
+  {
+    name: 'Anduril PreStocks',
+    symbol: 'ANDURIL',
+    contract_address: 'PresTj4Yc2bAR197Er7wz4UUKSfqt6FryBEdAriBoQB',
+    markPrice: 153.38,
+    tokenPrice: 158.83,
+    supply: 11805,
+    image: 'https://www.prestocks.com/logos/anduril.png',
+  },
+  {
+    name: 'Anthropic PreStocks',
+    symbol: 'ANTHROPIC',
+    contract_address: 'Pren1FvFX6J3E4kXhJuCiAD5aDmGEb7qJRncwA8Lkhw',
+    markPrice: 1029.32,
+    tokenPrice: 1009.03,
+    supply: 7381,
+    image: 'https://www.prestocks.com/logos/anthropic.png',
+  },
+  {
+    name: 'Figure AI PreStocks',
+    symbol: 'FIGUREAI',
+    contract_address: 'PreZad18qfPtbxNpMtMuAuX2zVpvkEU8DnJx56faCWd',
+    markPrice: 181.29,
+    tokenPrice: 177.96,
+    supply: 3012,
+    image: 'https://www.prestocks.com/logos/figureai.png',
+  },
+];
+
+async function fetchMarkets(): Promise<{ assets: PreStocksAsset[]; isLive: boolean }> {
   try {
-    const res = await fetch(PRESTOCKS_API, { next: { revalidate: 30 } });
-    if (!res.ok) return [];
-    return res.json();
+    const res = await fetch(PRESTOCKS_API, { next: { revalidate: 30 }, signal: AbortSignal.timeout(5000) });
+    if (!res.ok) return { assets: FALLBACK_PRESTOCKS_ASSETS, isLive: false };
+    const data = await res.json();
+    return { assets: data, isLive: true };
   } catch {
-    return [];
+    return { assets: FALLBACK_PRESTOCKS_ASSETS, isLive: false };
   }
 }
 
 export default async function MarketsPage() {
-  const assets = await fetchMarkets();
-  const isLive = assets.length > 0;
+  const { assets, isLive } = await fetchMarkets();
 
   // Sort by absolute gap desc
   const sorted = [...assets].sort((a, b) => {
