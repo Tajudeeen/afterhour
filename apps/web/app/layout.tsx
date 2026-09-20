@@ -32,9 +32,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <nav className="site-nav" aria-label="Primary navigation">
               <a href="/">Dashboard</a>
               <a href="/markets">Markets</a>
+              <a href="/proof">Proof</a>
               <a href="/activity">Activity</a>
               <a href="/?intro=1">System Intro</a>
-              <a href="https://github.com/Tajudeeen/ambit" rel="noreferrer" target="_blank">
+              <a href="https://github.com/Tajudeeen/afterhour" rel="noreferrer" target="_blank">
                 Documentation
               </a>
             </nav>
