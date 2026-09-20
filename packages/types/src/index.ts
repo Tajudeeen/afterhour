@@ -115,6 +115,7 @@ export interface AIAnalysisContext {
   portfolioExposure: number; // percent of portfolio
   maxAllowedExposure: number; // policy limit percent
   regime: RegimeState;
+  portfolioTotalValueUsd?: number;
 }
 
 /** AI Analyst output: explanation + bounded recommendation. */
@@ -180,4 +181,48 @@ export interface ActivityItem {
   description: string;
   txSignature?: string;
   status: 'info' | 'success' | 'warning' | 'error';
+}
+
+export interface PreStocksAsset {
+  name: string;
+  symbol: string;
+  description: string;
+  image: string;
+  contract_address: string;  // Solana mint
+  markPrice: number;         // fair value (reference price)
+  tokenPrice: number;        // on-chain DEX price
+  supply: number;
+  markValuation: number;
+}
+
+export interface RouteComparison {
+  venue: string;              // 'PreStocks' | 'Jupiter' | 'Meteora'
+  inputMint: string;
+  outputMint: string;
+  inAmount: number;           // USDC in lamports
+  outAmount: number;          // token out amount
+  price: number;              // effective price per token
+  priceImpact: number;        // percent
+  fees: number;               // USD
+  slippage: number;           // bps
+  liquidityUsd: number;
+  source: 'live' | 'demo';
+}
+
+export interface AssetIntelligence {
+  symbol: string;
+  name: string;
+  mint: string;
+  referencePrice: number;      // Pyth or PreStocks markPrice
+  referenceSource: 'pyth-live' | 'pyth-stale' | 'prestocks-live' | 'seeded';
+  referenceUpdatedAt: string;
+  onchainPrice: number;        // DEX price
+  gapPercent: number;
+  gapDollar: number;
+  routes: RouteComparison[];
+  bestRoute: RouteComparison | null;
+  riskScore: GapRiskScore;
+  marketStatus: MarketStatus;
+  liquidity: LiquidityLevel;
+  source: 'live' | 'demo';     // overall data source
 }

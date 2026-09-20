@@ -240,17 +240,33 @@ code {
 }
 
 .button-primary {
-  color: var(--paper);
-  background: var(--ink);
-  box-shadow: 5px 5px 0 var(--lime);
+  color: #0a0c08 !important;
+  background: var(--lime) !important;
+  border: 1px solid var(--lime);
+  font-weight: 800;
+  box-shadow: 0 0 16px rgba(216, 255, 79, 0.3);
+}
+
+.button-primary:hover:not(:disabled) {
+  background: #e4ff75 !important;
+  border-color: #e4ff75;
+  box-shadow: 0 0 24px rgba(216, 255, 79, 0.5);
+  color: #0a0c08 !important;
 }
 
 .button-secondary,
 .button-ghost,
 .button-compact {
   border-color: var(--line);
-  color: #d4d8ce;
+  color: #f0f2ec !important;
   background: var(--surface-strong);
+  font-weight: 700;
+}
+
+.button-secondary:hover:not(:disabled) {
+  border-color: var(--lime);
+  color: var(--lime) !important;
+  background: rgba(216, 255, 79, 0.08);
 }
 
 .button-ghost {
@@ -493,15 +509,17 @@ code {
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--surface-strong);
+  color: #f0f2ec !important;
   font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
-  transition: border-color 160ms ease, background 160ms ease;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
 }
 
 .wallet-connect:hover {
   border-color: var(--lime);
-  background: rgba(216, 255, 79, 0.04);
+  color: var(--lime) !important;
+  background: rgba(216, 255, 79, 0.08);
 }
 
 .wallet-connect .dot {
@@ -648,3 +666,397 @@ code {
   color: #d4d8ce;
   font-size: 0.85rem;
 }
+
+/* Solana Wallet Adapter UI theme overrides */
+.wallet-adapter-button {
+  font-family: inherit !important;
+  font-weight: 700 !important;
+  color: #f0f2ec !important;
+  background-color: var(--surface-strong) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 12px !important;
+  transition: all 160ms ease !important;
+}
+
+.wallet-adapter-button:hover:not([disabled]) {
+  background-color: rgba(216, 255, 79, 0.12) !important;
+  border-color: var(--lime) !important;
+  color: var(--lime) !important;
+}
+
+.wallet-adapter-modal-wrapper {
+  background: #121410 !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.85) !important;
+  color: #f0f2ec !important;
+}
+
+.wallet-adapter-modal-title {
+  color: #f0f2ec !important;
+  font-family: Georgia, serif !important;
+  font-weight: 500 !important;
+}
+
+.wallet-adapter-modal-list .wallet-adapter-button {
+  background: #1a1d17 !important;
+  border: 1px solid #2a2e26 !important;
+  color: #f0f2ec !important;
+}
+
+.wallet-adapter-modal-list .wallet-adapter-button:hover {
+  background: rgba(216, 255, 79, 0.14) !important;
+  border-color: var(--lime) !important;
+  color: var(--lime) !important;
+}
+
+/* Splash Screen / Terminal Bootloader */
+.splash-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 10, 7, 0.94);
+  backdrop-filter: blur(12px);
+  padding: 20px;
+  animation: splashFadeIn 240ms ease-out;
+}
+
+.splash-container {
+  width: min(680px, 100%);
+  background: #121510;
+  border: 1px solid rgba(216, 255, 79, 0.35);
+  border-radius: 20px;
+  padding: clamp(24px, 5vw, 40px);
+  box-shadow:
+    0 0 50px rgba(0, 0, 0, 0.9),
+    0 0 30px rgba(216, 255, 79, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.splash-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--lime), transparent);
+}
+
+.splash-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.splash-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'SF Mono', ui-monospace, Menlo, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: var(--lime);
+  background: rgba(216, 255, 79, 0.08);
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(216, 255, 79, 0.2);
+}
+
+.splash-tag .signal-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lime);
+  box-shadow: 0 0 8px var(--lime);
+  animation: pulseDot 1.4s infinite ease-in-out;
+}
+
+.splash-title {
+  margin: 0 0 12px;
+  font-family: Georgia, serif;
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  font-weight: 500;
+  color: #f0f2ec;
+  line-height: 1.15;
+}
+
+.splash-desc {
+  color: #99a98a;
+  font-size: 0.98rem;
+  line-height: 1.65;
+  margin: 0 0 28px;
+}
+
+.splash-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.splash-stat-box {
+  background: #181b15;
+  border: 1px solid #282d22;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.splash-stat-box .label {
+  font-family: 'SF Mono', ui-monospace, Menlo, monospace;
+  font-size: 0.68rem;
+  color: #7b8576;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.splash-stat-box .val {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #e0e6db;
+}
+
+.splash-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+@keyframes splashFadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+/* === Solana + Pyth Brand System === */
+:root {
+  --solana-purple: #9945FF;
+  --solana-green: #14F195;
+  --pyth-purple: #7B61FF;
+  --pyth-lavender: #E6DAFE;
+}
+
+/* Solana gradient utility */
+.gradient-solana {
+  background: linear-gradient(135deg, var(--solana-purple), var(--solana-green));
+}
+
+/* Override network badge with Solana gradient */
+.network-badge {
+  background: linear-gradient(135deg, rgba(153, 69, 255, 0.15), rgba(20, 241, 149, 0.15)) !important;
+  border-color: rgba(153, 69, 255, 0.4) !important;
+  color: #c4f5e0 !important;
+}
+
+.network-badge span {
+  background: var(--solana-green) !important;
+  box-shadow: 0 0 0 3px rgba(20, 241, 149, 0.2) !important;
+}
+
+/* Pyth oracle badge */
+.pyth-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: 'SF Mono', ui-monospace, monospace;
+}
+
+.pyth-live {
+  background: rgba(123, 97, 255, 0.15);
+  border: 1px solid rgba(123, 97, 255, 0.4);
+  color: var(--pyth-lavender);
+}
+
+.pyth-stale {
+  background: rgba(141, 90, 6, 0.15);
+  border: 1px solid rgba(141, 90, 6, 0.4);
+  color: #ffd98a;
+}
+
+.pyth-demo {
+  background: rgba(98, 103, 94, 0.15);
+  border: 1px solid rgba(98, 103, 94, 0.3);
+  color: #7b8576;
+}
+
+/* Source badge - LIVE vs DEMO DATA */
+.source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: 'SF Mono', ui-monospace, monospace;
+}
+
+.source-live {
+  background: rgba(20, 241, 149, 0.1);
+  border: 1px solid rgba(20, 241, 149, 0.3);
+  color: var(--solana-green);
+}
+
+.source-live::before {
+  content: '●';
+  font-size: 0.5rem;
+  animation: pulseDot 1.4s infinite ease-in-out;
+}
+
+.source-demo {
+  background: rgba(98, 103, 94, 0.1);
+  border: 1px solid rgba(98, 103, 94, 0.25);
+  color: #62675e;
+}
+
+/* Solana gradient execute button */
+.button-execute {
+  background: linear-gradient(135deg, var(--solana-purple), var(--solana-green)) !important;
+  color: #000 !important;
+  border: none !important;
+  font-weight: 900 !important;
+  box-shadow: 0 0 20px rgba(153, 69, 255, 0.3) !important;
+}
+
+.button-execute:hover:not(:disabled) {
+  box-shadow: 0 0 32px rgba(20, 241, 149, 0.4), 0 0 20px rgba(153, 69, 255, 0.4) !important;
+  transform: translateY(-2px);
+}
+
+/* PreStocks asset cards */
+.prestocks-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  background: rgba(216, 255, 79, 0.1);
+  border: 1px solid rgba(216, 255, 79, 0.25);
+  color: var(--lime);
+  font-family: 'SF Mono', ui-monospace, monospace;
+}
+
+/* Route comparison card */
+.route-card {
+  padding: 16px 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-strong);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.route-card.route-best {
+  border-color: rgba(20, 241, 149, 0.4);
+  background: rgba(20, 241, 149, 0.04);
+}
+
+.route-card .route-venue {
+  font-family: 'SF Mono', ui-monospace, monospace;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #f0f2ec;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.route-card .route-price {
+  font-family: 'SF Mono', ui-monospace, monospace;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--solana-green);
+}
+
+.route-card .route-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.route-card .route-meta span {
+  font-size: 0.72rem;
+  color: #7b8576;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.route-card .route-meta strong {
+  color: #d4d8ce;
+}
+
+/* Gap display */
+.gap-display {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.gap-positive-large {
+  color: var(--solana-green);
+  font-weight: 900;
+  font-family: 'SF Mono', ui-monospace, monospace;
+}
+
+.gap-negative-large {
+  color: #FF6B6B;
+  font-weight: 900;
+  font-family: 'SF Mono', ui-monospace, monospace;
+}
+
+/* Sponsor bar */
+.sponsor-bar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.sponsor-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: #62675e;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.sponsor-item .sponsor-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* Body background: Solana gradient radial */
+body {
+  background: 
+    radial-gradient(circle at 85% 5%, rgba(153, 69, 255, 0.06), transparent 30rem),
+    radial-gradient(circle at 12% 5%, rgba(216, 255, 79, 0.04), transparent 24rem),
+    var(--paper);
+}
+

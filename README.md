@@ -45,6 +45,9 @@ pnpm dev              # API on :8787, web on :3000
 # Or run individually
 pnpm --filter @afterhours/api dev     # REST API
 pnpm --filter @afterhours/web dev     # Next.js app
+
+# Run full verification gate (lint + typecheck + test + build)
+pnpm run verify
 ```
 
 ## Repository structure
@@ -137,7 +140,7 @@ portfolio updates.
 
 ## Demo script
 
-See `docs/demo.md` for the full 90-second demo flow.
+See `docs/DEMO.md` for the full 90-second demo flow.
 
 ## License
 

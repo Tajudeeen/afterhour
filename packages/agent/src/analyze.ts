@@ -168,9 +168,10 @@ function deterministicFallback(
   if (exposure > maxExposure && context.gapPercent > 1) {
     action = 'sell';
     // Sell enough to bring exposure down to the limit
+    const totalPortfolioValue = context.portfolioTotalValueUsd ?? 10000;
     amountUsd = Math.min(
       policy.maxTradeUsd,
-      Math.max(0, (exposure - maxExposure) / 100 * 10000),
+      Math.max(0, ((exposure - maxExposure) / 100) * totalPortfolioValue),
     );
   } else if (context.gapPercent < -2 && exposure < maxExposure * 0.5) {
     action = 'buy';

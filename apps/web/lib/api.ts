@@ -144,8 +144,44 @@ export async function getAssetRisk(symbol: string): Promise<{ evaluation: RiskEv
   return requestJson(`/api/assets/${encodeURIComponent(symbol)}/risk`);
 }
 
+export interface RouteComparison {
+  venue: string;
+  inputMint: string;
+  outputMint: string;
+  inAmount: number;
+  outAmount: number;
+  price: number;
+  priceImpact: number;
+  fees: number;
+  slippage: number;
+  liquidityUsd: number;
+  source: 'live' | 'demo';
+}
+
+export interface AssetIntelligence {
+  symbol: string;
+  name: string;
+  mint: string;
+  referencePrice: number;
+  referenceSource: 'pyth-live' | 'pyth-stale' | 'prestocks-live' | 'seeded';
+  referenceUpdatedAt: string;
+  onchainPrice: number;
+  gapPercent: number;
+  gapDollar: number;
+  routes: RouteComparison[];
+  bestRoute: RouteComparison | null;
+  riskScore: RiskScore;
+  marketStatus: string;
+  liquidity: string;
+  source: 'live' | 'demo';
+}
+
 export async function getAssetGap(symbol: string): Promise<{ snapshot: PriceSnapshot; riskScore: RiskScore }> {
   return requestJson(`/api/assets/${encodeURIComponent(symbol)}`);
+}
+
+export async function getAssetIntelligence(symbol: string): Promise<AssetIntelligence> {
+  return requestJson(`/api/assets/${encodeURIComponent(symbol)}/intelligence`);
 }
 
 export async function getActivity(wallet: string): Promise<{ activities: ActivityItem[] }> {

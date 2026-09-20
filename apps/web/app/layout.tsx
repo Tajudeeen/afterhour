@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { SolanaWalletProvider } from '@/components/SolanaWalletProvider';
+import { SplashScreen } from '@/components/SplashScreen';
 
 export const metadata: Metadata = {
   title: {
@@ -14,10 +16,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <body>
-        <div className="site-shell">
+        <SolanaWalletProvider>
+          <SplashScreen />
+          <div className="site-shell">
           <header className="site-header">
             <a href="/" className="brand" aria-label="AfterHours home">
-              <span className="brand-mark" aria-hidden="true">
+              <span className="brand-mark gradient-solana" aria-hidden="true" style={{ color: '#000' }}>
                 A
               </span>
               <span>
@@ -27,24 +31,43 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             </a>
             <nav className="site-nav" aria-label="Primary navigation">
               <a href="/">Dashboard</a>
+              <a href="/markets">Markets</a>
               <a href="/activity">Activity</a>
+              <a href="/?intro=1">System Intro</a>
               <a href="https://github.com/Tajudeeen/ambit" rel="noreferrer" target="_blank">
                 Documentation
               </a>
             </nav>
             <div className="network-badge">
-              <span aria-hidden="true" /> Solana
+              <span aria-hidden="true" /> Solana Devnet
             </div>
           </header>
           <main>{children}</main>
           <footer className="site-footer">
             <div>
-              <strong>The gap between trad and on-chain is your edge.</strong>
-              <p>AI interprets. The Governor enforces. The human approves.</p>
+              <strong>Discover. Compare. Validate. Execute.</strong>
+              <p>AI explains. The Governor enforces. The human approves. Solana settles.</p>
             </div>
-            <span>AfterHours · Built for Stocklana</span>
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ color: '#62675e', fontSize: '0.78rem' }}>AfterHours · Stocklana_ 2026</span>
+              <div className="sponsor-bar" style={{ justifyContent: 'flex-end' }}>
+                <span className="sponsor-item">
+                  <span className="sponsor-dot" style={{ background: '#7B61FF' }} />
+                  Powered by Pyth
+                </span>
+                <span className="sponsor-item">
+                  <span className="sponsor-dot" style={{ background: '#9945FF' }} />
+                  Built on Solana
+                </span>
+                <span className="sponsor-item">
+                  <span className="sponsor-dot" style={{ background: '#d8ff4f' }} />
+                  PreStocks Data
+                </span>
+              </div>
+            </div>
           </footer>
         </div>
+        </SolanaWalletProvider>
       </body>
     </html>
   );

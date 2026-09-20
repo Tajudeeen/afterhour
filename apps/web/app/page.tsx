@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getPortfolio, type AssetSummary, type Portfolio } from '@/lib/api';
+import { WalletBar } from '@/components/WalletBar';
 
 const DEMO_WALLET = 'demo';
 
@@ -16,37 +17,44 @@ export default async function DashboardPage() {
     // Fallback to mock data if API is unavailable
     portfolio = {
       wallet: DEMO_WALLET,
-      totalValueUsd: 10420,
+      totalValueUsd: 10000,
       holdings: [
-        { symbol: 'NVDA', mint: '', amount: 26.34, valueUsd: 4800, weightPercent: 46 },
-        { symbol: 'AAPL', mint: '', amount: 9.8, valueUsd: 2100, weightPercent: 20 },
-        { symbol: 'TSLA', mint: '', amount: 5.6, valueUsd: 1500, weightPercent: 14 },
-        { symbol: 'USDC', mint: '', amount: 2020, valueUsd: 2020, weightPercent: 19 },
+        { symbol: 'ANTHROPIC', mint: 'Pren1FvFX6J3E4kXhJuCiAD5aDmGEb7qJRncwA8Lkhw', amount: 2.9, valueUsd: 3000, weightPercent: 30 },
+        { symbol: 'SPACEX', mint: 'PreANxuXjsy2pvisWWMNB6YaJNzr7681wJJr2rHsfTh', amount: 21.1, valueUsd: 2500, weightPercent: 25 },
+        { symbol: 'OPENAI', mint: 'PreweJYECqtQwBtpxHL171nL2K6umo692gTm7Q3rpgF', amount: 1.73, valueUsd: 2000, weightPercent: 20 },
+        { symbol: 'NEURALINK', mint: 'PrekqLJvJ3qVdXmBGDiexvwUTF4rLFDa6HWS4HJbw9S', amount: 2.35, valueUsd: 1000, weightPercent: 10 },
+        { symbol: 'USDC', mint: 'EPjFWdd5AufqSSqeM2qN1xB9qMLM6kq7K3e8n1W4c2X', amount: 1500, valueUsd: 1500, weightPercent: 15 },
       ],
       timestamp: new Date().toISOString(),
     };
     assets = [
       {
-        symbol: 'NVDA', onchainPrice: 189.7, referencePrice: 182.4, gapPercent: 4.02,
-        valueUsd: 4800, weightPercent: 46,
-        riskScore: { score: 72, band: 'High' },
-        marketStatus: 'closed', liquidity: 'low',
-      },
-      {
-        symbol: 'AAPL', onchainPrice: 215.0, referencePrice: 214.8, gapPercent: 0.12,
-        valueUsd: 2100, weightPercent: 20,
-        riskScore: { score: 15, band: 'Normal' },
-        marketStatus: 'closed', liquidity: 'high',
-      },
-      {
-        symbol: 'TSLA', onchainPrice: 267.0, referencePrice: 268.5, gapPercent: -0.56,
-        valueUsd: 1500, weightPercent: 14,
+        symbol: 'ANTHROPIC', onchainPrice: 1009.03, referencePrice: 1029.32, gapPercent: -1.94,
+        valueUsd: 3000, weightPercent: 30,
         riskScore: { score: 28, band: 'Watch' },
-        marketStatus: 'closed', liquidity: 'medium',
+        marketStatus: 'open', liquidity: 'medium',
+      },
+      {
+        symbol: 'SPACEX', onchainPrice: 118.45, referencePrice: 152.59, gapPercent: -22.3,
+        valueUsd: 2500, weightPercent: 25,
+        riskScore: { score: 92, band: 'Extreme' },
+        marketStatus: 'open', liquidity: 'low',
+      },
+      {
+        symbol: 'OPENAI', onchainPrice: 1155.65, referencePrice: 994.16, gapPercent: 16.2,
+        valueUsd: 2000, weightPercent: 20,
+        riskScore: { score: 85, band: 'High' },
+        marketStatus: 'open', liquidity: 'medium',
+      },
+      {
+        symbol: 'NEURALINK', onchainPrice: 424.72, referencePrice: 335.26, gapPercent: 26.5,
+        valueUsd: 1000, weightPercent: 10,
+        riskScore: { score: 89, band: 'High' },
+        marketStatus: 'open', liquidity: 'low',
       },
       {
         symbol: 'USDC', onchainPrice: 1.0, referencePrice: 1.0, gapPercent: 0,
-        valueUsd: 2020, weightPercent: 19,
+        valueUsd: 1500, weightPercent: 15,
         riskScore: { score: 0, band: 'Normal' },
         marketStatus: 'open', liquidity: 'high',
       },
@@ -65,12 +73,7 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      <div className="wallet-bar">
-        <button className="wallet-connect">
-          <span className="dot" /> Connect Solana wallet
-        </button>
-        <span className="wallet-connected">Connected as demo</span>
-      </div>
+      <WalletBar />
 
       <section>
         <div className="portfolio-total">${portfolio?.totalValueUsd.toLocaleString() ?? '0'}</div>

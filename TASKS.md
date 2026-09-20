@@ -58,12 +58,14 @@ Stocklana hackathon submission.
 - [x] market-engine: 16 tests (gap, regime, liquidity, scoring)
 - [x] risk-engine: 7 tests (evaluate, governor policy enforcement)
 - [x] agent: 3 tests (deterministic fallback, LLM provider)
-- [x] solana: 2 tests (stock exports, portfolio builder)
+- [x] solana: 3 tests (stock exports, portfolio builder, SPL Memo attestation)
 - [x] config: 13 tests (defaults, env overrides, validation)
 - [x] types: 1 test (exports)
-- [x] web: 1 smoke test
-- [x] API: 9 tests (portfolio, asset, execute, health, security)
-- [x] `bash scripts/verify` passes — lint, typecheck, test, web build all green
+- [x] web: 1 smoke test (Next.js app router & wallet integration)
+- [x] API: 13 tests (portfolio, asset, execute, health, security, rebalancing accounting)
+- [x] Cross-platform verification gate (`pnpm run verify` / `bash scripts/verify`) passes — lint, typecheck, test (57/57 tests green), web build all green
+- [x] Dual-mode Solana integration: Wallet Adapter (Devnet) + 1-click Demo mode
+- [x] On-chain risk governance attestations via SPL Memo program with live Solscan Devnet links
 
 ## D5 — Ship (completed)
 

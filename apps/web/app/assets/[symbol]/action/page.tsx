@@ -1,8 +1,6 @@
-'use client';
-
-import { useState } from 'react';
 import Link from 'next/link';
 import { getAssetRisk, type AIAnalysis, type RiskEvaluation } from '@/lib/api';
+import { ExecuteButton } from './ExecuteButton';
 
 export default async function ActionPage({ params }: { params: Promise<{ symbol: string }> }) {
   const { symbol } = await params;
@@ -164,64 +162,5 @@ export default async function ActionPage({ params }: { params: Promise<{ symbol:
         </div>
       </div>
     </div>
-  );
-}
-
-function ExecuteButton({ symbol, evaluation }: { symbol: string; evaluation: RiskEvaluation }) {
-  const [status, setStatus] = useState<'idle' | 'signing' | 'executing' | 'success' | 'error'>('idle');
-  const [result, setResult] = useState<{ signature: string; explorerUrl: string } | null>(null);
-  const [errMsg, setErrMsg] = useState<string | null>(null);
-
-  if (status === 'success' && result) {
-    return (
-      <div>
-        <p style={{ color: 'var(--lime)' }}>Transaction confirmed!</p>
-        <p style={{ color: '#99a98a', fontSize: '0.78rem' }}>
-          {result.signature.slice(0, 12)}...{result.signature.slice(-8)}
-        </p>
-        <a href={result.explorerUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--blue)', fontSize: '0.72rem' }}>
-          View on Solscan →
-        </a>
-      </div>
-    );
-  }
-
-  if (status === 'error' && errMsg) {
-    return <p style={{ color: 'var(--red)' }}>{errMsg}</p>;
-  }
-
-  return (
-    <button
-      className="button button-primary button-wide"
-      disabled={status === 'signing' || status === 'executing'}
-      onClick={async () => {
-        setStatus('signing');
-        // Simulate wallet signing
-        await new Promise((r) => setTimeout(r, 800));
-        setStatus('executing');
-        try {
-          const res = await fetch('/api/execute', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              wallet: 'demo',
-              action: evaluation.proposed.action,
-              asset: symbol,
-              amountUsd: evaluation.proposed.amountUsd,
-              signature: 'user_signed',
-            }),
-          });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const data = await res.json();
-          setResult({ signature: data.result.signature, explorerUrl: data.result.explorerUrl });
-          setStatus('success');
-        } catch (e) {
-          setErrMsg(e instanceof Error ? e.message : 'Execution failed');
-          setStatus('error');
-        }
-      }}
-    >
-      {status === 'signing' ? 'Sign in wallet...' : status === 'executing' ? 'Executing...' : `Sign & execute: $${evaluation.proposed.amountUsd.toLocaleString()}`}
-    </button>
   );
 }

@@ -58,15 +58,17 @@ describe('agent analyzeGap', () => {
     expect(result.confidence).toBeLessThanOrEqual(1);
   });
 
-  it('produces hold recommendation when exposure is low and gap is small', async () => {
-    const result = await analyzeGap(mockProvider, {
-      ...defaultContext,
-      gapPercent: 0.5,
-      portfolioExposure: 10,
-      regime: { ...defaultContext.regime, label: 'NORMAL' },
-    }, DEFAULT_RISK_POLICY);
-    // The mock provider still returns sell, but the deterministic fallback
-    // would return hold. Since mock returns valid JSON, it returns sell.
-    expect(result.recommendation.action).toBe('sell');
+  it('produces hold recommendation via fallback when exposure is low and gap is small', async () => {
+    const result = await analyzeGap(
+      mockProviderBad,
+      {
+        ...defaultContext,
+        gapPercent: 0.5,
+        portfolioExposure: 10,
+        regime: { ...defaultContext.regime, label: 'NORMAL' },
+      },
+      DEFAULT_RISK_POLICY,
+    );
+    expect(result.recommendation.action).toBe('hold');
   });
 });

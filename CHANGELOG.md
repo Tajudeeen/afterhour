@@ -5,6 +5,17 @@ Meaningful changes only — not every commit. Newest first.
 ## [Unreleased]
 
 ### Added
+- Live Solana Devnet integration with `@solana/wallet-adapter-react` and `@solana/wallet-adapter-react-ui`, supporting browser wallets (Phantom, Solflare) with an interactive `WalletBar` and instant demo fallback.
+- Authentic on-chain risk governance attestations published directly to Solana Devnet using the SPL Memo program (`MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr`).
+- Live Solscan Devnet verification links on the Action execution screen and Activity audit trail.
+- Full cross-platform verification gate (`pnpm run verify` running lint, typecheck, test, and web build).
+
+### Fixed
+- Fixed trade execution HTTP 404 by routing client-side actions to the backend API (`http://localhost:8787`) via `executeTrade`.
+- Resolved Next.js 15 / React 19 async client component boundary by extracting `ExecuteButton.tsx`.
+- Corrected portfolio rebalancing accounting to credit USDC on sells and debit USDC on buys, strictly maintaining total portfolio value ($10,420).
+- Stabilized mock price snapshot with in-memory caching to eliminate random price fluctuation between dashboard, analysis, and risk views.
+- Fixed deterministic agent fallback calculations by passing dynamic portfolio values.
 - Full pivot from Ambit (BSC/ERC-8004 marketplace) to **AfterHours** — 24/7 intelligence
   for tokenized stocks on Solana. Detects on-chain-vs-reference price gaps, explains
   them with an AI Analyst, evaluates portfolio risk via a Risk Governor, and executes

@@ -7,6 +7,8 @@
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
+    "build": "pnpm --filter @afterhours/web build",
+    "verify": "pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run build",
     "dev": "pnpm -r dev",
     "demo:rehearse": "echo 'See docs/DEMO.md'",
     "format": "prettier --write .",

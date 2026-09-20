@@ -1,36 +1,39 @@
 import Link from 'next/link';
-import { getAssetGap, type PriceSnapshot, type RiskScore } from '@/lib/api';
+import { getAssetIntelligence, type AssetIntelligence } from '@/lib/api';
 
 export default async function AssetPage({ params }: { params: Promise<{ symbol: string }> }) {
   const { symbol } = await params;
   const upperSymbol = symbol.toUpperCase();
 
-  let snapshot: PriceSnapshot | null = null;
-  let riskScore: RiskScore | null = null;
+  let intelligence: AssetIntelligence | null = null;
 
   try {
-    const data = await getAssetGap(upperSymbol);
-    snapshot = data.snapshot;
-    riskScore = data.riskScore;
+    intelligence = await getAssetIntelligence(upperSymbol);
   } catch {
     // Fallback mock data
-    snapshot = {
-      asset: upperSymbol,
-      onchainPrice: 189.7,
+    intelligence = {
+      symbol: upperSymbol,
+      name: 'Tokenized stock',
+      mint: '',
       referencePrice: 182.4,
-      gapPercent: 4.02,
-      volume24h: 42500,
-      liquidityUsd: 18500,
-      liquidity: 'low',
-      marketStatus: 'closed',
+      referenceSource: 'seeded',
       referenceUpdatedAt: new Date(Date.now() - 16 * 3600_000).toISOString(),
-      observedAt: new Date().toISOString(),
+      onchainPrice: 189.7,
+      gapPercent: 4.02,
+      gapDollar: 7.3,
+      routes: [],
+      bestRoute: null,
+      riskScore: { score: 72, band: 'High' },
+      marketStatus: 'closed',
+      liquidity: 'low',
+      source: 'demo',
     };
-    riskScore = { score: 72, band: 'High' };
   }
 
-  if (!snapshot || !riskScore) return null;
+  if (!intelligence) return null;
 
+  const isPreStocks = ['ANTHROPIC', 'SPACEX', 'OPENAI', 'ANDURIL', 'NEURALINK', 'FIGUREAI'].includes(intelligence.symbol);
+  
   return (
     <div className="page-shell">
       <Link href="/" className="back-link">
@@ -42,28 +45,48 @@ export default async function AssetPage({ params }: { params: Promise<{ symbol: 
           <div>
             <p className="eyebrow">Tokenized stock</p>
             <h1 style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: '3rem', color: 'var(--lime)' }}>
-              {snapshot.asset}
+              {intelligence.symbol}
             </h1>
             <p style={{ color: 'var(--muted)', marginTop: '8px' }}>
-              {getAssetName(snapshot.asset)}
+              {intelligence.name}
             </p>
           </div>
-          <StatusPill band={riskScore.band} />
+          <StatusPill band={intelligence.riskScore.band} />
         </div>
       </section>
 
-      <div className="grid-2" style={{ marginTop: '32px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', marginTop: '24px' }}>
+        <span className={`source-badge ${intelligence.source === 'live' ? 'source-live' : 'source-demo'}`}>
+          {intelligence.source === 'live' ? 'Live Data' : 'Demo Data'}
+        </span>
+        <span className={`pyth-badge ${
+          intelligence.referenceSource === 'pyth-live' ? 'pyth-live' :
+          intelligence.referenceSource === 'prestocks-live' ? 'pyth-live' :
+          intelligence.referenceSource === 'pyth-stale' ? 'pyth-stale' : 'pyth-demo'
+        }`}>
+          {intelligence.referenceSource === 'pyth-live' ? '⬡ Pyth Live' :
+           intelligence.referenceSource === 'prestocks-live' ? '⬡ PreStocks Live' :
+           intelligence.referenceSource === 'pyth-stale' ? '⚠ Pyth Stale' : '⬡ Seeded'}
+        </span>
+      </div>
+
+      <div className="grid-2" style={{ marginTop: '16px' }}>
         <div>
           <div className="data-card">
             <h3>Onchain price</h3>
-            <div className="data-value">${snapshot.onchainPrice.toFixed(2)}</div>
+            <div className="data-value">${intelligence.onchainPrice.toFixed(2)}</div>
+            <div className="data-label" style={{ fontFamily: 'monospace', fontSize: '0.72rem' }}>
+              {isPreStocks ? 'PreStocks DEX' : `Pyth Feed: Crypto.${intelligence.symbol}X/USD`}
+            </div>
           </div>
         </div>
         <div>
           <div className="data-card">
-            <h3>Reference price</h3>
-            <div className="data-value">${snapshot.referencePrice.toFixed(2)}</div>
-            <div className="data-label">Last tradable: {formatTime(snapshot.referenceUpdatedAt)}</div>
+            <h3>Reference price (Fair Value)</h3>
+            <div className="data-value">${intelligence.referencePrice.toFixed(2)}</div>
+            <div className="data-label" style={{ fontFamily: 'monospace', fontSize: '0.72rem' }}>
+              {isPreStocks ? 'PreStocks Mark Price' : `Pyth Feed: Equity.US.${intelligence.symbol}/USD`} (Updated {formatTime(intelligence.referenceUpdatedAt)})
+            </div>
           </div>
         </div>
       </div>
@@ -71,38 +94,47 @@ export default async function AssetPage({ params }: { params: Promise<{ symbol: 
       <div className="grid-3" style={{ marginTop: '24px' }}>
         <div className="data-card">
           <h3>Gap</h3>
-          <div className={`data-value ${snapshot.gapPercent > 0 ? 'gap-positive' : 'gap-negative'}`}>
-            {snapshot.gapPercent > 0 ? '+' : ''}{snapshot.gapPercent.toFixed(2)}%
+          <div className={`data-value ${intelligence.gapPercent > 0 ? 'gap-positive-large' : 'gap-negative-large'}`}>
+            {intelligence.gapPercent > 0 ? '+' : ''}{intelligence.gapPercent.toFixed(2)}%
+          </div>
+          <div className="data-label">
+            {intelligence.gapDollar > 0 ? '+' : ''}${Math.abs(intelligence.gapDollar).toFixed(2)} per token
           </div>
         </div>
         <div className="data-card">
-          <h3>24h volume</h3>
-          <div className="data-value">${Math.round(snapshot.volume24h).toLocaleString()}</div>
-        </div>
-        <div className="data-card">
-          <h3>Liquidity (USD)</h3>
-          <div className="data-value">${Math.round(snapshot.liquidityUsd).toLocaleString()}</div>
-          <div className="data-label">{snapshot.liquidity} liquidity</div>
-        </div>
-      </div>
-
-      <div className="grid-2" style={{ marginTop: '24px' }}>
-        <div className="data-card">
-          <h3>Market status</h3>
-          <div className="data-value">{snapshot.marketStatus.toUpperCase()}</div>
+          <h3>Liquidity</h3>
+          <div className="data-value">
+             {intelligence.routes[0] ? `$${Math.round(intelligence.routes[0].liquidityUsd).toLocaleString()}` : '—'}
+          </div>
+          <div className="data-label">{intelligence.liquidity} liquidity</div>
         </div>
         <div className="data-card">
           <h3>Risk score</h3>
-          <div className="data-value" style={{ color: 'var(--lime)' }}>{riskScore.score}</div>
-          <div className="data-label">{riskScore.band}</div>
+          <div className="data-value" style={{ color: 'var(--lime)' }}>{intelligence.riskScore.score}</div>
+          <div className="data-label">{intelligence.riskScore.band}</div>
         </div>
       </div>
 
+      {intelligence.routes && intelligence.routes.length > 0 && (
+        <div style={{ marginTop: '32px' }}>
+          <h3 style={{ margin: '0 0 16px', fontSize: '1rem', color: '#e0e6db', fontFamily: 'Georgia, serif' }}>Best Execution Route</h3>
+          <div className="route-card route-best">
+            <div className="route-venue">{intelligence.routes[0]!.venue}</div>
+            <div className="route-price">${intelligence.routes[0]!.price.toFixed(2)} / token</div>
+            <div className="route-meta">
+              <span>Impact: <strong>{intelligence.routes[0]!.priceImpact.toFixed(2)}%</strong></span>
+              <span>Fees: <strong>${intelligence.routes[0]!.fees.toFixed(2)}</strong></span>
+              <span>Slippage: <strong>{intelligence.routes[0]!.slippage} bps</strong></span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{ marginTop: '32px', display: 'flex', gap: '16px' }}>
-        <Link href={`/assets/${snapshot.asset}/analysis`} className="button button-primary">
+        <Link href={`/assets/${intelligence.symbol}/analysis`} className="button button-execute" style={{ padding: '0 20px', borderRadius: '12px' }}>
           AI analysis →
         </Link>
-        <Link href={`/assets/${snapshot.asset}/action`} className="button button-secondary">
+        <Link href={`/assets/${intelligence.symbol}/action`} className="button button-secondary">
           Risk evaluation →
         </Link>
       </div>
@@ -126,15 +158,4 @@ function formatTime(value: string): string {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return '—';
   return d.toLocaleString('en', { timeZone: 'UTC', dateStyle: 'medium', timeStyle: 'short' });
-}
-
-function getAssetName(symbol: string): string {
-  const names: Record<string, string> = {
-    NVDA: 'NVIDIA Corporation',
-    AAPL: 'Apple Inc.',
-    TSLA: 'Tesla, Inc.',
-    MSFT: 'Microsoft Corporation',
-    GOOGL: 'Alphabet Inc.',
-  };
-  return names[symbol] ?? 'Tokenized stock';
 }

@@ -47,7 +47,7 @@ export default async function ActivityPage() {
                 {item.txSignature && (
                   <div>
                     <a
-                      href={`https://solscan.io/tx/${item.txSignature}`}
+                      href={`https://solscan.io/tx/${item.txSignature}?cluster=devnet`}
                       target="_blank"
                       rel="noreferrer"
                       className="sig"

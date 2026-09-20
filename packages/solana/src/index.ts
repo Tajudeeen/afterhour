@@ -12,14 +12,20 @@
 import type { Portfolio, PortfolioHolding, TokenizedStock } from '@afterhours/types';
 import type { TokenBalance } from './balances.js';
 
-export { SUPPORTED_STOCKS } from './assets.js';
+export { SUPPORTED_STOCKS, LEGACY_STOCKS, PYTH_FEED_MAP, getStock, getStockByMint } from './assets.js';
 export {
   createWalletStore,
   type WalletStore,
   type WalletAdapter,
 } from './wallet.js';
 export { JupiterSwapProvider, type SwapQuote, type SwapRoute } from './dex.js';
-export { buildSwapTransaction, signAndSend, type ExecutionResult } from './execution.js';
+export {
+  buildSwapTransaction,
+  signAndSend,
+  type ExecutionResult,
+  MEMO_PROGRAM_ID,
+  buildRiskAttestationMemo,
+} from './execution.js';
 export {
   getTokenBalances,
   getTokenPriceUsd,

@@ -19,9 +19,7 @@ pnpm run test
 echo ""
 
 echo "📝 Web build"
-pnpm --filter @afterhours/web build 2>&1 || {
-  echo "⚠ web build had warnings, but continuing"
-}
+pnpm --filter @afterhours/web build
 echo ""
 
 echo "✅ All checks passed"

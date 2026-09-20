@@ -54,14 +54,14 @@ export async function executeSwap(
     if (confirmed) {
       return {
         signature,
-        explorerUrl: `https://solscan.io/tx/${signature}`,
+        explorerUrl: `https://solscan.io/tx/${signature}?cluster=devnet`,
         status: 'confirmed',
       };
     }
 
     return {
       signature,
-      explorerUrl: `https://solscan.io/tx/${signature}`,
+      explorerUrl: `https://solscan.io/tx/${signature}?cluster=devnet`,
       status: 'failed',
       error: 'Transaction was not confirmed within timeout',
     };
@@ -124,4 +124,20 @@ async function awaitConfirmation(
     await new Promise((resolve) => setTimeout(resolve, 1_000));
   }
   return false;
+}
+
+/** Official Solana SPL Memo Program v2 */
+export const MEMO_PROGRAM_ID = 'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr';
+
+/**
+ * Format a verifiable on-chain risk governor attestation message for the SPL Memo program.
+ */
+export function buildRiskAttestationMemo(input: {
+  action: 'buy' | 'sell';
+  asset: string;
+  amountUsd: number;
+  maxExposurePercent?: number;
+}): string {
+  const exposureClause = input.maxExposurePercent ? ` (Cap: ${input.maxExposurePercent}%)` : '';
+  return `AfterHours: ${input.action.toUpperCase()} $${Math.round(input.amountUsd)} ${input.asset} | Risk Governor: Approved${exposureClause}`;
 }

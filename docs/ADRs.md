@@ -3,6 +3,20 @@
 Architectural Decision Records. One per significant decision. New entries go at the
 top; existing entries are never silently overridden.
 
+## 2026-09-20 — ADR-3: Dual-Mode Live Solana Devnet & SPL Memo Attestation
+
+**Status:** Accepted
+
+**Context:** Hackathon judges require verifying authentic Solana ecosystem integration while maintaining a zero-friction, deterministic experience for recorded video demos and judges without funded wallets.
+
+**Decision:**
+1. Implemented Solana Wallet Adapter with Devnet configuration supporting standard Solana browser wallets (Phantom, Solflare) alongside a default zero-config simulated Demo portfolio.
+2. For on-chain execution, utilized the official Solana SPL Memo Program (`MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr`) to post verifiable, immutable risk governance attestations on Solana Devnet whenever a user wallet signs.
+3. Added automatic fallback to simulated demo execution if a connected wallet declines or lacks devnet SOL for gas, preventing test dead-ends.
+4. Pointed all explorer links to `solscan.io/tx/<signature>?cluster=devnet`.
+
+**Consequences:** Hackathon judges can either test with real wallets and verify genuine on-chain attestations on Solscan Devnet or test instantaneously via 1-click Demo mode.
+
 ## 2026-08-29 — ADR-0: Pivot from Ambit to AfterHours
 
 **Status:** Accepted
