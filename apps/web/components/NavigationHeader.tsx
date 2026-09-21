@@ -7,7 +7,13 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 
 export function NavigationHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const pathname = usePathname();
+  
+  let pathname = '';
+  try {
+    pathname = usePathname() || '';
+  } catch {
+    pathname = '';
+  }
 
   // Close mobile menu on route change
   useEffect(() => {

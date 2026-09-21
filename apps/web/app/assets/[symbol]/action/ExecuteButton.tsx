@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { executeTrade, type RiskEvaluation } from '@/lib/api';
 
 const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
 
-export function ExecuteButton({ symbol, evaluation }: { symbol: string; evaluation: RiskEvaluation }) {
+function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation: RiskEvaluation }) {
   const { connected, publicKey, sendTransaction } = useWallet();
   const { connection } = useConnection();
 
@@ -226,4 +226,22 @@ Payload String: "${memoText}"`}
       </button>
     </div>
   );
+}
+
+export function ExecuteButton({ symbol, evaluation }: { symbol: string; evaluation: RiskEvaluation }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <button className="button button-execute button-wide" type="button" disabled>
+        Sign & execute: ${evaluation.proposed.amountUsd.toLocaleString()}
+      </button>
+    );
+  }
+
+  return <ExecuteButtonInner symbol={symbol} evaluation={evaluation} />;
 }

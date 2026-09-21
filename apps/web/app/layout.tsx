@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import './globals.css';
-import { SolanaWalletProvider } from '@/components/SolanaWalletProvider';
+import { SolanaWalletProviderClient } from '@/components/SolanaWalletProviderClient';
 import { SplashScreen } from '@/components/SplashScreen';
 import { NavigationHeader } from '@/components/NavigationHeader';
 
@@ -22,10 +23,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <body>
-        <SolanaWalletProvider>
+        <SolanaWalletProviderClient>
           <SplashScreen />
           <div className="site-shell">
-            <NavigationHeader />
+            <Suspense fallback={null}>
+              <NavigationHeader />
+            </Suspense>
             <main>{children}</main>
             <footer className="site-footer">
               <div>
@@ -51,7 +54,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               </div>
             </footer>
           </div>
-        </SolanaWalletProvider>
+        </SolanaWalletProviderClient>
       </body>
     </html>
   );

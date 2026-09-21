@@ -4,25 +4,9 @@ import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 
-export function WalletBar() {
-  const [mounted, setMounted] = useState(false);
+function WalletBarInner() {
   const { connected, publicKey, disconnect } = useWallet();
   const { setVisible } = useWalletModal();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return (
-      <div className="wallet-bar">
-        <button className="wallet-connect" type="button">
-          <span className="dot" /> Connect Solana wallet
-        </button>
-        <span className="wallet-connected">Connected as demo</span>
-      </div>
-    );
-  }
 
   if (connected && publicKey) {
     const base58 = publicKey.toBase58();
@@ -67,4 +51,25 @@ export function WalletBar() {
       <span className="wallet-connected">Connected as demo (Risk Governor active)</span>
     </div>
   );
+}
+
+export function WalletBar() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="wallet-bar">
+        <button className="wallet-connect" type="button">
+          <span className="dot" /> Connect Solana wallet
+        </button>
+        <span className="wallet-connected">Connected as demo</span>
+      </div>
+    );
+  }
+
+  return <WalletBarInner />;
 }
