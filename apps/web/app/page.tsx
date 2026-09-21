@@ -63,7 +63,7 @@ export default async function DashboardPage() {
   }
 
   const overallRisk = Math.max(...assets.map((a) => a.riskScore.score));
-  const marketStatus = assets.find((a) => a.symbol === 'NVDA')?.marketStatus ?? 'closed';
+  const marketStatus = assets.find((a) => a.symbol !== 'USDC')?.marketStatus ?? 'open';
 
   return (
     <div className="dashboard-shell">

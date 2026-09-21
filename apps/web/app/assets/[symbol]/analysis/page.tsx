@@ -15,9 +15,9 @@ export default async function AnalysisPage({ params }: { params: Promise<{ symbo
   } catch {
     // Fallback
     analysis = {
-      explanation: 'NVDA is trading 4% above its reference price while the underlying market is closed. Liquidity is currently thin and your portfolio has 46% exposure. This creates elevated gap risk at the next market open.',
-      primaryRisk: 'Portfolio concentration in NVDA exceeds policy limits during thin liquidity',
-      recommendation: { action: 'sell', asset: 'NVDA', amountUsd: 1150 },
+      explanation: `${upperSymbol} is trading 4.0% above its reference price while the underlying market is closed. Liquidity is currently thin and your portfolio has 46% exposure. This creates elevated gap risk at the next market open.`,
+      primaryRisk: `Portfolio concentration in ${upperSymbol} exceeds policy limits during thin liquidity`,
+      recommendation: { action: 'sell', asset: upperSymbol, amountUsd: 1150 },
       confidence: 0.87,
       createdAt: new Date().toISOString(),
     };

@@ -37,8 +37,8 @@ export default async function ActionPage({ params }: { params: Promise<{ symbol:
       reason: null,
     };
     analysis = {
-      explanation: 'NVDA is trading 4% above its reference price while the underlying market is closed.',
-      primaryRisk: 'Portfolio concentration in NVDA exceeds policy limits during thin liquidity',
+      explanation: `${upperSymbol} is trading 4.0% above its reference price while the underlying market is closed.`,
+      primaryRisk: `Portfolio concentration in ${upperSymbol} exceeds policy limits during thin liquidity`,
       recommendation: { action: 'sell', asset: upperSymbol, amountUsd: 1150 },
       confidence: 0.87,
       createdAt: new Date().toISOString(),

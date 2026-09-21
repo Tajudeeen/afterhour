@@ -16,7 +16,7 @@ export default async function ActivityPage() {
       { id: '4', timestamp: new Date(Date.now() - 12_000).toISOString(), description: 'Trade executed on Solana', txSignature: '5xAbCdEf8F2', status: 'success' },
       { id: '3', timestamp: new Date(Date.now() - 18_000).toISOString(), description: 'Risk policy approved', status: 'success' },
       { id: '2', timestamp: new Date(Date.now() - 24_000).toISOString(), description: 'AI analysis generated', status: 'info' },
-      { id: '1', timestamp: new Date(Date.now() - 30_000).toISOString(), description: 'Gap detected: NVDA +4.02%', status: 'info' },
+      { id: '1', timestamp: new Date(Date.now() - 30_000).toISOString(), description: 'Gap detected: ANTHROPIC -1.94%', status: 'info' },
     ];
   }
 
