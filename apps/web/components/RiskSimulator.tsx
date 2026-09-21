@@ -29,7 +29,7 @@ export function RiskSimulator({ symbol: _symbol, initialIntelligence }: RiskSimu
   const simScoreClamped = Math.min(100, Math.max(0, simScore));
 
   const getBand = (score: number) => {
-    if (score <= 20) return { name: 'Normal', tone: 'status-normal', color: '#99a98a' };
+    if (score <= 20) return { name: 'Normal', tone: 'status-normal', color: 'var(--ink-muted)' };
     if (score <= 40) return { name: 'Watch', tone: 'status-watch', color: '#d9c98c' };
     if (score <= 60) return { name: 'Elevated', tone: 'status-elevated', color: '#f3d97d' };
     if (score <= 80) return { name: 'High', tone: 'status-high', color: '#ffd369' };
@@ -70,7 +70,7 @@ export function RiskSimulator({ symbol: _symbol, initialIntelligence }: RiskSimu
           <div className="eyebrow" style={{ margin: 0 }}>
             <span className="eyebrow-accent">Interactive Stress-Tester</span>
           </div>
-          <h3 style={{ margin: '4px 0 0', fontFamily: 'Georgia, serif', fontSize: '1.25rem', color: '#f0f2ec' }}>
+          <h3 style={{ margin: '4px 0 0', fontFamily: 'Georgia, serif', fontSize: '1.25rem', color: 'var(--ink-heading)' }}>
             Simulate Market Gap Movement
           </h3>
         </div>
@@ -80,13 +80,13 @@ export function RiskSimulator({ symbol: _symbol, initialIntelligence }: RiskSimu
               ↺ Reset to Live
             </button>
           )}
-          <span className={`source-badge ${isSimulating ? 'source-live' : 'source-demo'}`} style={{ color: isSimulating ? 'var(--solana-green)' : '#7b8576' }}>
+          <span className={`source-badge ${isSimulating ? 'source-live' : 'source-demo'}`} style={{ color: isSimulating ? 'var(--solana-green)' : 'var(--ink-subtle)' }}>
             {isSimulating ? '● Active Simulation' : 'Live Data Snapshot'}
           </span>
         </div>
       </div>
 
-      <p style={{ margin: '0 0 20px', color: '#99a98a', fontSize: '0.88rem', lineHeight: 1.5 }}>
+      <p style={{ margin: '0 0 20px', color: 'var(--ink-muted)', fontSize: '0.88rem', lineHeight: 1.5 }}>
         Drag the gap slider to stress-test how AfterHours' Risk Governor & Pyth Dynamic Slippage Engine react in real-time to sudden market shifts.
       </p>
 
@@ -109,10 +109,10 @@ export function RiskSimulator({ symbol: _symbol, initialIntelligence }: RiskSimu
       {/* Slider Control */}
       <div style={{ background: 'var(--surface)', padding: '18px 20px', borderRadius: '14px', border: '1px solid var(--line)', marginBottom: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <span style={{ fontSize: '0.78rem', color: '#7b8576', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <span style={{ fontSize: '0.78rem', color: 'var(--ink-subtle)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Simulated Divergence Gap
           </span>
-          <span style={{ fontFamily: 'SF Mono, monospace', fontSize: '1.4rem', fontWeight: 900, color: sliderValue > 0 ? 'var(--solana-green)' : sliderValue < 0 ? '#ff6b6b' : '#d4d8ce' }}>
+          <span style={{ fontFamily: 'SF Mono, monospace', fontSize: '1.4rem', fontWeight: 900, color: sliderValue > 0 ? 'var(--solana-green)' : sliderValue < 0 ? '#ff6b6b' : 'var(--ink-body)' }}>
             {sliderValue > 0 ? '+' : ''}{sliderValue}%
           </span>
         </div>
@@ -130,7 +130,7 @@ export function RiskSimulator({ symbol: _symbol, initialIntelligence }: RiskSimu
           style={{ width: '100%', accentColor: 'var(--solana-green)', cursor: 'pointer' }}
         />
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#62675e', marginTop: '6px', fontFamily: 'monospace' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--ink-subtle)', marginTop: '6px', fontFamily: 'monospace' }}>
           <span>-30% (Severe Discount)</span>
           <span>0% (Parity)</span>
           <span>+30% (Extreme Premium)</span>
@@ -140,31 +140,31 @@ export function RiskSimulator({ symbol: _symbol, initialIntelligence }: RiskSimu
       {/* Real-time Simulated Outputs */}
       <div className="grid-3" style={{ gap: '12px' }}>
         <div style={{ padding: '14px', background: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--line)' }}>
-          <div style={{ fontSize: '0.68rem', color: '#7b8576', textTransform: 'uppercase', fontWeight: 800 }}>Simulated DEX Price</div>
-          <div style={{ fontFamily: 'SF Mono, monospace', fontSize: '1.2rem', fontWeight: 800, color: '#f0f2ec', marginTop: '4px' }}>
+          <div style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', textTransform: 'uppercase', fontWeight: 800 }}>Simulated DEX Price</div>
+          <div style={{ fontFamily: 'SF Mono, monospace', fontSize: '1.2rem', fontWeight: 800, color: 'var(--ink-heading)', marginTop: '4px' }}>
             ${simulatedOnchainPrice.toFixed(2)}
           </div>
-          <div style={{ fontSize: '0.7rem', color: '#7b8576', marginTop: '2px' }}>
+          <div style={{ fontSize: '0.7rem', color: 'var(--ink-subtle)', marginTop: '2px' }}>
             Ref: ${referencePrice.toFixed(2)}
           </div>
         </div>
 
         <div style={{ padding: '14px', background: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--line)' }}>
-          <div style={{ fontSize: '0.68rem', color: '#7b8576', textTransform: 'uppercase', fontWeight: 800 }}>Gap Risk Score</div>
+          <div style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', textTransform: 'uppercase', fontWeight: 800 }}>Gap Risk Score</div>
           <div style={{ fontFamily: 'SF Mono, monospace', fontSize: '1.2rem', fontWeight: 800, color: bandInfo.color, marginTop: '4px' }}>
             {simScoreClamped} <span style={{ fontSize: '0.8rem', fontWeight: 700 }}>({bandInfo.name})</span>
           </div>
-          <div style={{ fontSize: '0.7rem', color: '#7b8576', marginTop: '2px' }}>
+          <div style={{ fontSize: '0.7rem', color: 'var(--ink-subtle)', marginTop: '2px' }}>
             Deterministically computed
           </div>
         </div>
 
         <div style={{ padding: '14px', background: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--line)' }}>
-          <div style={{ fontSize: '0.68rem', color: '#7b8576', textTransform: 'uppercase', fontWeight: 800 }}>Pyth Dynamic Slippage</div>
+          <div style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', textTransform: 'uppercase', fontWeight: 800 }}>Pyth Dynamic Slippage</div>
           <div style={{ fontFamily: 'SF Mono, monospace', fontSize: '1.2rem', fontWeight: 800, color: 'var(--pyth-lavender)', marginTop: '4px' }}>
             {dynamicSlippageBps} BPS
           </div>
-          <div style={{ fontSize: '0.7rem', color: '#7b8576', marginTop: '2px' }}>
+          <div style={{ fontSize: '0.7rem', color: 'var(--ink-subtle)', marginTop: '2px' }}>
             Pyth Band: ±${pythConfUsd.toFixed(2)} ({pythConfRatio}%)
           </div>
         </div>

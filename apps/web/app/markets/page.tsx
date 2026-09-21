@@ -99,10 +99,10 @@ export default async function MarketsPage() {
           <div className="eyebrow">
             <span className="eyebrow-accent">Market Discovery</span>
           </div>
-          <h1 style={{ margin: '8px 0 0', fontFamily: 'Georgia, serif', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', color: '#f0f2ec', fontWeight: 500 }}>
+          <h1 style={{ margin: '8px 0 0', fontFamily: 'Georgia, serif', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', color: 'var(--ink-heading)', fontWeight: 500 }}>
             Pre-IPO Tokenized Markets
           </h1>
-          <p style={{ margin: '8px 0 0', color: '#99a98a', fontSize: '1rem' }}>
+          <p style={{ margin: '8px 0 0', color: 'var(--ink-muted)', fontSize: '1rem' }}>
             Real-time price gaps between fair value and on-chain price
           </p>
         </div>
@@ -143,18 +143,18 @@ export default async function MarketsPage() {
                 
                 {/* Name + symbol */}
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: 'SF Mono, monospace', fontWeight: 800, fontSize: '1rem', color: '#f0f2ec' }}>
+                  <div style={{ fontFamily: 'SF Mono, monospace', fontWeight: 800, fontSize: '1rem', color: 'var(--ink-heading)' }}>
                     {asset.symbol}
                   </div>
-                  <div style={{ fontSize: '0.82rem', color: '#7b8576', marginTop: '2px' }}>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--ink-subtle)', marginTop: '2px' }}>
                     {asset.name}
                   </div>
                 </div>
 
                 {/* Mark price */}
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.68rem', color: '#62675e', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '2px' }}>Fair Value</div>
-                  <div style={{ fontFamily: 'SF Mono, monospace', fontWeight: 700, color: '#d4d8ce' }}>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '2px' }}>Fair Value</div>
+                  <div style={{ fontFamily: 'SF Mono, monospace', fontWeight: 700, color: 'var(--ink-body)' }}>
                     ${asset.markPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                   </div>
                   <span className="prestocks-badge" style={{ marginTop: '4px' }}>PreStocks</span>
@@ -162,25 +162,25 @@ export default async function MarketsPage() {
 
                 {/* On-chain price */}
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.68rem', color: '#62675e', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '2px' }}>On-chain</div>
-                  <div style={{ fontFamily: 'SF Mono, monospace', fontWeight: 700, color: '#f0f2ec' }}>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '2px' }}>On-chain</div>
+                  <div style={{ fontFamily: 'SF Mono, monospace', fontWeight: 700, color: 'var(--ink-heading)' }}>
                     ${asset.tokenPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                   </div>
                 </div>
 
                 {/* Gap */}
                 <div style={{ textAlign: 'right', minWidth: '100px' }}>
-                  <div style={{ fontSize: '0.68rem', color: '#62675e', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '2px' }}>Gap</div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '2px' }}>Gap</div>
                   <div className={isPositive ? 'gap-positive-large' : 'gap-negative-large'} style={{ fontSize: '1.2rem' }}>
                     {isPositive ? '+' : ''}{gapPercent.toFixed(2)}%
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: '#7b8576' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--ink-subtle)' }}>
                     {isPositive ? '+' : ''}${Math.abs(gapDollar).toFixed(2)} per token
                   </div>
                 </div>
 
                 {/* Arrow */}
-                <div style={{ color: '#3a3f35', fontSize: '1.2rem' }}>→</div>
+                <div style={{ color: 'var(--ink-subtle)', fontSize: '1.2rem' }}>→</div>
               </div>
             </Link>
           );
@@ -188,10 +188,10 @@ export default async function MarketsPage() {
       </div>
 
       <div style={{ marginTop: '32px', padding: '20px', border: '1px solid var(--line)', borderRadius: '14px', background: 'rgba(123, 97, 255, 0.04)' }}>
-        <div style={{ fontSize: '0.72rem', color: '#62675e', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+        <div style={{ fontSize: '0.72rem', color: 'var(--ink-subtle)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
           ⬡ How AfterHours Detects Gaps
         </div>
-        <p style={{ margin: 0, color: '#99a98a', fontSize: '0.9rem', lineHeight: 1.6 }}>
+        <p style={{ margin: 0, color: 'var(--ink-muted)', fontSize: '0.9rem', lineHeight: 1.6 }}>
           Fair value is sourced from PreStocks mark price — the valuation implied by the underlying SPV.
           On-chain price reflects live DEX trading activity on Solana.
           AfterHours computes the gap, routes the best execution path, applies the Risk Governor,

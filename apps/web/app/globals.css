@@ -1,6 +1,9 @@
 :root {
   --ink: #f0f2ec;
-  --muted: #99a98a;
+  --ink-heading: #f0f2ec;
+  --ink-body: #d4d8ce;
+  --ink-muted: #99a98a;
+  --ink-subtle: #7b8576;
   --paper: #080a07;
   --surface: #10130e;
   --surface-strong: #161a13;
@@ -28,15 +31,19 @@
 }
 
 [data-theme="light"] {
-  --ink: #0c120a;
-  --muted: #4e5e49;
+  --ink: #070e06;
+  --ink-heading: #0a1408;
+  --ink-body: #182815;
+  --ink-muted: #3a4d36;
+  --ink-subtle: #52664d;
   --paper: #f4f7f2;
   --surface: #ffffff;
-  --surface-strong: #e7ebe3;
-  --surface-stronger: #dbe1d7;
-  --line: #cfd7cb;
-  --lime: #2e6600;
-  --lime-deep: #255200;
+  --surface-strong: #e5ebe2;
+  --surface-stronger: #d7dfd3;
+  --line: #c8d3c5;
+
+  --lime: #275600;
+  --lime-deep: #1d4000;
   --green: #0EBF75;
   --green-soft: #d0f5e4;
   --amber: #b87500;
@@ -48,12 +55,12 @@
   --shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
   --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.06);
 
-  --solana-purple: #7A28D4;
-  --solana-green: #0EBF75;
-  --pyth-purple: #5A3DE0;
-  --pyth-lavender: #311B92;
-  --card-text: #0c120a;
-  --badge-bg: rgba(0, 0, 0, 0.04);
+  --solana-purple: #6c1ec2;
+  --solana-green: #0a965b;
+  --pyth-purple: #5031d2;
+  --pyth-lavender: #2c1688;
+  --card-text: #070e06;
+  --badge-bg: rgba(0, 0, 0, 0.05);
 }
 
 * {
@@ -66,7 +73,7 @@ html {
 
 body {
   margin: 0;
-  color: #d4d8ce;
+  color: var(--ink-body);
   background: radial-gradient(circle at 12% 5%, rgba(216, 255, 79, 0.04), transparent 24rem), var(--paper);
   font-family:
     Inter,

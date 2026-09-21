@@ -52,7 +52,7 @@ export function SplashScreen() {
             style={{
               background: 'transparent',
               border: 'none',
-              color: '#7b8576',
+              color: 'var(--ink-subtle)',
               fontSize: '1.2rem',
               cursor: 'pointer',
               padding: '4px 8px',
@@ -76,17 +76,17 @@ export function SplashScreen() {
           <div className="splash-stat-box">
             <div className="label">Live Data & Markets</div>
             <div className="val" style={{ color: 'var(--lime)' }}>PreStocks</div>
-            <div style={{ color: '#7b8576', fontSize: '0.68rem', marginTop: '2px' }}>Real pre-IPO token gaps</div>
+            <div style={{ color: 'var(--ink-subtle)', fontSize: '0.68rem', marginTop: '2px' }}>Real pre-IPO token gaps</div>
           </div>
           <div className="splash-stat-box">
             <div className="label">Consensus & Settlement</div>
-            <div className="val" style={{ color: '#99a98a' }}>Solana Devnet</div>
-            <div style={{ color: '#7b8576', fontSize: '0.68rem', marginTop: '2px' }}>SPL Memo Attestation</div>
+            <div className="val" style={{ color: 'var(--ink-muted)' }}>Solana Devnet</div>
+            <div style={{ color: 'var(--ink-subtle)', fontSize: '0.68rem', marginTop: '2px' }}>SPL Memo Attestation</div>
           </div>
           <div className="splash-stat-box">
             <div className="label">Risk Governor</div>
             <div className="val" style={{ color: '#ffd98a' }}>4 Hard Bounds</div>
-            <div style={{ color: '#7b8576', fontSize: '0.68rem', marginTop: '2px' }}>AI never trades alone</div>
+            <div style={{ color: 'var(--ink-subtle)', fontSize: '0.68rem', marginTop: '2px' }}>AI never trades alone</div>
           </div>
         </div>
 
@@ -106,7 +106,7 @@ export function SplashScreen() {
           >
             Explore ANTHROPIC Gap →
           </Link>
-          <span style={{ marginLeft: 'auto', color: '#62675e', fontSize: '0.74rem', fontFamily: 'monospace' }}>
+          <span style={{ marginLeft: 'auto', color: 'var(--ink-subtle)', fontSize: '0.74rem', fontFamily: 'monospace' }}>
             Press Enter / Esc
           </span>
         </div>

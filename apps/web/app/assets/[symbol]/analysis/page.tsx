@@ -53,7 +53,7 @@ export default async function AnalysisPage({ params }: { params: Promise<{ symbo
       <section style={{ marginTop: 24 }}>
         <div>
           <p className="eyebrow eyebrow-accent">AI Analyst</p>
-          <h1 style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: '2.4rem', color: '#e0e6db' }}>
+          <h1 style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: '2.4rem', color: 'var(--ink-heading)' }}>
             Why this matters
           </h1>
         </div>
@@ -107,10 +107,10 @@ export default async function AnalysisPage({ params }: { params: Promise<{ symbo
         <div className="data-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <h3 style={{ margin: '0 0 4px', color: '#99a98a', fontSize: '0.82rem', fontWeight: 800 }}>
+              <h3 style={{ margin: '0 0 4px', color: 'var(--ink-muted)', fontSize: '0.82rem', fontWeight: 800 }}>
                 AI Analyst recommendation
               </h3>
-              <div style={{ color: '#d4d8ce', fontSize: '1.1rem' }}>
+              <div style={{ color: 'var(--ink-body)', fontSize: '1.1rem' }}>
                 {analysis.recommendation.action.toUpperCase()}: ${analysis.recommendation.amountUsd.toLocaleString()} {analysis.recommendation.asset}
               </div>
               <div className="data-label">

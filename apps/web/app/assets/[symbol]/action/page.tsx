@@ -58,7 +58,7 @@ export default async function ActionPage({ params }: { params: Promise<{ symbol:
       <section style={{ marginTop: 24 }}>
         <div>
           <p className="eyebrow eyebrow-accent">Risk Governor</p>
-          <h1 style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: '2.4rem', color: '#e0e6db' }}>
+          <h1 style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: '2.4rem', color: 'var(--ink-heading)' }}>
             Recommended action
           </h1>
         </div>

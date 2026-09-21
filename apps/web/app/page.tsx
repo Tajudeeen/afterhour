@@ -99,7 +99,7 @@ export default async function DashboardPage() {
 
       <section style={{ marginTop: '40px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: '1.6rem', color: '#e0e6db' }}>
+          <h2 style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: '1.6rem', color: 'var(--ink-heading)' }}>
             Portfolio holdings
           </h2>
           <Link href="/activity" className="text-link">
@@ -134,7 +134,7 @@ export default async function DashboardPage() {
 
       {assets.filter((a) => a.gapPercent > 1 || a.gapPercent < -1).length > 0 && (
         <section style={{ marginTop: '40px' }}>
-          <h2 style={{ margin: '0 0 20px', fontFamily: 'Georgia, serif', fontSize: '1.6rem', color: '#e0e6db' }}>
+          <h2 style={{ margin: '0 0 20px', fontFamily: 'Georgia, serif', fontSize: '1.6rem', color: 'var(--ink-heading)' }}>
             Gaps detected
           </h2>
           <div style={{ display: 'grid', gap: '14px' }}>

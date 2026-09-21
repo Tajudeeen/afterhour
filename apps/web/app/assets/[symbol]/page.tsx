@@ -130,7 +130,7 @@ export default async function AssetPage({ params }: { params: Promise<{ symbol: 
 
       {intelligence.routes && intelligence.routes.length > 0 && (
         <div style={{ marginTop: '32px' }}>
-          <h3 style={{ margin: '0 0 16px', fontSize: '1rem', color: '#e0e6db', fontFamily: 'Georgia, serif' }}>Best Execution Route</h3>
+          <h3 style={{ margin: '0 0 16px', fontSize: '1rem', color: 'var(--ink-heading)', fontFamily: 'Georgia, serif' }}>Best Execution Route</h3>
           <div className="route-card route-best">
             <div className="route-venue">{intelligence.routes[0]!.venue}</div>
             <div className="route-price">${intelligence.routes[0]!.price.toFixed(2)} / token</div>

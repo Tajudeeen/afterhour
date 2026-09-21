@@ -29,13 +29,13 @@ export default async function ActivityPage() {
       <section style={{ marginTop: 24 }}>
         <div>
           <p className="eyebrow eyebrow-accent">Audit trail</p>
-          <h1 style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: '2.4rem', color: '#e0e6db' }}>
+          <h1 style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: '2.4rem', color: 'var(--ink-heading)' }}>
             Activity
           </h1>
         </div>
       </section>
 
-      {error && <p style={{ color: '#99a98a', fontSize: '0.82rem', marginBottom: '20px' }}>{error}</p>}
+      {error && <p style={{ color: 'var(--ink-muted)', fontSize: '0.82rem', marginBottom: '20px' }}>{error}</p>}
 
       <div className="data-card" style={{ marginTop: 24 }}>
         <div className="timeline">

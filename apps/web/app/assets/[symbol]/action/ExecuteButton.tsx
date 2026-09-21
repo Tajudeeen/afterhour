@@ -123,7 +123,7 @@ export function ExecuteButton({ symbol, evaluation }: { symbol: string; evaluati
             DEVNET
           </span>
         </div>
-        <p style={{ color: '#99a98a', fontSize: '0.78rem', wordBreak: 'break-all', fontFamily: 'monospace', margin: '4px 0 12px 0' }}>
+        <p style={{ color: 'var(--ink-muted)', fontSize: '0.78rem', wordBreak: 'break-all', fontFamily: 'monospace', margin: '4px 0 12px 0' }}>
           {result.signature.length > 24 ? `${result.signature.slice(0, 12)}...${result.signature.slice(-8)}` : result.signature}
         </p>
         <div style={{ display: 'flex', gap: '16px' }}>
@@ -135,7 +135,7 @@ export function ExecuteButton({ symbol, evaluation }: { symbol: string; evaluati
           >
             View on Solscan (Devnet) →
           </a>
-          <a href="/activity" style={{ color: '#99a98a', fontSize: '0.82rem', textDecoration: 'underline' }}>
+          <a href="/activity" style={{ color: 'var(--ink-muted)', fontSize: '0.82rem', textDecoration: 'underline' }}>
             View Activity Log →
           </a>
         </div>
@@ -173,17 +173,17 @@ export function ExecuteButton({ symbol, evaluation }: { symbol: string; evaluati
         </button>
 
         {showInspector && (
-          <div style={{ padding: '0 16px 16px 16px', borderTop: '1px solid var(--line)', fontSize: '0.78rem', color: '#99a98a', background: 'var(--surface)' }}>
-            <div style={{ marginTop: '12px', marginBottom: '8px', fontWeight: 800, color: '#f0f2ec' }}>
+          <div style={{ padding: '0 16px 16px 16px', borderTop: '1px solid var(--line)', fontSize: '0.78rem', color: 'var(--ink-muted)', background: 'var(--surface)' }}>
+            <div style={{ marginTop: '12px', marginBottom: '8px', fontWeight: 800, color: 'var(--ink-heading)' }}>
               Instruction 0: SPL Token / DEX Rebalance
             </div>
-            <pre style={{ margin: 0, fontFamily: 'SF Mono, monospace', fontSize: '0.7rem', color: '#7b8576', background: 'var(--surface-strong)', padding: '8px 10px', borderRadius: 6, overflowX: 'auto' }}>
+            <pre style={{ margin: 0, fontFamily: 'SF Mono, monospace', fontSize: '0.7rem', color: 'var(--ink-subtle)', background: 'var(--surface-strong)', padding: '8px 10px', borderRadius: 6, overflowX: 'auto' }}>
 {`Action: ${evaluation.proposed.action.toUpperCase()} $${evaluation.proposed.amountUsd} ${symbol}
 Target Mint: ${symbol} SPL Token
 Slippage Floor: 50 BPS (Dynamic Pyth Buffer)`}
             </pre>
 
-            <div style={{ marginTop: '12px', marginBottom: '8px', fontWeight: 800, color: '#f0f2ec' }}>
+            <div style={{ marginTop: '12px', marginBottom: '8px', fontWeight: 800, color: 'var(--ink-heading)' }}>
               Instruction 1: SPL Memo Risk Attestation
             </div>
             <pre style={{ margin: 0, fontFamily: 'SF Mono, monospace', fontSize: '0.7rem', color: 'var(--solana-green)', background: 'rgba(20, 241, 149, 0.08)', padding: '8px 10px', borderRadius: 6, overflowX: 'auto', border: '1px solid rgba(20, 241, 149, 0.2)' }}>
@@ -191,7 +191,7 @@ Slippage Floor: 50 BPS (Dynamic Pyth Buffer)`}
 Payload String: "${memoText}"`}
             </pre>
 
-            <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#7b8576' }}>
+            <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--ink-subtle)' }}>
               <span>Est. Fee: <strong>0.000005 SOL</strong></span>
               <span>Network: <strong>Solana Devnet</strong></span>
               <span>Signers: <strong>1 (Wallet Owner)</strong></span>

@@ -121,10 +121,10 @@ export default async function ProofPage() {
         <p className="eyebrow">
           <span className="eyebrow-accent">Cryptographic & Policy Evidence</span>
         </p>
-        <h1 style={{ margin: '8px 0 12px', fontFamily: 'Georgia, serif', fontSize: 'clamp(2.2rem, 5vw, 3.2rem)', color: '#f0f2ec', fontWeight: 500, letterSpacing: '-0.03em' }}>
+        <h1 style={{ margin: '8px 0 12px', fontFamily: 'Georgia, serif', fontSize: 'clamp(2.2rem, 5vw, 3.2rem)', color: 'var(--ink-heading)', fontWeight: 500, letterSpacing: '-0.03em' }}>
           Live Verification & Proofs
         </h1>
-        <p style={{ margin: 0, color: '#99a98a', fontSize: '1.05rem', maxWidth: 740, lineHeight: 1.6 }}>
+        <p style={{ margin: 0, color: 'var(--ink-muted)', fontSize: '1.05rem', maxWidth: 740, lineHeight: 1.6 }}>
           Rather than relying on claims or static mockups, AfterHours exposes live query verification, deterministic negative proofs, and on-chain settlement receipts.
         </p>
       </div>
@@ -141,19 +141,19 @@ export default async function ProofPage() {
 
           <div className="grid-3" style={{ gap: 16 }}>
             <div>
-              <div style={{ fontSize: '0.72rem', color: '#7b8576', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Test Suite</div>
-              <div style={{ fontFamily: 'SF Mono, monospace', fontSize: '1.8rem', fontWeight: 800, color: '#f0f2ec', marginTop: 4 }}>60 / 60</div>
-              <div style={{ fontSize: '0.74rem', color: '#99a98a', marginTop: 2 }}>Passing across 8 packages</div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--ink-subtle)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Test Suite</div>
+              <div style={{ fontFamily: 'SF Mono, monospace', fontSize: '1.8rem', fontWeight: 800, color: 'var(--ink-heading)', marginTop: 4 }}>60 / 60</div>
+              <div style={{ fontSize: '0.74rem', color: 'var(--ink-muted)', marginTop: 2 }}>Passing across 8 packages</div>
             </div>
             <div>
-              <div style={{ fontSize: '0.72rem', color: '#7b8576', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Settlement Chain</div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--ink-subtle)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Settlement Chain</div>
               <div style={{ fontFamily: 'SF Mono, monospace', fontSize: '1.8rem', fontWeight: 800, color: 'var(--solana-green)', marginTop: 4 }}>Solana</div>
-              <div style={{ fontSize: '0.74rem', color: '#99a98a', marginTop: 2 }}>Devnet SPL Memo program</div>
+              <div style={{ fontSize: '0.74rem', color: 'var(--ink-muted)', marginTop: 2 }}>Devnet SPL Memo program</div>
             </div>
             <div>
-              <div style={{ fontSize: '0.72rem', color: '#7b8576', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Risk Governor</div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--ink-subtle)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Risk Governor</div>
               <div style={{ fontFamily: 'SF Mono, monospace', fontSize: '1.8rem', fontWeight: 800, color: 'var(--lime)', marginTop: 4 }}>Fail-Closed</div>
-              <div style={{ fontSize: '0.74rem', color: '#99a98a', marginTop: 2 }}>Zero autonomous trading</div>
+              <div style={{ fontSize: '0.74rem', color: 'var(--ink-muted)', marginTop: 2 }}>Zero autonomous trading</div>
             </div>
           </div>
         </div>
@@ -162,10 +162,10 @@ export default async function ProofPage() {
       {/* Proof 1: Live Feed Re-Verification */}
       <section style={{ marginBottom: 44 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
-          <h2 style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: '1.4rem', color: '#e0e6db', fontWeight: 500 }}>
+          <h2 style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: '1.4rem', color: 'var(--ink-heading)', fontWeight: 500 }}>
             1. Live Feed Re-Verification (PreStocks Protocol)
           </h2>
-          <span style={{ fontSize: '0.72rem', color: '#7b8576', fontFamily: 'SF Mono, monospace' }}>
+          <span style={{ fontSize: '0.72rem', color: 'var(--ink-subtle)', fontFamily: 'SF Mono, monospace' }}>
             Queried on page load ({receipt.latencyMs}ms)
           </span>
         </div>
@@ -176,11 +176,11 @@ export default async function ProofPage() {
               <span className={`source-badge ${receipt.status === 'ok' ? 'source-live' : 'source-demo'}`}>
                 {receipt.status === 'ok' ? 'Live Endpoint Verified' : 'Cached Seed Active'}
               </span>
-              <span style={{ marginLeft: 12, fontFamily: 'SF Mono, monospace', fontSize: '0.78rem', color: '#99a98a' }}>
+              <span style={{ marginLeft: 12, fontFamily: 'SF Mono, monospace', fontSize: '0.78rem', color: 'var(--ink-muted)' }}>
                 https://prestocks.com/api/prestocks
               </span>
             </div>
-            <div style={{ fontSize: '0.72rem', color: '#7b8576', fontFamily: 'SF Mono, monospace' }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--ink-subtle)', fontFamily: 'SF Mono, monospace' }}>
               {receipt.timestamp}
             </div>
           </div>
@@ -189,10 +189,10 @@ export default async function ProofPage() {
             <div style={{ marginTop: 12, padding: '16px 20px', borderRadius: 12, background: 'var(--surface-strong)', border: '1px solid var(--line)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <strong style={{ fontFamily: 'SF Mono, monospace', fontSize: '1.1rem', color: '#f0f2ec' }}>
+                  <strong style={{ fontFamily: 'SF Mono, monospace', fontSize: '1.1rem', color: 'var(--ink-heading)' }}>
                     {receipt.sampleAsset.symbol} PreStocks Token
                   </strong>
-                  <div style={{ fontFamily: 'SF Mono, monospace', fontSize: '0.72rem', color: '#7b8576', marginTop: 2 }}>
+                  <div style={{ fontFamily: 'SF Mono, monospace', fontSize: '0.72rem', color: 'var(--ink-subtle)', marginTop: 2 }}>
                     Solana Mint: {receipt.sampleAsset.mint}
                   </div>
                 </div>
@@ -200,25 +200,25 @@ export default async function ProofPage() {
                   <div className={receipt.sampleAsset.gapPercent > 0 ? 'gap-positive-large' : 'gap-negative-large'} style={{ fontSize: '1.4rem' }}>
                     {receipt.sampleAsset.gapPercent > 0 ? '+' : ''}{receipt.sampleAsset.gapPercent.toFixed(2)}%
                   </div>
-                  <div style={{ fontSize: '0.7rem', color: '#7b8576' }}>Live Gap Detected</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--ink-subtle)' }}>Live Gap Detected</div>
                 </div>
               </div>
 
               <div className="grid-3" style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--line)' }}>
                 <div>
-                  <span style={{ fontSize: '0.68rem', color: '#7b8576', textTransform: 'uppercase', fontWeight: 800 }}>Mark Valuation</span>
-                  <div style={{ fontFamily: 'SF Mono, monospace', fontWeight: 700, color: '#d4d8ce', marginTop: 2 }}>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', textTransform: 'uppercase', fontWeight: 800 }}>Mark Valuation</span>
+                  <div style={{ fontFamily: 'SF Mono, monospace', fontWeight: 700, color: 'var(--ink-body)', marginTop: 2 }}>
                     ${receipt.sampleAsset.markPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                   </div>
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.68rem', color: '#7b8576', textTransform: 'uppercase', fontWeight: 800 }}>On-Chain DEX Price</span>
-                  <div style={{ fontFamily: 'SF Mono, monospace', fontWeight: 700, color: '#d4d8ce', marginTop: 2 }}>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', textTransform: 'uppercase', fontWeight: 800 }}>On-Chain DEX Price</span>
+                  <div style={{ fontFamily: 'SF Mono, monospace', fontWeight: 700, color: 'var(--ink-body)', marginTop: 2 }}>
                     ${receipt.sampleAsset.tokenPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                   </div>
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.68rem', color: '#7b8576', textTransform: 'uppercase', fontWeight: 800 }}>Live Feed Tracked</span>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', textTransform: 'uppercase', fontWeight: 800 }}>Live Feed Tracked</span>
                   <div style={{ fontFamily: 'SF Mono, monospace', fontWeight: 700, color: 'var(--solana-green)', marginTop: 2 }}>
                     {receipt.assetCount} Active Equities
                   </div>
@@ -231,17 +231,17 @@ export default async function ProofPage() {
 
       {/* Proof 2: Solana Devnet Settlement Architecture */}
       <section style={{ marginBottom: 44 }}>
-        <h2 style={{ margin: '0 0 16px', fontFamily: 'Georgia, serif', fontSize: '1.4rem', color: '#e0e6db', fontWeight: 500 }}>
+        <h2 style={{ margin: '0 0 16px', fontFamily: 'Georgia, serif', fontSize: '1.4rem', color: 'var(--ink-heading)', fontWeight: 500 }}>
           2. On-Chain Settlement & Attestation Layer
         </h2>
 
         <div className="data-card" style={{ padding: 24, gap: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 0.8fr)', gap: 20 }}>
             <div>
-              <div style={{ fontSize: '0.8rem', color: '#7b8576', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--ink-subtle)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 SPL Memo Program (Audit Anchor)
               </div>
-              <p style={{ color: '#d4d8ce', fontSize: '0.92rem', lineHeight: 1.6, margin: '8px 0 12px' }}>
+              <p style={{ color: 'var(--ink-body)', fontSize: '0.92rem', lineHeight: 1.6, margin: '8px 0 12px' }}>
                 Every approved action is committed to Solana Devnet through the official SPL Memo Program. This writes an immutable, human-readable proof of the user’s approval and the Risk Governor’s policy compliance to the ledger.
               </p>
               <div style={{ fontFamily: 'SF Mono, monospace', fontSize: '0.78rem', color: 'var(--solana-green)', background: 'rgba(20, 241, 149, 0.08)', padding: '8px 12px', borderRadius: 8, wordBreak: 'break-all', border: '1px solid rgba(20, 241, 149, 0.2)' }}>
@@ -250,10 +250,10 @@ export default async function ProofPage() {
             </div>
 
             <div style={{ borderLeft: '1px solid var(--line)', paddingLeft: 20 }}>
-              <div style={{ fontSize: '0.8rem', color: '#7b8576', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--ink-subtle)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 Attestation Payload Schema
               </div>
-              <pre style={{ margin: '8px 0 0', fontFamily: 'SF Mono, monospace', fontSize: '0.72rem', color: '#99a98a', background: 'var(--surface-strong)', padding: '12px 14px', borderRadius: 8, overflowX: 'auto', border: '1px solid var(--line)' }}>
+              <pre style={{ margin: '8px 0 0', fontFamily: 'SF Mono, monospace', fontSize: '0.72rem', color: 'var(--ink-muted)', background: 'var(--surface-strong)', padding: '12px 14px', borderRadius: 8, overflowX: 'auto', border: '1px solid var(--line)' }}>
 {`AfterHours: [ACTION] $[AMOUNT] [ASSET]
 | Risk Governor: Passed
   - Cap: [POLICY_CAP]%
@@ -267,10 +267,10 @@ export default async function ProofPage() {
       {/* Proof 3: Negative Proofs Suite */}
       <section style={{ marginBottom: 44 }}>
         <div style={{ marginBottom: 16 }}>
-          <h2 style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: '1.4rem', color: '#e0e6db', fontWeight: 500 }}>
+          <h2 style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: '1.4rem', color: 'var(--ink-heading)', fontWeight: 500 }}>
             3. Deterministic Negative Proofs (Fail-Closed Rejections)
           </h2>
-          <p style={{ margin: '4px 0 0', color: '#7b8576', fontSize: '0.85rem' }}>
+          <p style={{ margin: '4px 0 0', color: 'var(--ink-subtle)', fontSize: '0.85rem' }}>
             A rigorous risk system is defined by what it refuses to execute. These deterministic bounds operate independently of AI models.
           </p>
         </div>
@@ -283,14 +283,14 @@ export default async function ProofPage() {
                   <span style={{ fontFamily: 'SF Mono, monospace', fontSize: '0.72rem', fontWeight: 900, color: 'var(--lime)' }}>
                     [{p.id}]
                   </span>
-                  <strong style={{ color: '#f0f2ec', fontSize: '0.95rem' }}>{p.title}</strong>
+                  <strong style={{ color: 'var(--ink-heading)', fontSize: '0.95rem' }}>{p.title}</strong>
                 </div>
                 <span className="status-pill status-normal" style={{ color: 'var(--solana-green)', borderColor: 'rgba(20, 241, 149, 0.4)' }}>
                   ✓ Verified In Tests
                 </span>
               </div>
 
-              <div style={{ fontSize: '0.85rem', color: '#99a98a', margin: '2px 0' }}>
+              <div style={{ fontSize: '0.85rem', color: 'var(--ink-muted)', margin: '2px 0' }}>
                 <strong>Scenario:</strong> {p.scenario}
               </div>
 
@@ -298,7 +298,7 @@ export default async function ProofPage() {
                 {p.actualStatus}
               </div>
 
-              <pre style={{ margin: '4px 0 0', fontFamily: 'SF Mono, monospace', fontSize: '0.7rem', color: '#7b8576', background: 'var(--surface-strong)', padding: '8px 12px', borderRadius: 6, overflowX: 'auto' }}>
+              <pre style={{ margin: '4px 0 0', fontFamily: 'SF Mono, monospace', fontSize: '0.7rem', color: 'var(--ink-subtle)', background: 'var(--surface-strong)', padding: '8px 12px', borderRadius: 6, overflowX: 'auto' }}>
                 {p.codeSnippet}
               </pre>
             </div>
@@ -308,16 +308,16 @@ export default async function ProofPage() {
 
       {/* Section 4: Known Limitations (Honest Disclosure) */}
       <section style={{ marginBottom: 40 }}>
-        <h2 style={{ margin: '0 0 16px', fontFamily: 'Georgia, serif', fontSize: '1.4rem', color: '#e0e6db', fontWeight: 500 }}>
+        <h2 style={{ margin: '0 0 16px', fontFamily: 'Georgia, serif', fontSize: '1.4rem', color: 'var(--ink-heading)', fontWeight: 500 }}>
           4. Known Limitations & Technical Boundaries
         </h2>
 
         <div className="data-card" style={{ padding: 24, gap: 14 }}>
-          <p style={{ color: '#99a98a', fontSize: '0.92rem', lineHeight: 1.6, margin: 0 }}>
+          <p style={{ color: 'var(--ink-muted)', fontSize: '0.92rem', lineHeight: 1.6, margin: 0 }}>
             In alignment with transparent protocol engineering standards, AfterHours discloses current architectural boundaries openly:
           </p>
 
-          <ul style={{ margin: '8px 0 0', paddingLeft: 20, color: '#d4d8ce', fontSize: '0.88rem', lineHeight: 1.7 }}>
+          <ul style={{ margin: '8px 0 0', paddingLeft: 20, color: 'var(--ink-body)', fontSize: '0.88rem', lineHeight: 1.7 }}>
             <li>
               <strong>Solana Devnet Scope:</strong> On-chain attestations execute via the SPL Memo program on Solana Devnet. While real wallet transactions sign and confirm on Devnet, tokenized stock AMM liquidity pools for pre-IPO tokens are testnet-scale.
             </li>
