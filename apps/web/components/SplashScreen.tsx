@@ -41,7 +41,8 @@ export function SplashScreen() {
     <div className="splash-backdrop" role="dialog" aria-modal="true" aria-label="Welcome to AfterHours">
       <div className="splash-container">
         <div className="splash-header">
-          <div className="splash-tag">
+          <div className="splash-tag" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <img src="/logo.png" alt="AfterHours" width={22} height={22} style={{ borderRadius: '6px' }} />
             <span className="signal-pulse" aria-hidden="true" />
             <span>SOLANA 24/7 STOCK RADAR</span>
           </div>

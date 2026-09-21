@@ -11,6 +11,11 @@ export const metadata: Metadata = {
   },
   description:
     'When Wall Street closes, Solana keeps trading. AfterHours detects price gaps between on-chain markets and traditional reference prices, explains them, assesses portfolio risk, and executes bounded actions on Solana.',
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -22,9 +27,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <div className="site-shell">
           <header className="site-header">
             <a href="/" className="brand" aria-label="AfterHours home">
-              <span className="brand-mark gradient-solana" aria-hidden="true" style={{ color: '#000' }}>
-                A
-              </span>
+              <img
+                src="/logo.png"
+                alt="AfterHours logo"
+                width={38}
+                height={38}
+                style={{ borderRadius: '10px', objectFit: 'cover' }}
+              />
               <span>
                 <strong>AfterHours</strong>
                 <small>Tokenized stock intelligence on Solana</small>
