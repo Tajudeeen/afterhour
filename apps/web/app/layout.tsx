@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { SolanaWalletProvider } from '@/components/SolanaWalletProvider';
 import { SplashScreen } from '@/components/SplashScreen';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export const metadata: Metadata = {
   title: {
@@ -39,8 +40,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                 Documentation
               </a>
             </nav>
-            <div className="network-badge">
-              <span aria-hidden="true" /> Solana Devnet
+            <div className="header-actions">
+              <ThemeToggle />
+              <div className="network-badge">
+                <span aria-hidden="true" /> Solana Devnet
+              </div>
             </div>
           </header>
           <main>{children}</main>
