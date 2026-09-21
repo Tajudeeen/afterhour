@@ -52,7 +52,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <div className="header-actions">
               <ThemeToggle />
               <div className="network-badge">
-                <span aria-hidden="true" /> Solana Devnet
+                <span aria-hidden="true" /> Solana Mainnet
               </div>
             </div>
           </header>

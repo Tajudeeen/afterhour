@@ -120,7 +120,7 @@ export function ExecuteButton({ symbol, evaluation }: { symbol: string; evaluati
               fontWeight: 800,
             }}
           >
-            DEVNET
+            MAINNET
           </span>
         </div>
         <p style={{ color: 'var(--ink-muted)', fontSize: '0.78rem', wordBreak: 'break-all', fontFamily: 'monospace', margin: '4px 0 12px 0' }}>
@@ -133,7 +133,7 @@ export function ExecuteButton({ symbol, evaluation }: { symbol: string; evaluati
             rel="noreferrer"
             style={{ color: 'var(--lime)', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'underline' }}
           >
-            View on Solscan (Devnet) →
+            View on Solscan →
           </a>
           <a href="/activity" style={{ color: 'var(--ink-muted)', fontSize: '0.82rem', textDecoration: 'underline' }}>
             View Activity Log →
@@ -150,7 +150,7 @@ export function ExecuteButton({ symbol, evaluation }: { symbol: string; evaluati
     status === 'signing'
       ? 'Confirming in wallet...'
       : status === 'confirming'
-        ? 'Confirming on Solana Devnet...'
+        ? 'Confirming on Solana Mainnet...'
         : status === 'executing'
           ? 'Finalizing trade...'
           : connected
@@ -193,7 +193,7 @@ Payload String: "${memoText}"`}
 
             <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--ink-subtle)' }}>
               <span>Est. Fee: <strong>0.000005 SOL</strong></span>
-              <span>Network: <strong>Solana Devnet</strong></span>
+              <span>Network: <strong>Solana Mainnet-Beta</strong></span>
               <span>Signers: <strong>1 (Wallet Owner)</strong></span>
             </div>
           </div>

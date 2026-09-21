@@ -10,11 +10,15 @@ import { clusterApiUrl } from '@solana/web3.js';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 export function SolanaWalletProvider({ children }: { children: React.ReactNode }) {
-  // Use Solana Devnet for hackathon
-  const network = WalletAdapterNetwork.Devnet;
-  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+  // Default to Solana Mainnet-Beta (configurable via env)
+  const isDevnet = process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'devnet';
+  const network = isDevnet ? WalletAdapterNetwork.Devnet : WalletAdapterNetwork.Mainnet;
+  const endpoint = useMemo(
+    () => process.env.NEXT_PUBLIC_SOLANA_RPC || clusterApiUrl(network),
+    [network]
+  );
 
-  // Wallet Standard automatically detects installed browser wallets (Phantom, Solflare, etc.)
+  // Wallet Standard automatically detects installed browser wallets (Phantom, Solflare, Backpack, etc.)
   const wallets = useMemo(() => [], []);
 
   return (

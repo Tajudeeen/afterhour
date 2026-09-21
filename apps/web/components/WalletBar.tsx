@@ -51,7 +51,7 @@ export function WalletBar() {
               letterSpacing: '0.04em',
             }}
           >
-            DEVNET
+            MAINNET
           </span>
           <span>Live wallet connected</span>
         </span>

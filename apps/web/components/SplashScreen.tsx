@@ -81,7 +81,7 @@ export function SplashScreen() {
           </div>
           <div className="splash-stat-box">
             <div className="label">Consensus & Settlement</div>
-            <div className="val" style={{ color: 'var(--ink-muted)' }}>Solana Devnet</div>
+            <div className="val" style={{ color: 'var(--ink-muted)' }}>Solana Mainnet</div>
             <div style={{ color: 'var(--ink-subtle)', fontSize: '0.68rem', marginTop: '2px' }}>SPL Memo Attestation</div>
           </div>
           <div className="splash-stat-box">
