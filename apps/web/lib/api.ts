@@ -174,14 +174,18 @@ export interface AssetIntelligence {
   marketStatus: string;
   liquidity: string;
   source: 'live' | 'demo';
+  pythConfidenceUsd?: number;
+  pythConfidenceRatioPercent?: number;
+  pythDynamicSlippageBps?: number;
 }
 
 export async function getAssetGap(symbol: string): Promise<{ snapshot: PriceSnapshot; riskScore: RiskScore }> {
   return requestJson(`/api/assets/${encodeURIComponent(symbol)}`);
 }
 
-export async function getAssetIntelligence(symbol: string): Promise<AssetIntelligence> {
-  return requestJson(`/api/assets/${encodeURIComponent(symbol)}/intelligence`);
+export async function getAssetIntelligence(symbol: string, simulatedGapPercent?: number): Promise<AssetIntelligence> {
+  const query = simulatedGapPercent !== undefined ? `?simulatedGap=${simulatedGapPercent}` : '';
+  return requestJson(`/api/assets/${encodeURIComponent(symbol)}/intelligence${query}`);
 }
 
 export async function getActivity(wallet: string): Promise<{ activities: ActivityItem[] }> {

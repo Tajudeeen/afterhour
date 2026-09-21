@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateGapPercent, classifyLiquidity, computeGapRiskScore } from '../src/index.js';
+import { calculateGapPercent, classifyLiquidity, computeGapRiskScore, computePythDynamicSlippage } from '../src/index.js';
 
 describe('market-engine', () => {
   describe('calculateGapPercent', () => {
@@ -93,6 +93,41 @@ describe('market-engine', () => {
       });
       expect(result.score).toBeLessThanOrEqual(100);
       expect(result.score).toBeGreaterThanOrEqual(0);
+    });
+
+    it('adds risk penalty for wide Pyth confidence ratio', () => {
+      const baseResult = computeGapRiskScore({
+        gapPercent: 1.0,
+        volume24h: 50_000,
+        liquidityUsd: 200_000,
+        marketStatus: 'open',
+        volatilityLevel: 'low',
+        hoursSinceReferenceUpdate: 1,
+      });
+
+      const wideConfResult = computeGapRiskScore({
+        gapPercent: 1.0,
+        volume24h: 50_000,
+        liquidityUsd: 200_000,
+        marketStatus: 'open',
+        volatilityLevel: 'low',
+        hoursSinceReferenceUpdate: 1,
+        pythConfidenceRatioPercent: 2.5,
+      });
+
+      expect(wideConfResult.score).toBeGreaterThan(baseResult.score);
+    });
+  });
+
+  describe('computePythDynamicSlippage', () => {
+    it('returns base slippage when no confidence is provided', () => {
+      expect(computePythDynamicSlippage(undefined, 180, 50)).toBe(50);
+    });
+
+    it('scales slippage buffer dynamically with Pyth confidence band', () => {
+      // Pyth confidence $1.80 on $180 price = 1% confidence ratio = 100 bps -> 50 + 100 = 150 bps
+      const slippage = computePythDynamicSlippage(1.80, 180, 50);
+      expect(slippage).toBe(150);
     });
   });
 });

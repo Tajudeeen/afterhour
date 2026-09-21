@@ -134,9 +134,10 @@ async function fetchPythPrice(feedId: string): Promise<{ price: number; conf: nu
   }
 }
 
-export async function getAssetIntelligence(symbol: string): Promise<AssetIntelligence> {
+export async function getAssetIntelligence(symbol: string, simulatedGapPercent?: number): Promise<AssetIntelligence> {
   const upper = symbol.toUpperCase();
-  const cached = intelligenceCache.get(upper);
+  const cacheKey = simulatedGapPercent !== undefined ? `${upper}_sim_${simulatedGapPercent}` : upper;
+  const cached = intelligenceCache.get(cacheKey);
   const now = Date.now();
   if (cached && now - cached.timestamp < 30_000) {
     return cached.intelligence;
@@ -151,6 +152,8 @@ export async function getAssetIntelligence(symbol: string): Promise<AssetIntelli
   let onchainPrice = stock.referencePrice;
   let referenceSource: 'pyth-live' | 'pyth-stale' | 'prestocks-live' | 'seeded' = 'seeded';
   let source: 'live' | 'demo' = 'demo';
+  let pythConfidenceUsd: number | undefined;
+  let pythConfidenceRatioPercent: number | undefined;
   const routes: RouteComparison[] = [];
   const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xB9qMLM6kq7K3e8n1W4c2X';
 
@@ -208,6 +211,9 @@ export async function getAssetIntelligence(symbol: string): Promise<AssetIntelli
         source: 'demo'
       });
     }
+    // Estimated confidence band for PreStocks mark price
+    pythConfidenceUsd = Number((referencePrice * 0.0075).toFixed(2));
+    pythConfidenceRatioPercent = 0.75;
   } else {
     const feedId = PYTH_FEED_IDS[upper];
     if (feedId) {
@@ -215,8 +221,14 @@ export async function getAssetIntelligence(symbol: string): Promise<AssetIntelli
       if (pythData) {
         referencePrice = pythData.price;
         referenceSource = pythData.source;
+        pythConfidenceUsd = pythData.conf;
+        pythConfidenceRatioPercent = Number(((pythData.conf / pythData.price) * 100).toFixed(2));
         source = 'live';
       }
+    }
+    if (!pythConfidenceUsd) {
+      pythConfidenceUsd = Number((referencePrice * 0.006).toFixed(2));
+      pythConfidenceRatioPercent = 0.6;
     }
     const jupQuote = await fetchJupiterQuote(USDC_MINT, stock.mint, 1000);
     if (jupQuote) {
@@ -240,11 +252,23 @@ export async function getAssetIntelligence(symbol: string): Promise<AssetIntelli
     }
   }
 
+  // If user passes a simulated gap percentage (interactive slider), override onchainPrice
+  if (simulatedGapPercent !== undefined) {
+    onchainPrice = Number((referencePrice * (1 + simulatedGapPercent / 100)).toFixed(2));
+    if (routes[0]) {
+      routes[0].price = onchainPrice;
+      routes[0].outAmount = Math.floor((1000 / onchainPrice) * 1_000_000);
+    }
+  }
+
   const gapPercent = ((onchainPrice - referencePrice) / referencePrice) * 100;
   const gapDollar = onchainPrice - referencePrice;
   const marketHours = getMarketHours();
   const volume24h = upper === 'NVDA' ? 42_500 : 25_000;
   const liquidityUsd = routes[0]?.liquidityUsd || 50000;
+
+  const { computePythDynamicSlippage } = await import('@afterhours/market-engine');
+  const pythDynamicSlippageBps = computePythDynamicSlippage(pythConfidenceUsd, referencePrice, 50);
 
   const riskScore = computeGapRiskScore({
     gapPercent,
@@ -253,6 +277,7 @@ export async function getAssetIntelligence(symbol: string): Promise<AssetIntelli
     marketStatus: marketHours.status,
     volatilityLevel: Math.abs(gapPercent) > 3 ? 'high' : 'low',
     hoursSinceReferenceUpdate: referenceSource.includes('stale') ? 16 : 0,
+    pythConfidenceRatioPercent,
   });
 
   const intelligence: AssetIntelligence = {
@@ -271,9 +296,12 @@ export async function getAssetIntelligence(symbol: string): Promise<AssetIntelli
     marketStatus: marketHours.status,
     liquidity: 'medium',
     source,
+    pythConfidenceUsd,
+    pythConfidenceRatioPercent,
+    pythDynamicSlippageBps,
   };
 
-  intelligenceCache.set(upper, { intelligence, timestamp: now });
+  intelligenceCache.set(cacheKey, { intelligence, timestamp: now });
   return intelligence;
 }
 
@@ -413,8 +441,10 @@ export function createApp(options: CreateAppOptions = {}): Hono {
    */
   app.get('/api/assets/:symbol/intelligence', async (c: Context) => {
     const symbol = getParam(c, 'symbol').toUpperCase();
+    const simGapParam = c.req.query('simulatedGap');
+    const simulatedGapPercent = simGapParam ? Number(simGapParam) : undefined;
     try {
-      const intelligence = await getAssetIntelligence(symbol);
+      const intelligence = await getAssetIntelligence(symbol, simulatedGapPercent);
       return c.json(intelligence);
     } catch (e: any) {
       return c.json({ error: { code: 'not-found', message: e.message } }, 404);

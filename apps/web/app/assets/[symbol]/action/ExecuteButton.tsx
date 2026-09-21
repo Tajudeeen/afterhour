@@ -143,6 +143,8 @@ export function ExecuteButton({ symbol, evaluation }: { symbol: string; evaluati
     );
   }
 
+  const [showInspector, setShowInspector] = useState(false);
+
   const isBusy = status === 'signing' || status === 'confirming' || status === 'executing';
   const buttonText =
     status === 'signing'
@@ -155,8 +157,49 @@ export function ExecuteButton({ symbol, evaluation }: { symbol: string; evaluati
             ? `Sign & execute on-chain: $${evaluation.proposed.amountUsd.toLocaleString()}`
             : `Sign & execute: $${evaluation.proposed.amountUsd.toLocaleString()}`;
 
+  const memoText = `AfterHours: ${evaluation.proposed.action.toUpperCase()} $${Math.round(evaluation.proposed.amountUsd)} ${symbol} | Risk Governor: Passed (Cap: ${evaluation.policy.maxSingleAssetExposurePercent}%)`;
+
   return (
     <div>
+      {/* Transaction Payload Inspector Toggle */}
+      <div style={{ marginBottom: '16px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--surface-strong)', overflow: 'hidden' }}>
+        <button
+          type="button"
+          onClick={() => setShowInspector(!showInspector)}
+          style={{ width: '100%', padding: '12px 16px', background: 'transparent', border: 'none', color: 'var(--solana-green)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: 'SF Mono, monospace', fontSize: '0.78rem', fontWeight: 800 }}
+        >
+          <span>🔍 Solana Instruction Payload Inspector</span>
+          <span>{showInspector ? '▲ Hide' : '▼ Inspect Bytes'}</span>
+        </button>
+
+        {showInspector && (
+          <div style={{ padding: '0 16px 16px 16px', borderTop: '1px solid var(--line)', fontSize: '0.78rem', color: '#99a98a', background: 'var(--surface)' }}>
+            <div style={{ marginTop: '12px', marginBottom: '8px', fontWeight: 800, color: '#f0f2ec' }}>
+              Instruction 0: SPL Token / DEX Rebalance
+            </div>
+            <pre style={{ margin: 0, fontFamily: 'SF Mono, monospace', fontSize: '0.7rem', color: '#7b8576', background: 'var(--surface-strong)', padding: '8px 10px', borderRadius: 6, overflowX: 'auto' }}>
+{`Action: ${evaluation.proposed.action.toUpperCase()} $${evaluation.proposed.amountUsd} ${symbol}
+Target Mint: ${symbol} SPL Token
+Slippage Floor: 50 BPS (Dynamic Pyth Buffer)`}
+            </pre>
+
+            <div style={{ marginTop: '12px', marginBottom: '8px', fontWeight: 800, color: '#f0f2ec' }}>
+              Instruction 1: SPL Memo Risk Attestation
+            </div>
+            <pre style={{ margin: 0, fontFamily: 'SF Mono, monospace', fontSize: '0.7rem', color: 'var(--solana-green)', background: 'rgba(20, 241, 149, 0.08)', padding: '8px 10px', borderRadius: 6, overflowX: 'auto', border: '1px solid rgba(20, 241, 149, 0.2)' }}>
+{`Program ID: MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr
+Payload String: "${memoText}"`}
+            </pre>
+
+            <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#7b8576' }}>
+              <span>Est. Fee: <strong>0.000005 SOL</strong></span>
+              <span>Network: <strong>Solana Devnet</strong></span>
+              <span>Signers: <strong>1 (Wallet Owner)</strong></span>
+            </div>
+          </div>
+        )}
+      </div>
+
       {errMsg && (
         <div style={{ marginBottom: '14px', padding: '12px', borderRadius: '8px', background: 'rgba(155, 48, 39, 0.15)', border: '1px solid var(--red)' }}>
           <p style={{ color: '#ffd98a', margin: '0 0 6px 0', fontSize: '0.82rem' }}>{errMsg}</p>

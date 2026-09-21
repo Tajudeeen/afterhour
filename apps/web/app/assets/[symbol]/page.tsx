@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getAssetIntelligence, type AssetIntelligence } from '@/lib/api';
+import { RiskSimulator } from '@/components/RiskSimulator';
 
 export default async function AssetPage({ params }: { params: Promise<{ symbol: string }> }) {
   const { symbol } = await params;
@@ -87,6 +88,11 @@ export default async function AssetPage({ params }: { params: Promise<{ symbol: 
             <div className="data-label" style={{ fontFamily: 'monospace', fontSize: '0.72rem' }}>
               {isPreStocks ? 'PreStocks Mark Price' : `Pyth Feed: Equity.US.${intelligence.symbol}/USD`} (Updated {formatTime(intelligence.referenceUpdatedAt)})
             </div>
+            {intelligence.pythConfidenceUsd && (
+              <div style={{ marginTop: '4px', fontSize: '0.74rem', color: 'var(--pyth-lavender)', fontFamily: 'SF Mono, monospace' }}>
+                Pyth Band: ±${intelligence.pythConfidenceUsd.toFixed(2)} ({intelligence.pythConfidenceRatioPercent}%)
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -102,17 +108,24 @@ export default async function AssetPage({ params }: { params: Promise<{ symbol: 
           </div>
         </div>
         <div className="data-card">
-          <h3>Liquidity</h3>
+          <h3>Liquidity & Slippage</h3>
           <div className="data-value">
              {intelligence.routes[0] ? `$${Math.round(intelligence.routes[0].liquidityUsd).toLocaleString()}` : '—'}
           </div>
-          <div className="data-label">{intelligence.liquidity} liquidity</div>
+          <div className="data-label">
+            {intelligence.liquidity} liquidity · {intelligence.pythDynamicSlippageBps || 50} BPS Slippage
+          </div>
         </div>
         <div className="data-card">
           <h3>Risk score</h3>
           <div className="data-value" style={{ color: 'var(--lime)' }}>{intelligence.riskScore.score}</div>
           <div className="data-label">{intelligence.riskScore.band}</div>
         </div>
+      </div>
+
+      {/* Interactive Risk Simulator */}
+      <div style={{ marginTop: '32px' }}>
+        <RiskSimulator symbol={upperSymbol} initialIntelligence={intelligence} />
       </div>
 
       {intelligence.routes && intelligence.routes.length > 0 && (
@@ -124,7 +137,7 @@ export default async function AssetPage({ params }: { params: Promise<{ symbol: 
             <div className="route-meta">
               <span>Impact: <strong>{intelligence.routes[0]!.priceImpact.toFixed(2)}%</strong></span>
               <span>Fees: <strong>${intelligence.routes[0]!.fees.toFixed(2)}</strong></span>
-              <span>Slippage: <strong>{intelligence.routes[0]!.slippage} bps</strong></span>
+              <span>Dynamic Slippage Buffer: <strong>{intelligence.pythDynamicSlippageBps || intelligence.routes[0]!.slippage} bps</strong></span>
             </div>
           </div>
         </div>

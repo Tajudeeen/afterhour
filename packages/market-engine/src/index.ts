@@ -194,6 +194,8 @@ export function computeGapRiskScore(input: {
   volatilityLevel: VolatilityLevel;
   /** Hours since the reference price was last updated */
   hoursSinceReferenceUpdate: number;
+  /** Pyth Confidence Interval ratio percentage (confidence / price * 100) */
+  pythConfidenceRatioPercent?: number;
 }): GapRiskScore {
   let score = 0;
 
@@ -224,11 +226,35 @@ export function computeGapRiskScore(input: {
   if (input.hoursSinceReferenceUpdate > 16) score += 10; // overnight
   else if (input.hoursSinceReferenceUpdate > 4) score += 5;
 
+  // Pyth Confidence Interval width penalty (0-15 points)
+  // Wide confidence interval implies off-market uncertainty or high spread
+  if (input.pythConfidenceRatioPercent !== undefined) {
+    if (input.pythConfidenceRatioPercent >= 2.0) score += 15;
+    else if (input.pythConfidenceRatioPercent >= 1.0) score += 10;
+    else if (input.pythConfidenceRatioPercent >= 0.5) score += 5;
+  }
+
   // Volume — low volume confirms gap may not be real/converging (0-5 points)
   if (input.volume24h < 5_000) score += 5;
 
   const clamped = Math.max(0, Math.min(100, score));
   return { score: clamped, band: scoreToBand(clamped) };
+}
+
+/**
+ * Compute dynamic slippage in basis points based on Pyth confidence interval.
+ * As Pyth confidence band widens, slippage buffer increases dynamically.
+ */
+export function computePythDynamicSlippage(
+  pythConfidenceUsd: number | undefined,
+  price: number,
+  baseSlippageBps: number = 50,
+): number {
+  if (!pythConfidenceUsd || price <= 0) return baseSlippageBps;
+  const ratioPercent = (pythConfidenceUsd / price) * 100;
+  // Convert confidence ratio % into bps (e.g. 0.5% = 50 bps extra slippage buffer)
+  const confidenceBps = Math.round(ratioPercent * 100);
+  return Math.min(500, Math.max(baseSlippageBps, baseSlippageBps + confidenceBps));
 }
 
 function scoreToBand(score: number): RiskScoreBand {

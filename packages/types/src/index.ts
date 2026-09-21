@@ -61,6 +61,10 @@ export interface PriceSnapshot {
   referenceUpdatedAt: string;
   /** ISO-8601 timestamp of this on-chain observation */
   observedAt: string;
+  /** Pyth confidence interval in USD (e.g. ±1.25) */
+  pythConfidenceUsd?: number;
+  /** Pyth confidence interval as % of price */
+  pythConfidenceRatioPercent?: number;
 }
 
 /** Risk score bands for the Gap Risk Score. */
@@ -225,4 +229,7 @@ export interface AssetIntelligence {
   marketStatus: MarketStatus;
   liquidity: LiquidityLevel;
   source: 'live' | 'demo';     // overall data source
+  pythConfidenceUsd?: number;
+  pythConfidenceRatioPercent?: number;
+  pythDynamicSlippageBps?: number;
 }
