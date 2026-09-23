@@ -37,9 +37,19 @@ import type {
   PreStocksAsset,
   RouteComparison,
 } from '@afterhours/types';
+import { resolveSolanaNetwork, solscanTxUrl, type SolanaNetwork } from '@afterhours/types';
 import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
+
+/**
+ * Network the explorer links are built for. Derived from env so a receipt can
+ * never point at a different cluster than the transaction settled on.
+ */
+const NETWORK: SolanaNetwork = resolveSolanaNetwork(
+  process.env.SOLANA_NETWORK,
+  process.env.SOLANA_RPC_URL,
+);
 
 export const health = (context: Context) =>
   context.json({ status: 'ok', service: 'afterhours-api' });
@@ -143,6 +153,15 @@ export async function getAssetIntelligence(symbol: string, simulatedGapPercent?:
     return cached.intelligence;
   }
 
+  // Check if asset is supported - do this synchronously for fast failure
+  const upperSym = symbol.toUpperCase();
+  // Import once at module level to avoid dynamic import overhead
+  const supportedStock = SUPPORTED_STOCKS.find(s => s.symbol === upperSym) ?? null;
+  if (!supportedStock) {
+    throw new Error(`Unsupported asset: ${upper}`);
+  }
+
+  // Check if asset is supported BEFORE doing any network operations
   const { getStock } = await import('@afterhours/solana');
   const stock = getStock(upper);
   if (!stock) throw new Error(`Unsupported asset: ${upper}`);
@@ -418,7 +437,7 @@ export function createApp(options: CreateAppOptions = {}): Hono {
   app.get('/health', health);
 
   app.get('/version', (c: Context) =>
-    c.json({ status: 'ok', service: 'afterhours-api', releaseId: process.env.AMBIT_RELEASE_ID ?? null }),
+    c.json({ status: 'ok', service: 'afterhours-api', releaseId: process.env.AFTERHOURS_RELEASE_ID ?? null }),
   );
 
   /**
@@ -551,7 +570,7 @@ export function createApp(options: CreateAppOptions = {}): Hono {
     const signature = isRealOnChainSig ? body.signature! : result.signature;
     const finalResult = {
       signature,
-      explorerUrl: `https://solscan.io/tx/${signature}?cluster=devnet`,
+      explorerUrl: solscanTxUrl(signature, NETWORK),
       status: 'confirmed' as const,
     };
 
@@ -701,7 +720,7 @@ async function executeTradeSimulation(_trade: {
   }
   return {
     signature,
-    explorerUrl: `https://solscan.io/tx/${signature}?cluster=devnet`,
+    explorerUrl: solscanTxUrl(signature, NETWORK),
     status: 'confirmed',
   };
 }

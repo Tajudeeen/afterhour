@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { executeTrade, type RiskEvaluation } from '@/lib/api';
+import { NETWORK_LABEL } from '@/lib/network';
 
 const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
 
@@ -150,7 +151,7 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
     status === 'signing'
       ? 'Confirming in wallet...'
       : status === 'confirming'
-        ? 'Confirming on Solana Mainnet...'
+        ? `Confirming on ${NETWORK_LABEL}...`
         : status === 'executing'
           ? 'Finalizing trade...'
           : connected
@@ -193,7 +194,7 @@ Payload String: "${memoText}"`}
 
             <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--ink-subtle)' }}>
               <span>Est. Fee: <strong>0.000005 SOL</strong></span>
-              <span>Network: <strong>Solana Mainnet-Beta</strong></span>
+              <span>Network: <strong>{NETWORK_LABEL}</strong></span>
               <span>Signers: <strong>1 (Wallet Owner)</strong></span>
             </div>
           </div>

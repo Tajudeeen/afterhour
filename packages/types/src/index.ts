@@ -233,3 +233,81 @@ export interface AssetIntelligence {
   pythConfidenceRatioPercent?: number;
   pythDynamicSlippageBps?: number;
 }
+
+/* ------------------------------------------------------------------------- *
+ * Solana network
+ *
+ * Single source of truth for BOTH the wallet connection and every network
+ * label / explorer link shown to the user. Keeping these derived from one
+ * place means a label can never claim a different network than the one the
+ * transaction actually settled on.
+ * ------------------------------------------------------------------------- */
+
+/** Solana cluster the app is running against. */
+export type SolanaNetwork = 'mainnet-beta' | 'devnet' | 'testnet' | 'localnet';
+
+/**
+ * Default when nothing is configured.
+ *
+ * Matches the wallet adapter default (`WalletAdapterNetwork.Mainnet`) and
+ * `SOLANA_RPC_URL` in `.env.example`.
+ */
+export const DEFAULT_SOLANA_NETWORK: SolanaNetwork = 'mainnet-beta';
+
+/** Infer a network from an RPC URL. Returns undefined when it can't tell. */
+export function networkFromRpcUrl(url?: string | null): SolanaNetwork | undefined {
+  const value = (url ?? '').trim().toLowerCase();
+  if (!value) return undefined;
+  if (value.includes('devnet')) return 'devnet';
+  if (value.includes('testnet')) return 'testnet';
+  if (value.includes('localhost') || value.includes('127.0.0.1')) return 'localnet';
+  if (value.includes('mainnet')) return 'mainnet-beta';
+  return undefined;
+}
+
+/**
+ * Resolve the active network. An explicit name wins; otherwise it is inferred
+ * from the RPC URL; otherwise it falls back to `DEFAULT_SOLANA_NETWORK`.
+ */
+export function resolveSolanaNetwork(
+  raw?: string | null,
+  rpcUrl?: string | null,
+): SolanaNetwork {
+  const value = (raw ?? '').trim().toLowerCase();
+  if (value === 'devnet') return 'devnet';
+  if (value === 'testnet') return 'testnet';
+  if (value === 'localnet' || value === 'local' || value === 'localhost') return 'localnet';
+  if (value === 'mainnet' || value === 'mainnet-beta') return 'mainnet-beta';
+  return networkFromRpcUrl(rpcUrl) ?? DEFAULT_SOLANA_NETWORK;
+}
+
+/** Human-readable network label for UI copy. */
+export function solanaNetworkLabel(network: SolanaNetwork): string {
+  switch (network) {
+    case 'devnet':
+      return 'Solana Devnet';
+    case 'testnet':
+      return 'Solana Testnet';
+    case 'localnet':
+      return 'Solana Localnet';
+    default:
+      return 'Solana Mainnet-Beta';
+  }
+}
+
+/** Solscan `?cluster=` query string. Mainnet takes no cluster parameter. */
+export function solscanClusterQuery(network: SolanaNetwork): string {
+  if (network === 'mainnet-beta') return '';
+  if (network === 'localnet') return '?cluster=custom';
+  return `?cluster=${network}`;
+}
+
+/** Solscan explorer URL for a transaction signature. */
+export function solscanTxUrl(signature: string, network: SolanaNetwork): string {
+  return `https://solscan.io/tx/${signature}${solscanClusterQuery(network)}`;
+}
+
+/** Solscan explorer URL for an account address. */
+export function solscanAddressUrl(address: string, network: SolanaNetwork): string {
+  return `https://solscan.io/account/${address}${solscanClusterQuery(network)}`;
+}

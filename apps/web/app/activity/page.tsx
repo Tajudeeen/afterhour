@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getActivity, type ActivityItem } from '@/lib/api';
+import { txExplorerUrl } from '@/lib/network';
 
 const DEMO_WALLET = 'demo';
 
@@ -47,7 +48,7 @@ export default async function ActivityPage() {
                 {item.txSignature && (
                   <div>
                     <a
-                      href={`https://solscan.io/tx/${item.txSignature}?cluster=devnet`}
+                      href={txExplorerUrl(item.txSignature)}
                       target="_blank"
                       rel="noreferrer"
                       className="sig"

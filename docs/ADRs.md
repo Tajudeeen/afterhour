@@ -3,6 +3,34 @@
 Architectural Decision Records. One per significant decision. New entries go at the
 top; existing entries are never silently overridden.
 
+## 2026-09-23 — ADR-4: Solana network is a single, env-driven source of truth
+
+**Status:** Accepted — supersedes the network choice in ADR-3
+
+**Context:** ADR-3 specified Solana Devnet for wallet connection and attestation, but the
+shipped code had drifted into a contradiction: `SolanaWalletProvider` defaulted to
+**Mainnet-Beta** (and `.env.example` pointed `SOLANA_RPC_URL` at a mainnet RPC), while
+`packages/solana/src/execution.ts`, `apps/api/src/index.ts`, and the Activity screen all
+hardcoded `?cluster=devnet` into their Solscan links. The UI therefore connected to one
+cluster and labelled the result with another. A subsequent copy-only edit changed a README
+heading to "mainnet" while the surrounding text, and every explorer link, still said
+Devnet — making the claim false rather than merely inconsistent.
+
+**Decision:**
+1. Added `SolanaNetwork`, `resolveSolanaNetwork`, `solanaNetworkLabel`, `solscanClusterQuery`,
+   and `solscanTxUrl` to `@afterhours/types` as the single source of truth.
+2. Resolution order: explicit `SOLANA_NETWORK` → inferred from `SOLANA_RPC_URL` →
+   `DEFAULT_SOLANA_NETWORK` (`mainnet-beta`).
+3. Every network label and Solscan URL in the web UI, the API, and the `solana` package now
+   derives from that resolver. `apps/web/lib/network.ts` mirrors it for the browser, since
+   Next.js only inlines `NEXT_PUBLIC_*`.
+4. **Default remains Mainnet-Beta**, matching the pre-existing wallet adapter default.
+
+**Consequences:** A label can no longer disagree with the cluster a transaction settled on.
+Setting `SOLANA_NETWORK=devnet` switches the wallet connection, every UI network label, and
+every explorer link together. ADR-3's dual-mode (real wallet + 1-click demo) and SPL Memo
+attestation decisions remain in force; only its Devnet-specific default is superseded.
+
 ## 2026-09-20 — ADR-3: Dual-Mode Live Solana Devnet & SPL Memo Attestation
 
 **Status:** Accepted

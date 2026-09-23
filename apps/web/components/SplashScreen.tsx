@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { NETWORK_LABEL } from '@/lib/network';
+
+const SPLASH_DURATION_MS = 2000;
 
 export function SplashScreen() {
   const [visible, setVisible] = useState(false);
@@ -9,23 +12,30 @@ export function SplashScreen() {
 
   useEffect(() => {
     setMounted(true);
-    // Show splash if not dismissed this session or if explicitly requested via query param
-    const hasSeen = typeof window !== 'undefined' ? sessionStorage.getItem('afterhours_splash_seen') : null;
+    // Show the intro splash immediately on every launch.
     const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-    if (!hasSeen || urlParams?.get('intro') === '1') {
+    const forceIntro = urlParams?.get('intro') === '1';
+    const hasSeen = typeof window !== 'undefined' ? sessionStorage.getItem('afterhours_splash_seen') : null;
+    if (forceIntro || !hasSeen) {
       setVisible(true);
     }
   }, []);
 
   useEffect(() => {
     if (!visible) return;
+    // Auto-dismiss after the intro duration.
+    const timer = window.setTimeout(() => dismiss(), SPLASH_DURATION_MS);
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' || e.key === 'Enter') {
+        window.clearTimeout(timer);
         dismiss();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [visible]);
 
   const dismiss = () => {
@@ -81,7 +91,7 @@ export function SplashScreen() {
           </div>
           <div className="splash-stat-box">
             <div className="label">Consensus & Settlement</div>
-            <div className="val" style={{ color: 'var(--ink-muted)' }}>Solana Mainnet</div>
+            <div className="val" style={{ color: 'var(--ink-muted)' }}>{NETWORK_LABEL}</div>
             <div style={{ color: 'var(--ink-subtle)', fontSize: '0.68rem', marginTop: '2px' }}>SPL Memo Attestation</div>
           </div>
           <div className="splash-stat-box">

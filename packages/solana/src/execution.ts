@@ -5,8 +5,18 @@
  * This layer executes the actual on-chain transaction.
  */
 import type { Connection, Transaction } from '@solana/web3.js';
+import { resolveSolanaNetwork, solscanTxUrl, type SolanaNetwork } from '@afterhours/types';
 import type { SwapQuote } from './dex.js';
 import type { WalletAdapter } from './wallet.js';
+
+/**
+ * Network the explorer links are built for. Derived from env so a receipt can
+ * never point at a different cluster than the transaction settled on.
+ */
+const NETWORK: SolanaNetwork = resolveSolanaNetwork(
+  process.env.SOLANA_NETWORK,
+  process.env.SOLANA_RPC_URL,
+);
 
 export interface ExecutionResult {
   /** Transaction signature */
@@ -54,14 +64,14 @@ export async function executeSwap(
     if (confirmed) {
       return {
         signature,
-        explorerUrl: `https://solscan.io/tx/${signature}?cluster=devnet`,
+        explorerUrl: solscanTxUrl(signature, NETWORK),
         status: 'confirmed',
       };
     }
 
     return {
       signature,
-      explorerUrl: `https://solscan.io/tx/${signature}?cluster=devnet`,
+      explorerUrl: solscanTxUrl(signature, NETWORK),
       status: 'failed',
       error: 'Transaction was not confirmed within timeout',
     };

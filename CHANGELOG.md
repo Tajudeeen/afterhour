@@ -5,6 +5,36 @@ Meaningful changes only — not every commit. Newest first.
 ## [Unreleased]
 
 ### Added
+- **Single source of truth for the Solana network.** `resolveSolanaNetwork`, `solanaNetworkLabel`,
+  and `solscanTxUrl`/`solscanAddressUrl` in `@afterhours/types` now derive the cluster *and* every
+  user-facing label from `SOLANA_NETWORK` / `SOLANA_RPC_URL` (server) and
+  `NEXT_PUBLIC_SOLANA_NETWORK` / `NEXT_PUBLIC_SOLANA_RPC` (web, via `apps/web/lib/network.ts`,
+  since Next.js only inlines `NEXT_PUBLIC_*`). A displayed network label can no longer disagree
+  with the cluster a transaction settles on. Default is `mainnet-beta`.
+- `docs/BUILD-PLAN.md` — reconciles the four competing plan sources (deeen_plans, README,
+  `TASKS.md`, `STOCKLANA_CONTEST_AUDIT.md`) into one canonical scope, with a conflict register
+  (C1–C6) and an off-plan inventory.
+
+### Changed
+- Settlement network default moved from Devnet to **Mainnet-Beta**; `SOLANA_NETWORK` selects
+  `devnet` / `testnet` / `localnet`. All Devnet-hardcoded Solscan URLs and network labels across
+  the web app, API, and `@afterhours/solana` now resolve from that one value.
+- Corrected the test count to **63/63** in `README.md`, `TASKS.md`, and the `/proof` route. The
+  three sources previously claimed 60, 57, and 58 respectively; all were stale.
+- `docs/ARCHITECTURE.md`: web route table corrected (7 routes, not 5) and the asset universe
+  documented as two layered universes.
+- `docs/STOCKLANA_CONTEST_AUDIT.md`: dead absolute `ambit` links replaced with repo-relative
+  paths, plus a dated post-audit reconciliation section.
+- `AFTERHOURS_RELEASE_ID` replaces `AMBIT_RELEASE_ID` in the API `/version` route.
+- Added `docs/BUILD-PLAN.md`.
+
+### Removed
+- `({t` — 0-byte junk file that had been committed.
+- `deploy/.env.example` — leftover Ambit/BSC configuration (`BSC_RPC_URL`, `ERC8004_*` registries,
+  `AMBIT_HIRE_TOKEN`). `docker-compose.yml` reads `env_file: .env` from the repo root, so nothing
+  depended on it.
+
+### Added (prior)
 - Live Solana Devnet integration with `@solana/wallet-adapter-react` and `@solana/wallet-adapter-react-ui`, supporting browser wallets (Phantom, Solflare) with an interactive `WalletBar` and instant demo fallback.
 - Authentic on-chain risk governance attestations published directly to Solana Devnet using the SPL Memo program (`MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr`).
 - Live Solscan Devnet verification links on the Action execution screen and Activity audit trail.

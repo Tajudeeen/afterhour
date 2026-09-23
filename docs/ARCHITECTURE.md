@@ -114,15 +114,31 @@ Hono server with REST endpoints:
 
 ### Web (`apps/web`)
 
-Next.js 15 app router with 5 screens:
+Next.js 15 app router with 7 routes:
 
 | Route | Screen |
 |-------|--------|
 | `/` | Dashboard |
+| `/markets` | Market Discovery (PreStocks pre-IPO universe) |
 | `/assets/:symbol` | Asset page |
 | `/assets/:symbol/analysis` | AI Analysis |
 | `/assets/:symbol/action` | Action screen |
 | `/activity` | Activity |
+| `/proof` | Live Verification Suite |
+
+> **Note:** this list previously said "5 screens". `/markets` and `/proof` were added for
+> the PreStocks and Pyth bounty tracks and are load-bearing — see `BUILD-PLAN.md` C1.
+
+### Asset universe
+
+AfterHours carries two layered universes — see `BUILD-PLAN.md` §2:
+
+- **Public equities** — NVDA, AAPL, TSLA (`SUPPORTED_STOCKS` in `packages/solana`).
+  The canonical demo path: the $10,420 portfolio, `docs/DEMO.md`, and the +4.02% gap
+  example are all built on it.
+- **Pre-IPO equities** — ANTHROPIC, SPACEX, OPENAI, ANDURIL, NEURALINK, FIGUREAI,
+  KALSHI, POLYMARKET, served by the API's `isPreStocks` branch from the PreStocks feed.
+  Backs `/markets` and the PreStocks bounty track.
 
 ## Security model
 

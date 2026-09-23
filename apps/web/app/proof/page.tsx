@@ -1,8 +1,9 @@
 import Link from 'next/link';
+import { NETWORK_LABEL } from '@/lib/network';
 
 export const metadata = {
   title: 'Proof & Verification — AfterHours',
-  description: 'Live re-verification of PreStocks market feeds, Solana Devnet attestation receipts, and deterministic negative proofs.',
+  description: `Live re-verification of PreStocks market feeds, ${NETWORK_LABEL} attestation receipts, and deterministic negative proofs.`,
 };
 
 const PRESTOCKS_API = 'https://prestocks.com/api/prestocks';
@@ -142,13 +143,13 @@ export default async function ProofPage() {
           <div className="grid-3" style={{ gap: 16 }}>
             <div>
               <div style={{ fontSize: '0.72rem', color: 'var(--ink-subtle)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Test Suite</div>
-              <div style={{ fontFamily: 'SF Mono, monospace', fontSize: '1.8rem', fontWeight: 800, color: 'var(--ink-heading)', marginTop: 4 }}>60 / 60</div>
+              <div style={{ fontFamily: 'SF Mono, monospace', fontSize: '1.8rem', fontWeight: 800, color: 'var(--ink-heading)', marginTop: 4 }}>63 / 63</div>
               <div style={{ fontSize: '0.74rem', color: 'var(--ink-muted)', marginTop: 2 }}>Passing across 8 packages</div>
             </div>
             <div>
               <div style={{ fontSize: '0.72rem', color: 'var(--ink-subtle)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Settlement Chain</div>
               <div style={{ fontFamily: 'SF Mono, monospace', fontSize: '1.8rem', fontWeight: 800, color: 'var(--solana-green)', marginTop: 4 }}>Solana</div>
-              <div style={{ fontSize: '0.74rem', color: 'var(--ink-muted)', marginTop: 2 }}>Mainnet SPL Memo program</div>
+              <div style={{ fontSize: '0.74rem', color: 'var(--ink-muted)', marginTop: 2 }}>{NETWORK_LABEL} SPL Memo program</div>
             </div>
             <div>
               <div style={{ fontSize: '0.72rem', color: 'var(--ink-subtle)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Risk Governor</div>
@@ -229,7 +230,7 @@ export default async function ProofPage() {
         </div>
       </section>
 
-      {/* Proof 2: Solana Mainnet Settlement Architecture */}
+      {/* Proof 2: Solana Settlement Architecture */}
       <section style={{ marginBottom: 44 }}>
         <h2 style={{ margin: '0 0 16px', fontFamily: 'Georgia, serif', fontSize: '1.4rem', color: 'var(--ink-heading)', fontWeight: 500 }}>
           2. On-Chain Settlement & Attestation Layer
@@ -242,7 +243,7 @@ export default async function ProofPage() {
                 SPL Memo Program (Audit Anchor)
               </div>
               <p style={{ color: 'var(--ink-body)', fontSize: '0.92rem', lineHeight: 1.6, margin: '8px 0 12px' }}>
-                Every approved action is committed to Solana Mainnet through the official SPL Memo Program. This writes an immutable, human-readable proof of the user’s approval and the Risk Governor’s policy compliance to the ledger.
+                Every approved action is committed to {NETWORK_LABEL} through the official SPL Memo Program. This writes an immutable, human-readable proof of the user’s approval and the Risk Governor’s policy compliance to the ledger.
               </p>
               <div style={{ fontFamily: 'SF Mono, monospace', fontSize: '0.78rem', color: 'var(--solana-green)', background: 'rgba(20, 241, 149, 0.08)', padding: '8px 12px', borderRadius: 8, wordBreak: 'break-all', border: '1px solid rgba(20, 241, 149, 0.2)' }}>
                 Program ID: {SOLANA_MEMO_PROGRAM}
@@ -319,7 +320,7 @@ export default async function ProofPage() {
 
           <ul style={{ margin: '8px 0 0', paddingLeft: 20, color: 'var(--ink-body)', fontSize: '0.88rem', lineHeight: 1.7 }}>
             <li>
-              <strong>Solana Devnet Scope:</strong> On-chain attestations execute via the SPL Memo program on Solana Devnet. While real wallet transactions sign and confirm on Devnet, tokenized stock AMM liquidity pools for pre-IPO tokens are testnet-scale.
+              <strong>{NETWORK_LABEL} Scope:</strong> On-chain attestations execute via the SPL Memo program on {NETWORK_LABEL}. Real wallet transactions sign and confirm on that network, so tokenized stock AMM liquidity pools for pre-IPO tokens are experimental-scale.
             </li>
             <li>
               <strong>Oracle Rate Limits:</strong> The PreStocks API is cached using Next.js Incremental Static Regeneration (30s stale-while-revalidate window) to prevent client-side rate limiting and maintain high availability.

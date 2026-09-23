@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { NETWORK_LABEL } from '@/lib/network';
 
 export function SiteFooter() {
   return (
@@ -24,7 +25,7 @@ export function SiteFooter() {
             Detecting price divergence, explaining market regimes, enforcing risk bounds, and executing on-chain actions.
           </p>
           <div className="footer-status">
-            <span className="source-badge source-live">Solana Mainnet-Beta</span>
+            <span className="source-badge source-live">{NETWORK_LABEL}</span>
             <span className="pyth-badge pyth-live">⬡ Pyth Oracles Active</span>
           </div>
         </div>

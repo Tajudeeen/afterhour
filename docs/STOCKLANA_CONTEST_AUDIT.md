@@ -62,7 +62,7 @@ The entire user journey is 100% operational:
 - **Bounty Requirement:**
   > *"Build a Solana application where live financial data does real work... builders can work with both the underlying market and the on-chain asset representing exposure to it. Pyth provides access to both, including: `Equity.US.AAPL/USD`, the regular Apple equity feed; `Crypto.AAPLX/USD`, an xStock feed; `Crypto.AAPLON/USD`, an Ondo feed. Use one feed, compare both..."*
 - **AfterHours Alignment:**
-  AfterHours was literally built for this exact prompt. Our [`PYTH_FEED_MAP`](file:///c:/Users/tajud/Desktop/hack/ambit/packages/solana/src/assets.ts) pairs the traditional Pyth equity feed with the Pyth on-chain tokenized feed:
+  AfterHours was literally built for this exact prompt. Our [`PYTH_FEED_MAP`](packages/solana/src/assets.ts) pairs the traditional Pyth equity feed with the Pyth on-chain tokenized feed:
   - NVDA: `Equity.US.NVDA/USD` ⟷ `Crypto.NVDAX/USD`
   - AAPL: `Equity.US.AAPL/USD` ⟷ `Crypto.AAPLX/USD`
   - TSLA: `Equity.US.TSLA/USD` ⟷ `Crypto.TSLAX/USD`
@@ -87,7 +87,7 @@ To ensure maximum score during judge evaluation:
 | **README.md** | Clear problem statement, architecture diagram, quick start, demo guide | Ready & Verified |
 | **Verification Gate** | `pnpm run verify` passes with 0 errors across all packages | Verified (58/58 tests passing) |
 | **Live Demo URL** | Deploy web app on Vercel / Cloudflare Pages + API on Railway/Render | Deployable in 1 click |
-| **Video Demo (90s)** | Screen recording following [`docs/DEMO.md`](file:///c:/Users/tajud/Desktop/hack/ambit/docs/DEMO.md) | Script ready |
+| **Video Demo (90s)** | Screen recording following [`docs/DEMO.md`](docs/DEMO.md) | Script ready |
 | **Dual-Mode UI** | Works instantly without wallet, and works with Phantom on Devnet | Verified |
 | **Tracks Selected** | Main Track ($100k) + Pyth Network Bounty | Identified |
 
@@ -96,3 +96,31 @@ To ensure maximum score during judge evaluation:
 ## 5. Summary Recommendation
 
 The codebase is technically sound, aesthetically refined, and strategically aligned with the Stocklana judging rubric. With the button contrast fixed, splash screen added, Pyth feeds mapped, and verification passing cleanly, you are in an ideal position to submit and compete for the top prizes.
+
+---
+
+## 6. Post-Audit Reconciliation (2026-09-23)
+
+This document is a dated evaluation (September 20, 2026). Several figures in it have since
+changed and are recorded here rather than rewritten above, so the audit stays a faithful
+snapshot of what was assessed. Where this section and the body disagree, **this section and
+the repository are authoritative.**
+
+| Claim above | Was | Now |
+|---|---|---|
+| Test count (§1, §2 Criterion 4, §4 checklist) | 58 / 58 | **63 / 63** across 8 packages — `bash scripts/verify` |
+| Settlement network (§1, §2 Criterion 2, §4 checklist) | Solana Devnet | **Mainnet-Beta by default**, selected by `SOLANA_NETWORK` |
+| Frontend surface (CHANGELOG, ARCHITECTURE) | 5 screens | **7 routes** — `/markets` and `/proof` added |
+| Repository URL (§4 checklist) | `github.com/Tajudeeen/ambit` | `github.com/Tajudeeen/afterhour` |
+
+The network change is the substantive one. It is not a relabelling: the execution cluster and
+every user-facing label now derive from a single env-driven source of truth
+(`resolveSolanaNetwork` in `@afterhours/types`), so a displayed label can no longer disagree
+with the cluster a transaction actually settles on. See `docs/ADRs.md` ADR-4.
+
+The PreStocks expansion referenced in §3B — 8 pre-IPO stocks alongside the 3 public equities —
+was **planned, not scope creep**. It is the bounty deliverable described above, and the asset
+universe is layered rather than replaced: the canonical demo path (NVDA/AAPL/TSLA, the $10,420
+portfolio, `docs/DEMO.md`) is unchanged.
+
+See `docs/BUILD-PLAN.md` for the full merged scope and conflict register.
