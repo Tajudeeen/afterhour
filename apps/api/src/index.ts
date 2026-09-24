@@ -606,6 +606,24 @@ export function createApp(options: CreateAppOptions = {}): Hono {
     c.res.headers.set('referrer-policy', 'no-referrer');
   });
 
+  app.get('/', (c: Context) =>
+    c.json({
+      service: 'afterhours-api',
+      status: 'ok',
+      version: '1.0.0',
+      description: 'AfterHours 24/7 Intelligence & Risk Governor for Tokenized Stocks on Solana',
+      endpoints: {
+        health: '/health',
+        radar: '/api/radar',
+        portfolio: '/api/portfolio/demo',
+        intelligence: '/api/assets/:symbol/intelligence',
+        analysis: '/api/assets/:symbol/analysis',
+        risk: '/api/assets/:symbol/risk',
+        execute: 'POST /api/execute',
+      },
+    }),
+  );
+
   app.get('/health', health);
 
   app.get('/version', (c: Context) =>
