@@ -1,51 +1,52 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-
-// In-memory session tracker: displays once on initial app load/open
-let hasShownSplashInSession = false;
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 
 export function SplashScreen() {
   const [visible, setVisible] = useState(false);
   const [fadingOut, setFadingOut] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const fadeTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const dismissedRef = useRef(false);
+  const router = useRouter();
 
-  useEffect(() => {
-    // Check if user specifically requested intro via ?intro=1 or ?splash=1
-    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-    const forceSplash = params?.get('intro') === '1' || params?.get('splash') === '1';
+  const goToDashboard = useCallback(() => {
+    if (dismissedRef.current) return;
+    dismissedRef.current = true;
+    setFadingOut(true);
 
-    if (!hasShownSplashInSession || forceSplash) {
-      hasShownSplashInSession = true;
-      setVisible(true);
-
-      // 2-second splash screen before transitioning to homepage
-      timerRef.current = setTimeout(() => {
-        dismiss();
-      }, 2000);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('afterhours_splash_seen', 'true');
     }
 
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-      if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
-    };
-  }, []);
+    try {
+      router.push('/');
+    } catch {
+      // router fallback
+    }
 
-  const dismiss = () => {
-    setFadingOut(true);
-    fadeTimerRef.current = setTimeout(() => {
+    setTimeout(() => {
       setVisible(false);
       setFadingOut(false);
     }, 300);
-  };
+  }, [router]);
+
+  useEffect(() => {
+    // Check if user specifically requested intro via ?intro=1 or ?splash=1 or hasn't seen it yet
+    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const forceSplash = params?.get('intro') === '1' || params?.get('splash') === '1';
+    const hasSeen = typeof window !== 'undefined' ? sessionStorage.getItem('afterhours_splash_seen') : null;
+
+    if (!hasSeen || forceSplash) {
+      setVisible(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (!visible) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
-        dismiss();
+        goToDashboard();
       }
     };
 
@@ -53,7 +54,7 @@ export function SplashScreen() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [visible]);
+  }, [visible, goToDashboard]);
 
   if (!visible) return null;
 
@@ -63,16 +64,15 @@ export function SplashScreen() {
       role="dialog"
       aria-modal="true"
       aria-label="AfterHours Splash Screen"
-      onClick={dismiss}
     >
-      <div className="splash-container" onClick={(e) => e.stopPropagation()}>
+      <div className="splash-container">
         <div className="splash-logo-wrap">
           <img
             src="/logo.png"
             alt="AfterHours Logo"
             className="splash-logo"
-            width={80}
-            height={80}
+            width={84}
+            height={84}
           />
         </div>
 
@@ -92,19 +92,22 @@ export function SplashScreen() {
         </p>
 
         <div className="splash-progress-track">
-          <div className="splash-progress-bar" />
+          <div className="splash-progress-bar" style={{ width: '100%', animation: 'none' }} />
         </div>
 
+        {/* Primary button for user to launch dashboard */}
+        <button
+          type="button"
+          className="splash-dashboard-btn"
+          onClick={goToDashboard}
+          aria-label="Go to Dashboard"
+        >
+          <span>Go to Dashboard</span>
+          <span style={{ fontSize: '1.2rem', marginLeft: '4px' }}>→</span>
+        </button>
+
         <div className="splash-status-text">
-          <span>INITIALIZING MARKET RADAR...</span>
-          <button
-            type="button"
-            className="splash-skip-btn"
-            onClick={dismiss}
-            aria-label="Skip to homepage"
-          >
-            Skip [Esc]
-          </button>
+          <span>PRESS ENTER OR CLICK TO LAUNCH DASHBOARD</span>
         </div>
       </div>
     </div>
