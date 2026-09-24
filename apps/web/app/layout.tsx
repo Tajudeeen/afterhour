@@ -5,6 +5,7 @@ import { SolanaWalletProviderClient } from '@/components/SolanaWalletProviderCli
 import { SplashScreen } from '@/components/SplashScreen';
 import { NavigationHeader } from '@/components/NavigationHeader';
 import { SiteFooter } from '@/components/SiteFooter';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 export const metadata: Metadata = {
   title: {
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <SiteFooter />
           </div>
         </SolanaWalletProviderClient>
+        <SpeedInsights />
       </body>
     </html>
   );
