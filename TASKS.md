@@ -70,9 +70,9 @@ Stocklana hackathon submission.
 
 ## D5 — Ship (completed)
 
-- [x] Branch `hack/stocklana-afterhours` created
+- [x] Branch `fix/solana-network-source-of-truth` created
 - [x] Commit pushed to GitHub
-- PR opened: https://github.com/Tajudeeen/afterhour/pull/new/hack/stocklana-afterhours
+- [x] PR opened: https://github.com/Tajudeeen/afterhour/pull/new/fix/solana-network-source-of-truth
 - [x] **Public Gap Radar** (`/gaps`) — wallet-free, statically-prerendered 24/7 gap monitor with real-time PreStocks+Pyth data, 30s auto-refresh
 - [x] **`GET /api/radar`** endpoint — unified data source for dashboard and gap radar pages
 - [x] **Real on-chain portfolio reading** — `buildPortfolioForWallet()` reads actual SPL token balances via Solana RPC
