@@ -979,3 +979,5 @@ async function executeTradeSimulation(_trade: {
 
 export const app = createApp();
 export { config as apiConfig };
+
+export default app;
