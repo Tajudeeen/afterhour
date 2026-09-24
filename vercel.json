@@ -1,23 +1,6 @@
 {
-  "version": 2,
-  "build": {
-    "env": {
-      "NEXT_PUBLIC_API_URL": "http://localhost:8787",
-      "NEXT_PUBLIC_SOLANA_NETWORK": "mainnet-beta"
-    }
-  },
-  "builds": [
-    {
-      "source": "package.json",
-      "use": "@vercel/static-build",
-      "config": { "distDir": "apps/web/.next" }
-    }
-  ],
-  "routes": [
-    {
-      "source": "/api/(.*)",
-      "destination": "https://<YOUR-API-HOST>/api/$1",
-      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH"]
-    }
-  ]
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "pnpm --filter @afterhours/web build",
+  "outputDirectory": "apps/web/.next",
+  "installCommand": "pnpm install"
 }
