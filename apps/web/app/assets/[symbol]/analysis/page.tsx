@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { getAssetAnalysis, type AIAnalysis, type AIAnalysisContext } from '@/lib/api';
+import { getAssetAnalysis, getAssetIntelligence, type AIAnalysis, type AIAnalysisContext, type AssetIntelligence } from '@/lib/api';
+import { RiskSimulator } from '@/components/RiskSimulator';
 
 export default async function AnalysisPage({ params }: { params: Promise<{ symbol: string }> }) {
   const { symbol } = await params;
@@ -7,6 +8,7 @@ export default async function AnalysisPage({ params }: { params: Promise<{ symbo
 
   let analysis: AIAnalysis | null = null;
   let context: AIAnalysisContext | null = null;
+  let intelligence: AssetIntelligence | null = null;
 
   try {
     const data = await getAssetAnalysis(upperSymbol);
@@ -42,7 +44,33 @@ export default async function AnalysisPage({ params }: { params: Promise<{ symbo
     };
   }
 
+  // Fetch full intelligence for the RiskSimulator (needs riskScore, pythConfidence, etc.)
+  try {
+    intelligence = await getAssetIntelligence(upperSymbol);
+  } catch {
+    // Simulator will use fallback values from analysis context
+  }
+
   if (!analysis || !context) return null;
+
+  // Build a minimal AssetIntelligence for the simulator if the full fetch failed
+  const simIntelligence: AssetIntelligence = intelligence ?? {
+    symbol: upperSymbol,
+    name: upperSymbol,
+    mint: '',
+    referencePrice: context.referencePrice,
+    referenceSource: 'seeded',
+    referenceUpdatedAt: new Date().toISOString(),
+    onchainPrice: context.onchainPrice,
+    gapPercent: context.gapPercent,
+    gapDollar: context.onchainPrice - context.referencePrice,
+    routes: [],
+    bestRoute: null,
+    riskScore: { score: 50, band: 'Watch' },
+    marketStatus: context.marketStatus,
+    liquidity: context.liquidity,
+    source: 'demo',
+  };
 
   return (
     <div className="page-shell">
@@ -52,7 +80,7 @@ export default async function AnalysisPage({ params }: { params: Promise<{ symbo
 
       <section style={{ marginTop: 24 }}>
         <div>
-          <p className="eyebrow eyebrow-accent">AI Analyst</p>
+          <p className="eyebrow eyebrow-accent">AfterHours Analysis</p>
           <h1 style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: '2.4rem', color: 'var(--ink-heading)' }}>
             Why this matters
           </h1>
@@ -103,12 +131,17 @@ export default async function AnalysisPage({ params }: { params: Promise<{ symbo
         </div>
       </section>
 
+      {/* Interactive Risk Simulator */}
+      <section style={{ marginTop: 24 }}>
+        <RiskSimulator symbol={upperSymbol} initialIntelligence={simIntelligence} />
+      </section>
+
       <section style={{ marginTop: 24 }}>
         <div className="data-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <h3 style={{ margin: '0 0 4px', color: 'var(--ink-muted)', fontSize: '0.82rem', fontWeight: 800 }}>
-                AI Analyst recommendation
+                Recommendation
               </h3>
               <div style={{ color: 'var(--ink-body)', fontSize: '1.1rem' }}>
                 {analysis.recommendation.action.toUpperCase()}: ${analysis.recommendation.amountUsd.toLocaleString()} {analysis.recommendation.asset}

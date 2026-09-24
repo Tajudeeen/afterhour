@@ -1,32 +1,42 @@
 'use client';
 
-import { useState } from 'react';
-import type { AssetIntelligence } from '@/lib/api';
+import { useState, useEffect, useCallback } from 'react';
+import { getAssetIntelligence, type AssetIntelligence } from '@/lib/api';
 
 interface RiskSimulatorProps {
   symbol: string;
   initialIntelligence: AssetIntelligence;
 }
 
-export function RiskSimulator({ symbol: _symbol, initialIntelligence }: RiskSimulatorProps) {
+export function RiskSimulator({ symbol, initialIntelligence }: RiskSimulatorProps) {
   const [sliderValue, setSliderValue] = useState<number>(Math.round(initialIntelligence.gapPercent));
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
+  const [liveIntelligence, setLiveIntelligence] = useState<AssetIntelligence | null>(null);
 
-  const referencePrice = initialIntelligence.referencePrice;
-  const simulatedOnchainPrice = Number((referencePrice * (1 + sliderValue / 100)).toFixed(2));
+  // When simulating, fetch the real engine output for the simulated gap
+  const fetchSimulated = useCallback(async (gap: number) => {
+    try {
+      const intel = await getAssetIntelligence(symbol, gap);
+      setLiveIntelligence(intel);
+    } catch {
+      setLiveIntelligence(null);
+    }
+  }, [symbol]);
+
+  // Debounce the API call so we don't spam on every slider tick
+  useEffect(() => {
+    if (!isSimulating) return;
+    const id = setTimeout(() => {
+      void fetchSimulated(sliderValue);
+    }, 150);
+    return () => clearTimeout(id);
+  }, [sliderValue, isSimulating, fetchSimulated]);
+
+  // Use live intelligence if simulating, otherwise fall back to initial snapshot
+  const intel = isSimulating && liveIntelligence ? liveIntelligence : initialIntelligence;
   const absGap = Math.abs(sliderValue);
-
-  // Compute live local simulated score
-  let simScore = 15;
-  if (absGap >= 20) simScore += 45;
-  else if (absGap >= 10) simScore += 30;
-  else if (absGap >= 5) simScore += 20;
-  else if (absGap >= 2) simScore += 10;
-
-  if (initialIntelligence.marketStatus === 'closed') simScore += 20;
-  if (initialIntelligence.pythConfidenceRatioPercent && initialIntelligence.pythConfidenceRatioPercent > 0.5) simScore += 10;
-
-  const simScoreClamped = Math.min(100, Math.max(0, simScore));
+  const referencePrice = intel.referencePrice;
+  const simulatedOnchainPrice = Number((referencePrice * (1 + sliderValue / 100)).toFixed(2));
 
   const getBand = (score: number) => {
     if (score <= 20) return { name: 'Normal', tone: 'status-normal', color: 'var(--ink-muted)' };
@@ -36,20 +46,24 @@ export function RiskSimulator({ symbol: _symbol, initialIntelligence }: RiskSimu
     return { name: 'Extreme', tone: 'status-extreme', color: '#ff6b6b' };
   };
 
+  // Use the REAL engine's risk score when simulating, fall back to inline for initial state
+  const simScoreClamped = isSimulating && liveIntelligence ? intel.riskScore.score : computeInlineRiskScore(intel, sliderValue);
   const bandInfo = getBand(simScoreClamped);
 
-  // Dynamic slippage buffer computation
-  const pythConfUsd = initialIntelligence.pythConfidenceUsd || Number((referencePrice * 0.0075).toFixed(2));
+  // Dynamic slippage — use real engine value when available
+  const pythConfUsd = intel.pythConfidenceUsd || Number((referencePrice * 0.0075).toFixed(2));
   const pythConfRatio = Number(((pythConfUsd / referencePrice) * 100).toFixed(2));
-  const dynamicSlippageBps = Math.min(500, Math.max(50, 50 + Math.round(pythConfRatio * 100) + Math.round(absGap * 5)));
+  const dynamicSlippageBps = intel.pythDynamicSlippageBps
+    ? intel.pythDynamicSlippageBps + Math.round(absGap * 5)
+    : Math.min(500, Math.max(50, 50 + Math.round(pythConfRatio * 100) + Math.round(absGap * 5)));
 
-  // Simulated Governor Action
+  // Governor verdict — derived from the real risk score when simulating
   let governorVerdict = 'PASS: Proposed trade within limits';
   let isBlocked = false;
-  if (absGap >= 20) {
+  if (simScoreClamped >= 60) {
     governorVerdict = 'REJECTED: Policy Cap Exceeded (Projected exposure > 35%)';
     isBlocked = true;
-  } else if (absGap >= 10) {
+  } else if (simScoreClamped >= 40) {
     governorVerdict = 'CLAMPED: Trade size restricted to $850 USD safe max';
   }
 
@@ -61,6 +75,7 @@ export function RiskSimulator({ symbol: _symbol, initialIntelligence }: RiskSimu
   const resetToLive = () => {
     setSliderValue(Math.round(initialIntelligence.gapPercent));
     setIsSimulating(false);
+    setLiveIntelligence(null);
   };
 
   return (
@@ -155,7 +170,7 @@ export function RiskSimulator({ symbol: _symbol, initialIntelligence }: RiskSimu
             {simScoreClamped} <span style={{ fontSize: '0.8rem', fontWeight: 700 }}>({bandInfo.name})</span>
           </div>
           <div style={{ fontSize: '0.7rem', color: 'var(--ink-subtle)', marginTop: '2px' }}>
-            Deterministically computed
+            {isSimulating && liveIntelligence ? 'Live engine' : 'Deterministically computed'}
           </div>
         </div>
 
@@ -178,4 +193,22 @@ export function RiskSimulator({ symbol: _symbol, initialIntelligence }: RiskSimu
       </div>
     </div>
   );
+}
+
+/**
+ * Inline risk score fallback — used only for the initial non-simulated state
+ * until the first real engine fetch completes.
+ */
+function computeInlineRiskScore(intelligence: AssetIntelligence, sliderGap: number): number {
+  let score = 15;
+  const absGap = Math.abs(sliderGap);
+  if (absGap >= 20) score += 45;
+  else if (absGap >= 10) score += 30;
+  else if (absGap >= 5) score += 20;
+  else if (absGap >= 2) score += 10;
+
+  if (intelligence.marketStatus === 'closed') score += 20;
+  if (intelligence.pythConfidenceRatioPercent && intelligence.pythConfidenceRatioPercent > 0.5) score += 10;
+
+  return Math.min(100, Math.max(0, score));
 }

@@ -34,10 +34,10 @@ export function SiteFooter() {
         <div className="footer-links-col">
           <div className="footer-col-title">PRODUCT</div>
           <Link href="/">Dashboard</Link>
+          <Link href="/gaps">Gap Radar</Link>
           <Link href="/markets">PreStocks Markets</Link>
           <Link href="/proof">Solana Proofs</Link>
           <Link href="/activity">Activity Audit Trail</Link>
-          <Link href="/?intro=1">System Intro</Link>
         </div>
 
         {/* Pre-IPO Markets */}

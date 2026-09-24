@@ -58,20 +58,27 @@ Stocklana hackathon submission.
 - [x] market-engine: 16 tests (gap, regime, liquidity, scoring)
 - [x] risk-engine: 7 tests (evaluate, governor policy enforcement)
 - [x] agent: 3 tests (deterministic fallback, LLM provider)
-- [x] solana: 3 tests (stock exports, portfolio builder, SPL Memo attestation)
-- [x] config: 13 tests (defaults, env overrides, validation)
+- [x] solana: 5 tests (stock exports, portfolio builder, SPL Memo attestation)
+- [x] config: 14 tests (defaults, env overrides, validation, Pyth API key)
 - [x] types: 1 test (exports)
-- [x] web: 1 smoke test (Next.js app router & wallet integration)
+- [x] web: 2 smoke tests (Next.js app router & wallet integration)
 - [x] API: 13 tests (portfolio, asset, execute, health, security, rebalancing accounting)
-- [x] Cross-platform verification gate (`pnpm run verify` / `bash scripts/verify`) passes — lint, typecheck, test (63/63 tests green), web build all green
+- [x] Cross-platform verification gate (`pnpm run verify` / `bash scripts/verify`) passes — lint, typecheck, test (65/65 tests green), web build all green
 - [x] Dual-mode Solana integration: Wallet Adapter (Mainnet-Beta by default; `SOLANA_NETWORK` selects devnet/testnet/localnet) + 1-click Demo mode
+- [x] Pyth Network Dual-Feed Market Intelligence (Equity.US vs Crypto.*X/Ondo feeds) with automated basis divergence calculations
 - [x] On-chain risk governance attestations via SPL Memo program with live Solscan links
 
 ## D5 — Ship (completed)
 
 - [x] Branch `hack/stocklana-afterhours` created
 - [x] Commit pushed to GitHub
-- PR opened: https://github.com/Tajudeeen/ambit/pull/new/hack/stocklana-afterhours
+- PR opened: https://github.com/Tajudeeen/afterhour/pull/new/hack/stocklana-afterhours
+- [x] **Public Gap Radar** (`/gaps`) — wallet-free, statically-prerendered 24/7 gap monitor with real-time PreStocks+Pyth data, 30s auto-refresh
+- [x] **`GET /api/radar`** endpoint — unified data source for dashboard and gap radar pages
+- [x] **Real on-chain portfolio reading** — `buildPortfolioForWallet()` reads actual SPL token balances via Solana RPC
+- [x] **Deterministic demo signatures** — `5demo_` prefixed signatures replacing random base58 generation
+- [x] **RiskSimulator wired to real engine** — calls `getAssetIntelligence` API for live risk scoring
+- [x] **API cross-verification** on `/proof` page — PreStocks data verified against API radar endpoint
 
 ## Out of scope (hackathon constraints)
 

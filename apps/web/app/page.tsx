@@ -1,69 +1,192 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getPortfolio, type AssetSummary, type Portfolio } from '@/lib/api';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { WalletBar } from '@/components/WalletBar';
+import { getPortfolio, getGapRadar, type AssetSummary, type Portfolio, type GapRadarAsset } from '@/lib/api';
 
 const DEMO_WALLET = 'demo';
 
-export default async function DashboardPage() {
-  let portfolio: Portfolio | null = null;
-  let assets: AssetSummary[] = [];
-  let error: string | null = null;
+export default function DashboardPage() {
+  const { connected } = useWallet();
+  const { setVisible } = useWalletModal();
+  const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
+  const [assets, setAssets] = useState<AssetSummary[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [radar, setRadar] = useState<GapRadarAsset[]>([]);
+  const [regime, setRegime] = useState<{ label: string; session: string } | null>(null);
+  const [marketHours, setMarketHours] = useState<{ status: string; nextOpenAt: string | null; lastCloseAt: string | null } | null>(null);
 
-  try {
-    const data = await getPortfolio(DEMO_WALLET);
-    portfolio = data.portfolio;
-    assets = data.assets;
-  } catch {
-    // Fallback to mock data if API is unavailable
-    portfolio = {
-      wallet: DEMO_WALLET,
-      totalValueUsd: 10000,
-      holdings: [
-        { symbol: 'ANTHROPIC', mint: 'Pren1FvFX6J3E4kXhJuCiAD5aDmGEb7qJRncwA8Lkhw', amount: 2.9, valueUsd: 3000, weightPercent: 30 },
-        { symbol: 'SPACEX', mint: 'PreANxuXjsy2pvisWWMNB6YaJNzr7681wJJr2rHsfTh', amount: 21.1, valueUsd: 2500, weightPercent: 25 },
-        { symbol: 'OPENAI', mint: 'PreweJYECqtQwBtpxHL171nL2K6umo692gTm7Q3rpgF', amount: 1.73, valueUsd: 2000, weightPercent: 20 },
-        { symbol: 'NEURALINK', mint: 'PrekqLJvJ3qVdXmBGDiexvwUTF4rLFDa6HWS4HJbw9S', amount: 2.35, valueUsd: 1000, weightPercent: 10 },
-        { symbol: 'USDC', mint: 'EPjFWdd5AufqSSqeM2qN1xB9qMLM6kq7K3e8n1W4c2X', amount: 1500, valueUsd: 1500, weightPercent: 15 },
-      ],
-      timestamp: new Date().toISOString(),
+  useEffect(() => {
+    if (!connected) {
+      setPortfolio(null);
+      setAssets([]);
+      setError(null);
+      return;
+    }
+    const fetchPortfolio = async () => {
+      try {
+        const data = await getPortfolio(DEMO_WALLET);
+        setPortfolio(data.portfolio);
+        setAssets(data.assets);
+        setError(null);
+      } catch {
+        setError('API unavailable — unable to load portfolio');
+      }
     };
-    assets = [
-      {
-        symbol: 'ANTHROPIC', onchainPrice: 1009.03, referencePrice: 1029.32, gapPercent: -1.94,
-        valueUsd: 3000, weightPercent: 30,
-        riskScore: { score: 28, band: 'Watch' },
-        marketStatus: 'open', liquidity: 'medium',
-      },
-      {
-        symbol: 'SPACEX', onchainPrice: 118.45, referencePrice: 152.59, gapPercent: -22.3,
-        valueUsd: 2500, weightPercent: 25,
-        riskScore: { score: 92, band: 'Extreme' },
-        marketStatus: 'open', liquidity: 'low',
-      },
-      {
-        symbol: 'OPENAI', onchainPrice: 1155.65, referencePrice: 994.16, gapPercent: 16.2,
-        valueUsd: 2000, weightPercent: 20,
-        riskScore: { score: 85, band: 'High' },
-        marketStatus: 'open', liquidity: 'medium',
-      },
-      {
-        symbol: 'NEURALINK', onchainPrice: 424.72, referencePrice: 335.26, gapPercent: 26.5,
-        valueUsd: 1000, weightPercent: 10,
-        riskScore: { score: 89, band: 'High' },
-        marketStatus: 'open', liquidity: 'low',
-      },
-      {
-        symbol: 'USDC', onchainPrice: 1.0, referencePrice: 1.0, gapPercent: 0,
-        valueUsd: 1500, weightPercent: 15,
-        riskScore: { score: 0, band: 'Normal' },
-        marketStatus: 'open', liquidity: 'high',
-      },
-    ];
-    error = 'API unavailable — showing snapshot data';
-  }
+    fetchPortfolio();
+  }, [connected]);
 
-  const overallRisk = Math.max(...assets.map((a) => a.riskScore.score));
-  const marketStatus = assets.find((a) => a.symbol !== 'USDC')?.marketStatus ?? 'open';
+  // Fetch live gap radar from the API (serves PreStocks + Pyth data)
+  useEffect(() => {
+    const loadRadar = async () => {
+      try {
+        const data = await getGapRadar();
+        setRadar(data.assets);
+        setRegime(data.regime);
+        setMarketHours(data.marketHours);
+        setError(null);
+      } catch {
+        setError('API unavailable — unable to load market data');
+      }
+    };
+    loadRadar();
+    const interval = setInterval(loadRadar, 30_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const topGaps = radar.slice(0, 5);
+  const totalGapValue = topGaps.reduce((sum, a) => sum + Math.abs(a.gapPercent), 0);
+  const avgGap = topGaps.length > 0 ? totalGapValue / topGaps.length : 0;
+  const largestGap = topGaps.length > 0 ? topGaps[0] : null;
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'open': return 'var(--lime)';
+      case 'closed': return '#ff6b6b';
+      case 'after-hours': return '#ffa726';
+      case 'pre-market': return '#64b5f6';
+      default: return 'var(--ink-muted)';
+    }
+  };
+
+  if (!connected) {
+    return (
+      <div className="dashboard-shell">
+        <WalletBar />
+        <section style={{ marginTop: 40 }}>
+          <div>
+            <p className="eyebrow eyebrow-accent">Market Overview</p>
+            <h1 style={{ margin: '8px 0', fontFamily: 'Georgia, serif', fontSize: 'clamp(2rem, 5vw, 3rem)', color: 'var(--ink-heading)', fontWeight: 500 }}>
+              Tokenized Stock Intelligence on Solana
+            </h1>
+            <p style={{ margin: '0 0 24px', color: 'var(--ink-muted)', fontSize: '1.1rem', lineHeight: 1.6 }}>
+              Monitor tokenized equity gaps 24/7 with Pyth Network feeds and PreStocks data. When traditional markets close, tokenized equities on Solana keep trading.
+            </p>
+          </div>
+
+          {/* Regime banner */}
+          {regime && marketHours && (
+            <div className="data-card" style={{ marginBottom: 24, display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center' }}>
+              <div>
+                <span style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', fontFamily: 'var(--mono)', fontWeight: 800, textTransform: 'uppercase' }}>Market Regime</span>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: '1.3rem', fontWeight: 800, color: 'var(--ink-heading)' }}>{regime.label}</div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', fontFamily: 'var(--mono)', fontWeight: 800, textTransform: 'uppercase' }}>Equity Session</span>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: '1.1rem', fontWeight: 700 }}>
+                  <span style={{ color: getStatusColor(marketHours.status) }}>{marketHours.status.toUpperCase()}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Top gaps grid */}
+          <div className="data-card" style={{ marginTop: 24, marginBottom: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontFamily: 'var(--mono)', fontSize: '0.85rem', fontWeight: 800, color: 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                What's Hot — 7-Day Trending Gaps
+              </h3>
+              <span style={{ fontSize: '0.72rem', color: 'var(--ink-subtle)', fontFamily: 'var(--mono)' }}>
+                Persistent divergence detected by Pyth dual-feed comparison
+              </span>
+            </div>
+            <div style={{ display: 'grid', gap: 12 }}>
+              {topGaps.slice(0, 3).map((g) => (
+                <div key={g.symbol} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--line)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <Link href={`/assets/${g.symbol}/analysis`} style={{ textDecoration: 'none' }}>
+                      <span style={{ fontFamily: 'var(--mono)', fontWeight: 800, color: 'var(--ink-heading)' }}>{g.symbol}</span>
+                    </Link>
+                    <span style={{ fontSize: '0.65rem', padding: '2px 8px', borderRadius: 4, background: 'rgba(216, 255, 79, 0.15)', color: 'var(--lime)', fontFamily: 'var(--mono)' }}>
+                      {g.source === 'live' ? 'LIVE' : 'DEMO'}
+                    </span>
+                  </div>
+                  <span className={g.gapPercent > 0 ? 'gap-positive' : 'gap-negative'} style={{ fontSize: '0.95rem', fontFamily: 'var(--mono)' }}>
+                    {g.gapPercent > 0 ? '+' : ''}{g.gapPercent.toFixed(2)}% — Risk {g.riskScore.score}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Top gaps grid */}
+          <div className="data-card" style={{ marginTop: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontFamily: 'var(--mono)', fontSize: '0.85rem', fontWeight: 800, color: 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Top 5 Market Gaps
+              </h3>
+              <Link href="/gaps" className="text-link">Full Gap Radar →</Link>
+            </div>
+            <div style={{ display: 'grid', gap: 12 }}>
+              {topGaps.map((g) => (
+                <div key={g.symbol} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--line)' }}>
+                  <Link href={`/assets/${g.symbol}/analysis`} style={{ textDecoration: 'none' }}>
+                    <span style={{ fontFamily: 'var(--mono)', fontWeight: 800, color: 'var(--ink-heading)' }}>{g.symbol}</span>
+                  </Link>
+                  <span className={g.gapPercent > 0 ? 'gap-positive' : 'gap-negative'} style={{ fontSize: '0.95rem', fontFamily: 'var(--mono)' }}>
+                    {g.gapPercent > 0 ? '+' : ''}{g.gapPercent.toFixed(2)}%
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: '28px', marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--line)' }}>
+              <div>
+                <span style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', fontFamily: 'var(--mono)', fontWeight: 800, textTransform: 'uppercase' }}>Avg Gap</span>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: '1.3rem', fontWeight: 800, color: 'var(--ink-heading)' }}>{avgGap.toFixed(1)}%</div>
+              </div>
+              {largestGap && (
+                <div>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', fontFamily: 'var(--mono)', fontWeight: 800, textTransform: 'uppercase' }}>Largest Gap</span>
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: '1.3rem', fontWeight: 800 }}>
+                    <span className={largestGap.gapPercent > 0 ? 'gap-positive' : 'gap-negative'}>
+                      {largestGap.gapPercent > 0 ? '+' : ''}{largestGap.gapPercent.toFixed(1)}% {largestGap.symbol}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <section style={{ marginTop: 40, textAlign: 'center' }}>
+            <p style={{ margin: '0 0 20px', color: 'var(--ink-muted)', fontSize: '1rem' }}>
+              Connect a wallet to view your portfolio and risk analysis.
+            </p>
+            <button
+              type="button"
+              className="button button-primary"
+              style={{ minWidth: '200px' }}
+              onClick={() => setVisible(true)}
+            >
+              Connect Wallet →
+            </button>
+          </section>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-shell">
@@ -75,6 +198,22 @@ export default async function DashboardPage() {
 
       <WalletBar />
 
+      {/* Regime banner for connected users */}
+      {regime && marketHours && (
+        <div className="data-card" style={{ marginTop: 20, display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div>
+            <span style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', fontFamily: 'var(--mono)', fontWeight: 800, textTransform: 'uppercase' }}>Market Regime</span>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: '1.1rem', fontWeight: 800, color: 'var(--ink-heading)' }}>{regime.label}</div>
+          </div>
+          <div>
+            <span style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', fontFamily: 'var(--mono)', fontWeight: 800, textTransform: 'uppercase' }}>Equity Session</span>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: '1.1rem', fontWeight: 700 }}>
+              <span style={{ color: getStatusColor(marketHours.status) }}>{marketHours.status.toUpperCase()}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <section>
         <div className="portfolio-total">${portfolio?.totalValueUsd.toLocaleString() ?? '0'}</div>
         <div className="portfolio-subtotal">Portfolio value</div>
@@ -82,12 +221,12 @@ export default async function DashboardPage() {
 
       <div className="grid-3" style={{ marginTop: '28px' }}>
         <div className="risk-score-display">
-          <strong>{overallRisk}</strong>
+          <strong>{Math.max(...assets.map((a) => a.riskScore.score), 0)}</strong>
           <span>Overall risk score</span>
         </div>
         <div className="data-card">
           <h3>Market Status</h3>
-          <div className="data-value">{marketStatus.toUpperCase()}</div>
+          <div className="data-value">{assets.find((a) => a.symbol !== 'USDC')?.marketStatus ?? marketHours?.status ?? 'open'}</div>
           <div className="data-label">U.S. equities</div>
         </div>
         <div className="data-card">
@@ -96,6 +235,61 @@ export default async function DashboardPage() {
           <div className="data-label">24/7 trading</div>
         </div>
       </div>
+
+      {/* Market Overview Section */}
+      <section style={{ marginTop: '40px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h2 style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: '1.6rem', color: 'var(--ink-heading)' }}>
+            Market Overview
+          </h2>
+          <Link href="/gaps" className="text-link">
+            Full Gap Radar →
+          </Link>
+        </div>
+
+        <div className="data-card">
+          <div style={{ display: 'grid', gap: '14px' }}>
+            {topGaps.map((g) => (
+              <Link href={`/assets/${g.symbol}/analysis`} key={g.symbol} style={{ textDecoration: 'none' }}>
+                <div className="gap-row" style={{ cursor: 'pointer' }}>
+                  <div className="symbol">{g.symbol}</div>
+                  <div className="meta">
+                    <div className="value">
+                      Onchain: ${g.onchainPrice.toFixed(2)}
+                      {'  |  '}
+                      Fair Value: ${g.referencePrice.toFixed(2)}
+                    </div>
+                    <div className="data-label">
+                      {marketHours && <span style={{ color: getStatusColor(marketHours.status) }}>{marketHours.status}</span>}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div className={`value ${g.gapPercent > 0 ? 'gap-positive' : 'gap-negative'}`}>
+                      {g.gapPercent > 0 ? '+' : ''}{g.gapPercent.toFixed(2)}%
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: '28px', marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--line)' }}>
+            <div>
+              <span style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', fontFamily: 'var(--mono)', fontWeight: 800, textTransform: 'uppercase' }}>Avg Gap</span>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: '1.3rem', fontWeight: 800, color: 'var(--ink-heading)' }}>{avgGap.toFixed(1)}%</div>
+            </div>
+            {largestGap && (
+              <div>
+                <span style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', fontFamily: 'var(--mono)', fontWeight: 800, textTransform: 'uppercase' }}>Largest Gap</span>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: '1.3rem', fontWeight: 800 }}>
+                  <span className={largestGap.gapPercent > 0 ? 'gap-positive' : 'gap-negative'}>
+                    {largestGap.gapPercent > 0 ? '+' : ''}{largestGap.gapPercent.toFixed(1)}% {largestGap.symbol}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
 
       <section style={{ marginTop: '40px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -134,9 +328,14 @@ export default async function DashboardPage() {
 
       {assets.filter((a) => a.gapPercent > 1 || a.gapPercent < -1).length > 0 && (
         <section style={{ marginTop: '40px' }}>
-          <h2 style={{ margin: '0 0 20px', fontFamily: 'Georgia, serif', fontSize: '1.6rem', color: 'var(--ink-heading)' }}>
-            Gaps detected
-          </h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h2 style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: '1.6rem', color: 'var(--ink-heading)' }}>
+              Gaps detected
+            </h2>
+            <Link href="/gaps" className="text-link">
+              See full radar →
+            </Link>
+          </div>
           <div style={{ display: 'grid', gap: '14px' }}>
             {assets
               .filter((a) => Math.abs(a.gapPercent) > 1)

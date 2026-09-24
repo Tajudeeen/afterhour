@@ -12,7 +12,7 @@
 import type { Portfolio, PortfolioHolding, TokenizedStock } from '@afterhours/types';
 import type { TokenBalance } from './balances.js';
 
-export { SUPPORTED_STOCKS, LEGACY_STOCKS, PYTH_FEED_MAP, getStock, getStockByMint } from './assets.js';
+export { SUPPORTED_STOCKS, LEGACY_STOCKS, PYTH_FEED_MAP, PYTH_EQUITY_FEEDS, type PythFeedPairConfig, getStock, getStockByMint, USDC_MINT, USDC_DECIMALS } from './assets.js';
 export {
   createWalletStore,
   type WalletStore,

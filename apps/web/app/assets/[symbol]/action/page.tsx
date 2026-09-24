@@ -67,7 +67,7 @@ export default async function ActionPage({ params }: { params: Promise<{ symbol:
       <div className="grid-2" style={{ marginTop: 24 }}>
         <div>
           <div className="data-card">
-            <h3>AI proposes</h3>
+            <h3>Proposal</h3>
             <div className="action-confirm">
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <div>

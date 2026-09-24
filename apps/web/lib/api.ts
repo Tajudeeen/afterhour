@@ -116,6 +116,23 @@ export interface ExecuteResult {
   status: 'confirmed' | 'failed';
 }
 
+export interface GapRadarAsset {
+  symbol: string;
+  name: string;
+  mint: string;
+  referencePrice: number;
+  onchainPrice: number;
+  gapPercent: number;
+  gapDollar: number;
+  gapDirection: 'premium' | 'discount' | 'neutral';
+  riskScore: { score: number; band: string };
+  marketStatus: string;
+  liquidity: string;
+  referenceSource: 'pyth-live' | 'pyth-stale' | 'prestocks-live' | 'seeded';
+  source: 'live' | 'demo';
+  routes: number;
+}
+
 function apiUrl(): string {
   return (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8787').replace(/\/+$/u, '');
 }
@@ -177,6 +194,16 @@ export interface AssetIntelligence {
   pythConfidenceUsd?: number;
   pythConfidenceRatioPercent?: number;
   pythDynamicSlippageBps?: number;
+  pythFeedPair?: {
+    equitySymbol: string;
+    tokenSymbol: string;
+    equityPrice: number;
+    tokenPrice: number;
+    gapPercent: number;
+    tokenType: 'xStock' | 'Ondo';
+    equityFeedId: string;
+    tokenFeedId: string;
+  };
 }
 
 export async function getAssetGap(symbol: string): Promise<{ snapshot: PriceSnapshot; riskScore: RiskScore }> {
@@ -190,6 +217,15 @@ export async function getAssetIntelligence(symbol: string, simulatedGapPercent?:
 
 export async function getActivity(wallet: string): Promise<{ activities: ActivityItem[] }> {
   return requestJson(`/api/activity/${encodeURIComponent(wallet)}`);
+}
+
+export async function getGapRadar(): Promise<{
+  assets: GapRadarAsset[];
+  regime: { label: string; session: string };
+  marketHours: { status: string; nextOpenAt: string | null; lastCloseAt: string | null };
+  observedAt: string;
+}> {
+  return requestJson('/api/radar');
 }
 
 export async function executeTrade(body: {

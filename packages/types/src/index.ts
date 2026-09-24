@@ -232,6 +232,16 @@ export interface AssetIntelligence {
   pythConfidenceUsd?: number;
   pythConfidenceRatioPercent?: number;
   pythDynamicSlippageBps?: number;
+  pythFeedPair?: {
+    equitySymbol: string;
+    tokenSymbol: string;
+    equityPrice: number;
+    tokenPrice: number;
+    gapPercent: number;
+    tokenType: 'xStock' | 'Ondo';
+    equityFeedId: string;
+    tokenFeedId: string;
+  };
 }
 
 /* ------------------------------------------------------------------------- *

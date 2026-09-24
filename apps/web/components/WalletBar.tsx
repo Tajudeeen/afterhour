@@ -46,9 +46,8 @@ function WalletBarInner() {
   return (
     <div className="wallet-bar">
       <button className="wallet-connect" type="button" onClick={() => setVisible(true)}>
-        <span className="dot" /> Connect Solana wallet
+        <span className="dot" /> Connect Wallet
       </button>
-      <span className="wallet-connected">Connected as demo (Risk Governor active)</span>
     </div>
   );
 }
@@ -64,9 +63,8 @@ export function WalletBar() {
     return (
       <div className="wallet-bar">
         <button className="wallet-connect" type="button">
-          <span className="dot" /> Connect Solana wallet
+          <span className="dot" /> Connect Wallet
         </button>
-        <span className="wallet-connected">Connected as demo</span>
       </div>
     );
   }

@@ -7,9 +7,10 @@ describe('config', () => {
     delete process.env.SOLANA_RPC_URL;
     delete process.env.SOLANA_CHAIN_ID;
     delete process.env.API_PORT;
-    delete process.env.OPENAI_API_KEY;
+    delete process.env.LLM_API_KEY;
     delete process.env.LLM_MODEL;
     delete process.env.NEXT_PUBLIC_API_URL;
+    delete process.env.GROQ_API_KEY;
     reloadConfig();
   });
 
@@ -28,16 +29,28 @@ describe('config', () => {
       expect(c.solana.rpcUrl).toBe('https://custom.rpcurl');
     });
 
-    it('reads OPENAI_API_KEY when set', () => {
-      process.env.OPENAI_API_KEY = 'sk-test-123';
+    it('reads LLM_API_KEY when set', () => {
+      process.env.LLM_API_KEY = 'sk-test-123';
       const c = loadConfig();
-      expect(c.llmApiKey).toBe('sk-test-123');
+      expect(c.llmKey).toBe('sk-test-123');
     });
 
-    it('returns null for llmApiKey when not set', () => {
-      delete process.env.OPENAI_API_KEY;
+    it('returns null for llmKey when not set', () => {
+      delete process.env.LLM_API_KEY;
       const c = loadConfig();
-      expect(c.llmApiKey).toBeNull();
+      expect(c.llmKey).toBeNull();
+    });
+
+    it('reads GROQ_API_KEY when set', () => {
+      process.env.GROQ_API_KEY = 'gsk-test-456';
+      const c = loadConfig();
+      expect(c.groqKey).toBe('gsk-test-456');
+    });
+
+    it('returns null for groqKey when not set', () => {
+      delete process.env.GROQ_API_KEY;
+      const c = loadConfig();
+      expect(c.groqKey).toBeNull();
     });
 
     it('reads API_PORT when set', () => {

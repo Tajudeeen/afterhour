@@ -97,6 +97,46 @@ export default async function AssetPage({ params }: { params: Promise<{ symbol: 
         </div>
       </div>
 
+      {intelligence.pythFeedPair && (
+        <div className="data-card" style={{ marginTop: '20px', borderColor: 'var(--pyth-lavender)', background: 'rgba(123, 97, 255, 0.04)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--pyth-lavender)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              ⬡ Pyth Network Dual-Feed Market Intelligence
+            </div>
+            <span className="pyth-badge pyth-live">Verified Pyth Pair</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+            <div>
+              <div style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', fontWeight: 800, textTransform: 'uppercase' }}>Underlying Equity Feed</div>
+              <div style={{ fontFamily: 'SF Mono, monospace', fontSize: '1.1rem', fontWeight: 700, color: 'var(--ink-heading)', marginTop: '2px' }}>
+                ${intelligence.pythFeedPair.equityPrice.toFixed(2)}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--ink-subtle)', fontFamily: 'SF Mono, monospace', marginTop: '2px' }}>
+                {intelligence.pythFeedPair.equitySymbol}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', fontWeight: 800, textTransform: 'uppercase' }}>On-Chain Tokenized Feed</div>
+              <div style={{ fontFamily: 'SF Mono, monospace', fontSize: '1.1rem', fontWeight: 700, color: 'var(--ink-heading)', marginTop: '2px' }}>
+                ${intelligence.pythFeedPair.tokenPrice.toFixed(2)}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--ink-subtle)', fontFamily: 'SF Mono, monospace', marginTop: '2px' }}>
+                {intelligence.pythFeedPair.tokenSymbol} ({intelligence.pythFeedPair.tokenType})
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', fontWeight: 800, textTransform: 'uppercase' }}>Feed Divergence Gap</div>
+              <div style={{ fontFamily: 'SF Mono, monospace', fontSize: '1.1rem', fontWeight: 800, color: intelligence.pythFeedPair.gapPercent > 0 ? 'var(--lime)' : 'var(--amber)', marginTop: '2px' }}>
+                {intelligence.pythFeedPair.gapPercent > 0 ? '+' : ''}{intelligence.pythFeedPair.gapPercent.toFixed(2)}%
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--ink-subtle)', marginTop: '2px' }}>
+                Dynamic Slippage: {intelligence.pythDynamicSlippageBps || 50} bps
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid-3" style={{ marginTop: '24px' }}>
         <div className="data-card">
           <h3>Gap</h3>
@@ -145,7 +185,7 @@ export default async function AssetPage({ params }: { params: Promise<{ symbol: 
 
       <div style={{ marginTop: '32px', display: 'flex', gap: '16px' }}>
         <Link href={`/assets/${intelligence.symbol}/analysis`} className="button button-execute" style={{ padding: '0 20px', borderRadius: '12px' }}>
-          AI analysis →
+          Market analysis →
         </Link>
         <Link href={`/assets/${intelligence.symbol}/action`} className="button button-secondary">
           Risk evaluation →

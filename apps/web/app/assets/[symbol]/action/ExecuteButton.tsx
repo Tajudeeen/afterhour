@@ -26,16 +26,18 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
     setStatus('executing');
     try {
       const res = await executeTrade({
-        wallet: 'demo',
+        wallet: connected && publicKey ? publicKey.toBase58() : 'demo',
         action: evaluation.proposed.action,
         asset: symbol,
         amountUsd: evaluation.proposed.amountUsd,
-        signature: `demo_signed_${Date.now()}`,
+        signature: connected && publicKey ? '' : `demo_signed_${Date.now()}`,
       });
+      const sig = res.result.signature;
+      const isDemo = sig.startsWith('5demo_') || sig.startsWith('demo_') || sig.startsWith('user_signed') || !connected;
       setResult({
-        signature: res.result.signature,
+        signature: sig,
         explorerUrl: res.result.explorerUrl,
-        isLiveOnchain: false,
+        isLiveOnchain: connected && !isDemo,
       });
       setStatus('success');
     } catch (e) {

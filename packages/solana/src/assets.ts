@@ -83,3 +83,55 @@ export const PYTH_FEED_MAP: Record<string, string> = {
   TSLA: '16dad506d7db8da01c87581c87ca897a012a153557d4d578c3b9c9e1bc0632f1',
 };
 
+export interface PythFeedPairConfig {
+  symbol: string;
+  name: string;
+  equitySymbol: string;
+  equityFeedId: string;
+  tokenSymbol: string;
+  tokenFeedId: string;
+  tokenType: 'xStock' | 'Ondo';
+  ondoFeedId?: string;
+  defaultEquityPrice: number;
+  defaultTokenPrice: number;
+}
+
+export const PYTH_EQUITY_FEEDS: Record<string, PythFeedPairConfig> = {
+  AAPL: {
+    symbol: 'AAPL',
+    name: 'Apple Inc.',
+    equitySymbol: 'Equity.US.AAPL/USD',
+    equityFeedId: '49f6b65cb1de6b10eaf75e7c03ca029c306d0357e91b5311b175084a5ad55688',
+    tokenSymbol: 'Crypto.AAPLX/USD',
+    tokenFeedId: '978e6cc68a119ce066aa830017318563a9ed04ec3a0a6439010fc11296a58675',
+    tokenType: 'xStock',
+    ondoFeedId: 'e6734de88a83d9d2fb33072adab319004700aefd069653aba30ba9e3cac056f2',
+    defaultEquityPrice: 214.80,
+    defaultTokenPrice: 218.40,
+  },
+  NVDA: {
+    symbol: 'NVDA',
+    name: 'NVIDIA Corporation',
+    equitySymbol: 'Equity.US.NVDA/USD',
+    equityFeedId: 'b1073854ed24cbc755dc527418f52b7d271f6cc967bbf8d8129112b18860a593',
+    tokenSymbol: 'Crypto.NVDAX/USD',
+    tokenFeedId: '4244d07890e4610f46bbde67de8f43a4bf8b569eebe904f136b469f148503b7f',
+    tokenType: 'xStock',
+    ondoFeedId: '207ddea2a443d30b7e13a7c88a9e3f106765deb97049afc65a18cede50fffc82',
+    defaultEquityPrice: 182.40,
+    defaultTokenPrice: 189.70,
+  },
+  TSLA: {
+    symbol: 'TSLA',
+    name: 'Tesla, Inc.',
+    equitySymbol: 'Equity.US.TSLA/USD',
+    equityFeedId: '16dad506d7db8da01c87581c87ca897a012a153557d4d578c3b9c9e1bc0632f1',
+    tokenSymbol: 'Crypto.TSLAX/USD',
+    tokenFeedId: '47a156470288850a440df3a6ce85a55917b813a19bb5b31128a33a986566a362',
+    tokenType: 'xStock',
+    ondoFeedId: 'c09ef687ed07091c047da444f1499f2da52cdc1c085104643ec565a9eb1af514',
+    defaultEquityPrice: 268.50,
+    defaultTokenPrice: 274.20,
+  },
+};
+

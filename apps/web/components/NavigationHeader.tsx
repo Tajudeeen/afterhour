@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { NETWORK_LABEL } from '@/lib/network';
 
 export function NavigationHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -35,10 +34,10 @@ export function NavigationHeader() {
 
   const navItems = [
     { href: '/', label: 'Dashboard' },
+    { href: '/gaps', label: 'Gap Radar' },
     { href: '/markets', label: 'Markets' },
     { href: '/proof', label: 'Solana Proof' },
     { href: '/activity', label: 'Activity' },
-    { href: '/?intro=1', label: 'System Intro' },
     { href: 'https://github.com/Tajudeeen/afterhour', label: 'Documentation', external: true },
   ];
 
@@ -80,9 +79,6 @@ export function NavigationHeader() {
       {/* Header Actions */}
       <div className="header-actions">
         <ThemeToggle />
-        <div className="network-badge">
-          <span aria-hidden="true" /> {NETWORK_LABEL}
-        </div>
 
         {/* Mobile Hamburger Menu Toggle Button */}
         <button
@@ -144,9 +140,6 @@ export function NavigationHeader() {
               )}
             </div>
             <div className="mobile-nav-footer">
-              <div className="network-badge" style={{ justifyContent: 'center', width: '100%' }}>
-                <span aria-hidden="true" /> {NETWORK_LABEL}
-              </div>
             </div>
           </div>
         </div>

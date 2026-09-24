@@ -5,6 +5,26 @@ Meaningful changes only — not every commit. Newest first.
 ## [Unreleased]
 
 ### Added
+- **Public Gap Radar** (`apps/web/app/gaps/page.tsx`): Wallet-free, statically-prerendered 24/7 gap monitor showing real-time divergence between PreStocks fair value and on-chain DEX prices. Ranked by magnitude with regime classification, 30-second auto-refresh, and shareable asset analysis links. Powers audience capture for judges without wallet setup.
+- **`GET /api/radar`** endpoint: Returns all tracked assets sorted by absolute gap magnitude, with regime classification, market hours, and 30-second cache. Serves both `/gaps` page and dashboard from a single source of truth.
+- **"What's Hot" dashboard section**: Highlights top 3 trending gaps with LIVE/DEMO source badges and risk scores, powered by Pyth dual-feed comparison.
+- **RiskSimulator real engine wiring**: Now calls `getAssetIntelligence(symbol, simulatedGapPercent)` API endpoint for live risk score and slippage computation, with 150ms debounce. Falls back to inline computation only for initial state.
+- **Proof page API cross-verification**: Live feed receipt now cross-verifies PreStocks data against the API's `/api/radar` endpoint, displaying PASS/N/A status. Added NP-05 negative proof documenting portfolio isolation behavior.
+- `getGapRadar` API client function + `GapRadarAsset` type in `apps/web/lib/api.ts`.
+
+### Changed
+- **Real on-chain portfolio reading**: Added `buildPortfolioForWallet()` to API — reads actual USDC and supported stock token balances via Solana RPC `getParsedTokenAccountsByTokenAccountsByOwner`. All endpoints (execute, portfolio, analysis, risk) now use this instead of hardcoded `portfolios.demo!`. Empty wallets get transparent demo fallback; no silent asset fabrication.
+- **`executeTradeSimulation`**: Replaced random 88-char base58 signature generation with deterministic `5demo_` prefixed signatures derived from trade parameters. Execution path is now transparent: real user signatures are used if provided, deterministic demo signatures otherwise.
+- **Real market hours**: Replaced hardcoded `isWeekend: true` in `buildAIContext` with dynamic computation from market status (`'closed' | 'after-hours'` → weekend).
+- `ExecuteButton.tsx` now passes real wallet address (`publicKey.toBase58()`) to the API instead of hardcoded `'demo'`.
+- Updated test count to **65/65** across 8 workspace packages in README and proof page.
+- **Pyth Network Dual-Feed Market Intelligence & Oracle Discrepancy Engine**:
+  - Implemented full compliance with Pyth's Hackathon bounty prompt ("Equity.US.AAPL/USD vs Crypto.AAPLX/USD vs Crypto.AAPLON/USD").
+  - Added exact Pyth Hermes ID mapping for TradFi equities (`Equity.US.*`) alongside tokenized on-chain counterparts (`Crypto.*X` / Ondo) for AAPL, NVDA, and TSLA.
+  - Multi-tab Market Discovery UI (`/markets`) with real-time toggle between **⬡ Pyth Dual-Feed Equities (xStocks / Ondo)** and **⚡ Pre-IPO Tokens (PreStocks)**.
+  - Pyth basis divergence telemetry card on `/assets/[symbol]` surfacing canonical feed IDs, TradFi vs DEX price basis, and gap percentage.
+  - Negative proof `NP-06` (Pyth Dynamic Slippage Expansion) on `/proof` demonstrating how the Risk Governor expands slippage and clamps maximum position sizing when on-chain vs TradFi Pyth divergence widens.
+  - Dynamic Pyth Pro Bearer auth support via `PYTH_HERMES_API_KEY` with graceful failover snapshots to prevent offline or unauthenticated UI degradation.
 - **Single source of truth for the Solana network.** `resolveSolanaNetwork`, `solanaNetworkLabel`,
   and `solscanTxUrl`/`solscanAddressUrl` in `@afterhours/types` now derive the cluster *and* every
   user-facing label from `SOLANA_NETWORK` / `SOLANA_RPC_URL` (server) and
