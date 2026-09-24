@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getAssetIntelligence, type PythMarketAsset } from '@/lib/api';
+import { getAssetIntelligence } from '@/lib/api';
 
 export interface PreStocksAsset {
   name: string;
@@ -189,7 +189,7 @@ export function MarketsView({ prestocksAssets, isPrestocksLive }: MarketsViewPro
           </div>
 
           <div style={{ display: 'grid', gap: '14px' }}>
-            {PYTH_MARKET_ASSETS.map((asset) => {
+            {pythAssetsDisplay.map((asset) => {
               const isPositive = asset.gapPercent > 0;
               return (
                 <Link
@@ -204,8 +204,8 @@ export function MarketsView({ prestocksAssets, isPrestocksLive }: MarketsViewPro
                         <span style={{ fontFamily: 'SF Mono, monospace', fontWeight: 800, fontSize: '1.15rem', color: 'var(--ink-heading)' }}>
                           {asset.symbol}
                         </span>
-                        <span className="pyth-badge pyth-live" style={{ fontSize: '0.62rem', padding: '1px 6px' }}>
-                          {asset.tokenType}
+                        <span className={`pyth-badge ${isPythLive ? 'pyth-live' : 'pyth-seeded'}`} style={{ fontSize: '0.62rem', padding: '1px 6px' }}>
+                          {isPythLive ? 'LIVE' : 'Seeded'}
                         </span>
                       </div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--ink-subtle)', marginTop: '2px' }}>
