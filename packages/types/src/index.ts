@@ -259,10 +259,13 @@ export type SolanaNetwork = 'mainnet-beta' | 'devnet' | 'testnet' | 'localnet';
 /**
  * Default when nothing is configured.
  *
- * Matches the wallet adapter default (`WalletAdapterNetwork.Mainnet`) and
- * `SOLANA_RPC_URL` in `.env.example`.
+ * Devnet is used so the demo flows (wallet connection, on-chain SPL Memo
+ * transactions) work immediately without mainnet rate limits or real SOL.
+ * Judges can connect a wallet, get devnet SOL from the faucet, and execute
+ * real on-chain transactions. Set NEXT_PUBLIC_SOLANA_NETWORK=mainnet-beta
+ * to go to mainnet.
  */
-export const DEFAULT_SOLANA_NETWORK: SolanaNetwork = 'mainnet-beta';
+export const DEFAULT_SOLANA_NETWORK: SolanaNetwork = 'devnet';
 
 /** Infer a network from an RPC URL. Returns undefined when it can't tell. */
 export function networkFromRpcUrl(url?: string | null): SolanaNetwork | undefined {
