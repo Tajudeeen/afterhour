@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { executeTrade, type RiskEvaluation } from '@/lib/api';
 import { NETWORK_LABEL } from '@/lib/network';
@@ -10,50 +11,21 @@ const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfc
 
 function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation: RiskEvaluation }) {
   const { connected, publicKey, sendTransaction } = useWallet();
+  const { setVisible } = useWalletModal();
   const { connection } = useConnection();
 
   const [status, setStatus] = useState<'idle' | 'signing' | 'confirming' | 'executing' | 'success' | 'error'>('idle');
   const [result, setResult] = useState<{ signature: string; explorerUrl: string; isLiveOnchain: boolean } | null>(null);
   const [errMsg, setErrMsg] = useState<string | null>(null);
-  const [showFallback, setShowFallback] = useState(false);
-
-  const handleDemoExecution = async () => {
-    setStatus('signing');
-    setErrMsg(null);
-    setShowFallback(false);
-    // Brief simulated delay
-    await new Promise((r) => setTimeout(r, 600));
-    setStatus('executing');
-    try {
-      const res = await executeTrade({
-        wallet: connected && publicKey ? publicKey.toBase58() : 'demo',
-        action: evaluation.proposed.action,
-        asset: symbol,
-        amountUsd: evaluation.proposed.amountUsd,
-        signature: connected && publicKey ? '' : `demo_signed_${Date.now()}`,
-      });
-      const sig = res.result.signature;
-      const isDemo = sig.startsWith('5demo_') || sig.startsWith('demo_') || sig.startsWith('user_signed') || !connected;
-      setResult({
-        signature: sig,
-        explorerUrl: res.result.explorerUrl,
-        isLiveOnchain: connected && !isDemo,
-      });
-      setStatus('success');
-    } catch (e) {
-      setErrMsg(e instanceof Error ? e.message : 'Execution failed');
-      setStatus('error');
-    }
-  };
 
   const handleLiveOnchainExecution = async () => {
     if (!connected || !publicKey) {
-      return handleDemoExecution();
+      setVisible(true);
+      return;
     }
 
     setStatus('signing');
     setErrMsg(null);
-    setShowFallback(false);
 
     try {
       const memoText = `AfterHours: ${evaluation.proposed.action.toUpperCase()} $${Math.round(evaluation.proposed.amountUsd)} ${symbol} | Risk Governor: Passed (Cap: ${evaluation.policy.maxSingleAssetExposurePercent}%)`;
@@ -94,7 +66,6 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
       const msg = e instanceof Error ? e.message : 'Wallet transaction failed';
       setErrMsg(msg);
       setStatus('error');
-      setShowFallback(true);
     }
   };
 
@@ -206,16 +177,6 @@ Payload String: "${memoText}"`}
       {errMsg && (
         <div style={{ marginBottom: '14px', padding: '12px', borderRadius: '8px', background: 'rgba(155, 48, 39, 0.15)', border: '1px solid var(--red)' }}>
           <p style={{ color: '#ffd98a', margin: '0 0 6px 0', fontSize: '0.82rem' }}>{errMsg}</p>
-          {showFallback && (
-            <button
-              className="button button-secondary button-wide"
-              type="button"
-              onClick={handleDemoExecution}
-              style={{ marginTop: '8px', fontSize: '0.8rem', padding: '8px 14px' }}
-            >
-              Continue in Demo Mode (Simulate execution) →
-            </button>
-          )}
         </div>
       )}
 
@@ -223,7 +184,7 @@ Payload String: "${memoText}"`}
         className="button button-execute button-wide"
         type="button"
         disabled={isBusy}
-        onClick={connected ? handleLiveOnchainExecution : handleDemoExecution}
+        onClick={handleLiveOnchainExecution}
       >
         {buttonText}
       </button>

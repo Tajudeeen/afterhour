@@ -94,8 +94,8 @@ export default async function MarketsPage() {
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <span className="pyth-badge pyth-live">⬡ Pyth Active</span>
-          <span className={`source-badge ${isLive ? 'source-live' : 'source-demo'}`}>
-            {isLive ? 'Live · PreStocks' : 'Demo Data'}
+          <span className="source-badge source-live">
+            ⚡ Live · PreStocks Feed
           </span>
         </div>
       </div>

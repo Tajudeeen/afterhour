@@ -7,10 +7,8 @@ import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { WalletBar } from '@/components/WalletBar';
 import { getPortfolio, getGapRadar, type AssetSummary, type Portfolio, type GapRadarAsset } from '@/lib/api';
 
-const DEMO_WALLET = 'demo';
-
 export default function DashboardPage() {
-  const { connected } = useWallet();
+  const { connected, publicKey } = useWallet();
   const { setVisible } = useWalletModal();
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
   const [assets, setAssets] = useState<AssetSummary[]>([]);
@@ -20,7 +18,7 @@ export default function DashboardPage() {
   const [marketHours, setMarketHours] = useState<{ status: string; nextOpenAt: string | null; lastCloseAt: string | null } | null>(null);
 
   useEffect(() => {
-    if (!connected) {
+    if (!connected || !publicKey) {
       setPortfolio(null);
       setAssets([]);
       setError(null);
@@ -28,7 +26,8 @@ export default function DashboardPage() {
     }
     const fetchPortfolio = async () => {
       try {
-        const data = await getPortfolio(DEMO_WALLET);
+        const walletAddress = publicKey.toBase58();
+        const data = await getPortfolio(walletAddress);
         setPortfolio(data.portfolio);
         setAssets(data.assets);
         setError(null);
@@ -37,7 +36,7 @@ export default function DashboardPage() {
       }
     };
     fetchPortfolio();
-  }, [connected]);
+  }, [connected, publicKey]);
 
   // Fetch live gap radar from the API (serves PreStocks + Pyth data)
   useEffect(() => {
@@ -302,27 +301,41 @@ export default function DashboardPage() {
         </div>
 
         <div className="portfolio-list">
-          {portfolio?.holdings.map((holding) => {
-            const asset = assets.find((a) => a.symbol === holding.symbol);
-            const gapClass = (asset && asset.gapPercent > 0) ? 'gap-positive' : (asset && asset.gapPercent < 0) ? 'gap-negative' : '';
-            return (
-              <Link href={`/assets/${holding.symbol}`} key={holding.symbol} className="portfolio-row">
-                <div className="symbol">{holding.symbol}</div>
-                <div className="meta">
-                  <div className="value">${holding.valueUsd.toLocaleString()}</div>
-                  {asset && (
-                    <div className={`value ${gapClass}`} style={{ fontSize: '0.85rem' }}>
-                      Gap: {asset.gapPercent > 0 ? '+' : ''}{asset.gapPercent.toFixed(2)}%
-                    </div>
-                  )}
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <StatusPill band={asset?.riskScore.band ?? 'Normal'} />
-                  <div className="weight">{Math.round(holding.weightPercent)}%</div>
-                </div>
+          {(!portfolio || portfolio.holdings.length === 0) ? (
+            <div className="data-card" style={{ textAlign: 'center', padding: '36px 20px', background: 'var(--surface-strong)' }}>
+              <p style={{ color: 'var(--ink-heading)', fontSize: '1rem', fontWeight: 600, margin: '0 0 8px' }}>
+                No Tokenized Stocks Detected in Connected Wallet
+              </p>
+              <p style={{ color: 'var(--ink-muted)', fontSize: '0.88rem', margin: '0 0 20px' }}>
+                Your connected Solana wallet currently holds 0 tokenized stock SPL tokens. Explore the live 24/7 markets below to execute a position.
+              </p>
+              <Link href="/markets" className="button button-primary" style={{ display: 'inline-block' }}>
+                View Live PreStocks & Pyth Markets →
               </Link>
-            );
-          })}
+            </div>
+          ) : (
+            portfolio.holdings.map((holding) => {
+              const asset = assets.find((a) => a.symbol === holding.symbol);
+              const gapClass = (asset && asset.gapPercent > 0) ? 'gap-positive' : (asset && asset.gapPercent < 0) ? 'gap-negative' : '';
+              return (
+                <Link href={`/assets/${holding.symbol}`} key={holding.symbol} className="portfolio-row">
+                  <div className="symbol">{holding.symbol}</div>
+                  <div className="meta">
+                    <div className="value">${holding.valueUsd.toLocaleString()}</div>
+                    {asset && (
+                      <div className={`value ${gapClass}`} style={{ fontSize: '0.85rem' }}>
+                        Gap: {asset.gapPercent > 0 ? '+' : ''}{asset.gapPercent.toFixed(2)}%
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <StatusPill band={asset?.riskScore.band ?? 'Normal'} />
+                    <div className="weight">{Math.round(holding.weightPercent)}%</div>
+                  </div>
+                </Link>
+              );
+            })
+          )}
         </div>
       </section>
 

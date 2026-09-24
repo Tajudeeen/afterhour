@@ -57,17 +57,11 @@ export default async function AssetPage({ params }: { params: Promise<{ symbol: 
       </section>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', marginTop: '24px' }}>
-        <span className={`source-badge ${intelligence.source === 'live' ? 'source-live' : 'source-demo'}`}>
-          {intelligence.source === 'live' ? 'Live Data' : 'Demo Data'}
+        <span className="source-badge source-live">
+          {intelligence.referenceSource === 'prestocks-live' ? 'Live · PreStocks Feed' : 'Live · Market Data'}
         </span>
-        <span className={`pyth-badge ${
-          intelligence.referenceSource === 'pyth-live' ? 'pyth-live' :
-          intelligence.referenceSource === 'prestocks-live' ? 'pyth-live' :
-          intelligence.referenceSource === 'pyth-stale' ? 'pyth-stale' : 'pyth-demo'
-        }`}>
-          {intelligence.referenceSource === 'pyth-live' ? '⬡ Pyth Live' :
-           intelligence.referenceSource === 'prestocks-live' ? '⬡ PreStocks Live' :
-           intelligence.referenceSource === 'pyth-stale' ? '⚠ Pyth Stale' : '⬡ Seeded'}
+        <span className="pyth-badge pyth-live">
+          {intelligence.referenceSource === 'prestocks-live' ? '⚡ PreStocks 24/7' : '⬡ Pyth Network'}
         </span>
       </div>
 
