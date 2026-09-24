@@ -1,18 +1,6 @@
 {
-  "$schema": "https://json.schemastore.org/vercel.json",
-  "version": 2,
-  "builds": [
-    {
-      "source": "package.json",
-      "use": "@vercel/static-build",
-      "config": { "distDir": ".next" }
-    }
-  ],
-  "routes": [
-    {
-      "source": "/api/(.*)",
-      "destination": "http://localhost:8787/api/$1",
-      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH"]
-    }
-  ]
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "pnpm --filter @afterhours/web build",
+  "outputDirectory": "apps/web/.next",
+  "installCommand": "pnpm install"
 }
