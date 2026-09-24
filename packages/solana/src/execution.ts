@@ -86,17 +86,45 @@ export async function executeSwap(
 }
 
 /**
- * Build a swap transaction (mock for hackathon; real impl uses Jupiter swap API).
+ * Build a real Jupiter swap transaction for the user's wallet.
+ * Calls Jupiter POST /swap to get a serialized transaction, then deserializes it.
  */
 export async function buildSwapTransaction(
-  _connection: Connection,
-  _input: { userAddress: string; quote: SwapQuote },
+  connection: Connection,
+  input: { userAddress: string; quote: SwapQuote },
 ): Promise<Transaction> {
-  // In production: fetch the swap transaction from Jupiter POST /swap,
-  // deserialize it, add the user's signature, and return.
-  // For the hackathon, we return a placeholder that the wallet adapter signs.
-  const { Transaction } = await import('@solana/web3.js');
-  return new Transaction();
+  const { userAddress, quote } = input;
+  const { Transaction, PublicKey } = await import('@solana/web3.js');
+
+  // Call Jupiter API to get the swap transaction
+  const swapRes = await fetch('https://api.jup.ag/swap/v1/swap', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      routeInfo: {
+        swapId: quote.route.inputMint,
+        outAmount: quote.route.outputAmount,
+      },
+      userPublicKey: userAddress,
+      wrapUnwrapUSD: true,
+      computeUnitPriceMicroLamports: 1,
+    }),
+  });
+
+  if (!swapRes.ok) {
+    throw new Error(`Jupiter swap API failed: ${swapRes.status}`);
+  }
+
+  const swapData = await swapRes.json() as { swapTransaction: string };
+  const swapBuffer = Buffer.from(swapData.swapTransaction, 'base64');
+  const transaction = Transaction.from(swapBuffer);
+
+  // Update with recent blockhash
+  const { blockhash } = await connection.getLatestBlockhash('confirmed');
+  transaction.recentBlockhash = blockhash;
+  transaction.feePayer = new PublicKey(userAddress);
+
+  return transaction;
 }
 
 /**

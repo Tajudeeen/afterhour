@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { getActivity, type ActivityItem } from '@/lib/api';
 import { txExplorerUrl } from '@/lib/network';
-
-const DEMO_WALLET = 'demo';
 
 interface ActivityViewProps {
   initialActivities: ActivityItem[];
@@ -14,10 +13,12 @@ export function ActivityView({ initialActivities }: ActivityViewProps) {
   const [activities, setActivities] = useState<ActivityItem[]>(initialActivities);
   const [error, setError] = useState<string | null>(null);
   const [isLive, setIsLive] = useState(false);
+  const { publicKey } = useWallet();
 
   const fetchActivity = useCallback(async () => {
     try {
-      const data = await getActivity(DEMO_WALLET);
+      const wallet = publicKey ? publicKey.toBase58() : 'demo';
+      const data = await getActivity(wallet);
       setActivities(data.activities);
       setError(null);
       setIsLive(true);
@@ -25,7 +26,7 @@ export function ActivityView({ initialActivities }: ActivityViewProps) {
       setError('API unavailable — showing recent activity');
       setIsLive(false);
     }
-  }, []);
+  }, [publicKey]);
 
   useEffect(() => {
     void fetchActivity();
