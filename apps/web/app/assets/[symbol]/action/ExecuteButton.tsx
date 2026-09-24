@@ -123,7 +123,7 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
               fontWeight: 800,
             }}
           >
-            MAINNET
+            {NETWORK_LABEL}
           </span>
         </div>
         <p style={{ color: 'var(--ink-muted)', fontSize: '0.78rem', wordBreak: 'break-all', fontFamily: 'monospace', margin: '4px 0 12px 0' }}>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
+import { NETWORK_LABEL } from '@/lib/network';
 
 function WalletBarInner() {
   const { connected, publicKey, disconnect } = useWallet();
@@ -35,7 +36,7 @@ function WalletBarInner() {
               letterSpacing: '0.04em',
             }}
           >
-            MAINNET
+            {NETWORK_LABEL}
           </span>
           <span>Live wallet connected</span>
         </span>
