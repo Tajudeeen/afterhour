@@ -5,7 +5,7 @@
  * Raydium, Orca, Meteora, Phoenix, and others to find the best price.
  *
  * In production: query Jupiter API for quotes, build swap transactions.
- * For hackathon: mock the price impact to simulate realistic gap scenarios.
+ * For demo: simulates a quote when the live API is unavailable.
  */
 import type { Connection } from '@solana/web3.js';
 import type { TokenizedStock } from '@afterhours/types';
@@ -49,14 +49,42 @@ export class JupiterSwapProvider {
     inputAmount: number,
     slippageBps = 50,
   ): Promise<SwapQuote> {
-    // For the hackathon, simulate a quote. In production, call the real Jupiter API:
-    // GET /quote?inputMint=...&outputMint=...&amount=...
-    const mockRoute = await this.simulateQuote(inputMint, outputMint, inputAmount, slippageBps);
+    // Try real Jupiter API first, fall back to simulation
+    const liveRoute = await this.fetchLiveQuote(inputMint, outputMint, inputAmount);
+    const route = liveRoute ?? await this.simulateQuote(inputMint, outputMint, inputAmount, slippageBps);
     return {
-      route: mockRoute,
-      minOutputAmount: mockRoute.outputAmount * (1 - slippageBps / 10_000),
+      route,
+      minOutputAmount: route.outputAmount * (1 - slippageBps / 10_000),
       estimatedGasSol: 0.0005,
     };
+  }
+
+  /**
+   * Query the real Jupiter API for a swap quote.
+   */
+  private async fetchLiveQuote(
+    inputMint: string,
+    outputMint: string,
+    inputAmount: number,
+  ): Promise<SwapRoute | null> {
+    try {
+      const url = `https://quote-api.jup.ag/v6/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${Math.floor(inputAmount * 1_000_000)}&slippageBps=50`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+      if (!res.ok) return null;
+      const data = await res.json() as any;
+      if (!data.outAmount) return null;
+      return {
+        inputMint,
+        outputMint,
+        inputAmount: Math.floor(inputAmount * 1_000_000),
+        outputAmount: Number(data.outAmount),
+        priceImpactBps: Number(data.priceImpactPct) * 100,
+        dex: 'Jupiter (live)',
+        route: data.routePlan?.map((r: any) => r.swapInfo?.label ?? 'unknown') ?? [],
+      };
+    } catch {
+      return null;
+    }
   }
 
   /**
@@ -72,8 +100,8 @@ export class JupiterSwapProvider {
   }
 
   /**
-   * Simulate a quote for the hackathon (no live Jupiter API needed).
-   * Produces a realistic price impact that may differ from reference.
+   * Simulate a quote as a fallback when the live Jupiter API is unavailable.
+   * Produces a realistic price impact based on AMM-style depth.
    */
   private async simulateQuote(
     inputMint: string,
