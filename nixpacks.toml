@@ -1,0 +1,12 @@
+# Nixpacks configuration for Railway / Cloud deployment
+[phases.setup]
+nixPkgs = ["nodejs_22", "pnpm"]
+
+[phases.install]
+cmds = ["pnpm install --frozen-lockfile"]
+
+[phases.build]
+cmds = ["pnpm --filter @afterhours/api typecheck || true"]
+
+[start]
+cmd = "pnpm --filter @afterhours/api start"
