@@ -128,7 +128,7 @@ export interface GapRadarAsset {
   riskScore: { score: number; band: string };
   marketStatus: string;
   liquidity: string;
-  referenceSource: 'pyth-live' | 'pyth-stale' | 'prestocks-live' | 'seeded';
+  referenceSource: 'pyth-live' | 'pyth-stale' | 'prestocks-live' | 'yahoo-finance' | 'seeded';
   source: 'live' | 'demo';
   routes: number;
 }
@@ -180,7 +180,7 @@ export interface AssetIntelligence {
   name: string;
   mint: string;
   referencePrice: number;
-  referenceSource: 'pyth-live' | 'pyth-stale' | 'prestocks-live' | 'seeded';
+  referenceSource: 'pyth-live' | 'pyth-stale' | 'prestocks-live' | 'yahoo-finance' | 'seeded';
   referenceUpdatedAt: string;
   onchainPrice: number;
   gapPercent: number;

@@ -218,7 +218,7 @@ export interface AssetIntelligence {
   name: string;
   mint: string;
   referencePrice: number;      // Pyth or PreStocks markPrice
-  referenceSource: 'pyth-live' | 'pyth-stale' | 'prestocks-live' | 'seeded';
+  referenceSource: 'pyth-live' | 'pyth-stale' | 'prestocks-live' | 'yahoo-finance' | 'seeded';
   referenceUpdatedAt: string;
   onchainPrice: number;        // DEX price
   gapPercent: number;

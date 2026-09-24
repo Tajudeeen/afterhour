@@ -192,7 +192,7 @@ export async function getAssetIntelligence(symbol: string, simulatedGapPercent?:
   const isPreStocks = ['ANTHROPIC', 'SPACEX', 'OPENAI', 'ANDURIL', 'NEURALINK', 'FIGUREAI', 'KALSHI', 'POLYMARKET'].includes(upper);
   let referencePrice = stock.referencePrice;
   let onchainPrice = stock.referencePrice;
-  let referenceSource: 'pyth-live' | 'pyth-stale' | 'prestocks-live' | 'seeded' = 'seeded';
+  let referenceSource: 'pyth-live' | 'pyth-stale' | 'prestocks-live' | 'yahoo-finance' | 'seeded' = 'seeded';
   let source: 'live' | 'demo' = 'demo';
   let pythConfidenceUsd: number | undefined;
   let pythConfidenceRatioPercent: number | undefined;
@@ -287,12 +287,12 @@ export async function getAssetIntelligence(symbol: string, simulatedGapPercent?:
         const liveQuote = await fetchEquityQuote(upper);
         if (liveQuote) {
           referencePrice = liveQuote;
-          referenceSource = 'pyth-live';
+          referenceSource = 'yahoo-finance';
           source = 'live';
         } else {
           referencePrice = feedPairConfig.defaultEquityPrice;
-          referenceSource = 'pyth-live';
-          source = 'live';
+          referenceSource = 'seeded';
+          source = 'demo';
         }
       }
 
@@ -333,9 +333,12 @@ export async function getAssetIntelligence(symbol: string, simulatedGapPercent?:
         const liveQuote = await fetchEquityQuote(upper);
         if (liveQuote) {
           referencePrice = liveQuote;
-          referenceSource = 'pyth-live';
+          referenceSource = 'yahoo-finance';
           source = 'live';
           onchainPrice = Number((referencePrice * 1.02).toFixed(2));
+        } else {
+          referenceSource = 'seeded';
+          source = 'demo';
         }
       }
     }
@@ -448,13 +451,12 @@ export async function getAssetSnapshot(symbol: string): Promise<{ snapshot: Pric
 const mockPortfolios: Record<string, Portfolio> = {
   demo: {
     wallet: 'demo',
-    totalValueUsd: 10000,
+    totalValueUsd: 10420,
     holdings: [
-      { symbol: 'ANTHROPIC', mint: 'Pren1FvFX6J3E4kXhJuCiAD5aDmGEb7qJRncwA8Lkhw', amount: 2.9, valueUsd: 3000, weightPercent: 30 },
-      { symbol: 'SPACEX', mint: 'PreANxuXjsy2pvisWWMNB6YaJNzr7681wJJr2rHsfTh', amount: 21.1, valueUsd: 2500, weightPercent: 25 },
-      { symbol: 'OPENAI', mint: 'PreweJYECqtQwBtpxHL171nL2K6umo692gTm7Q3rpgF', amount: 1.73, valueUsd: 2000, weightPercent: 20 },
-      { symbol: 'NEURALINK', mint: 'PrekqLJvJ3qVdXmBGDiexvwUTF4rLFDa6HWS4HJbw9S', amount: 2.35, valueUsd: 1000, weightPercent: 10 },
-      { symbol: 'USDC', mint: 'EPjFWdd5AufqSSqeM2qN1xB9qMLM6kq7K3e8N1W4c2X', amount: 1500, valueUsd: 1500, weightPercent: 15 },
+      { symbol: 'NVDA', mint: 'DezYN7vS56KDyHiLnuW5G9b2doY5xBLk7s6o5YJr4YWr', amount: 20.54, valueUsd: 4800, weightPercent: 46.06 },
+      { symbol: 'AAPL', mint: '6dbRFHr7SxG8i5kHnBLY5YFvU3x5xVJoY5hK5a5qJ8eR', amount: 7.31, valueUsd: 2500, weightPercent: 23.99 },
+      { symbol: 'TSLA', mint: 'Gyu3qZ5b7Kq3e8n1W4c2X6y9J3a5K7b8L4m9N2P1Q6R', amount: 3.88, valueUsd: 1500, weightPercent: 14.4 },
+      { symbol: 'USDC', mint: 'EPjFWdd5AufqSSqeM2qN1xB9qMLM6kq7K3e8n1W4c2X', amount: 1620, valueUsd: 1620, weightPercent: 15.55 },
     ],
     timestamp: new Date().toISOString(),
   },
