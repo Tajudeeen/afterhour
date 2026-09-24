@@ -16,6 +16,7 @@ export default function DashboardPage() {
   const [radar, setRadar] = useState<GapRadarAsset[]>([]);
   const [regime, setRegime] = useState<{ label: string; session: string } | null>(null);
   const [marketHours, setMarketHours] = useState<{ status: string; nextOpenAt: string | null; lastCloseAt: string | null } | null>(null);
+  const [isEvaluationMode, setIsEvaluationMode] = useState(false);
 
   useEffect(() => {
     if (!connected || !publicKey) {
@@ -26,7 +27,7 @@ export default function DashboardPage() {
     }
     const fetchPortfolio = async () => {
       try {
-        const walletAddress = publicKey.toBase58();
+        const walletAddress = isEvaluationMode ? 'demo' : publicKey.toBase58();
         const data = await getPortfolio(walletAddress);
         setPortfolio(data.portfolio);
         setAssets(data.assets);
@@ -36,7 +37,7 @@ export default function DashboardPage() {
       }
     };
     fetchPortfolio();
-  }, [connected, publicKey]);
+  }, [connected, publicKey, isEvaluationMode]);
 
   // Fetch live gap radar from the API (serves PreStocks + Pyth data)
   useEffect(() => {
@@ -213,6 +214,27 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Evaluation mode banner */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 0 16px', padding: '12px 18px', borderRadius: '12px', background: isEvaluationMode ? 'rgba(216, 255, 79, 0.08)' : 'var(--surface-strong)', border: `1px solid ${isEvaluationMode ? 'var(--lime)' : 'var(--line)'}`, flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          <span style={{ fontSize: '0.74rem', fontFamily: 'var(--mono)', fontWeight: 800, color: isEvaluationMode ? 'var(--lime)' : 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            {isEvaluationMode ? '🧪 Hackathon Evaluation Sandbox Active' : '● Live On-Chain Wallet Mode'}
+          </span>
+          <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--ink-subtle)' }}>
+            {isEvaluationMode
+              ? 'Evaluating Risk Governor on canonical $10,420 portfolio. Wallet signs real Solana transactions on-chain.'
+              : `Displaying on-chain SPL token holdings for ${publicKey?.toBase58().slice(0, 4)}...${publicKey?.toBase58().slice(-4)}`}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsEvaluationMode(!isEvaluationMode)}
+          style={{ background: 'transparent', border: '1px solid var(--line)', color: 'var(--ink-body)', padding: '6px 14px', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'var(--mono)', fontWeight: 600 }}
+        >
+          {isEvaluationMode ? '← View Real Wallet Balances' : 'Load Evaluation Portfolio ($10,420) →'}
+        </button>
+      </div>
+
       <section>
         <div className="portfolio-total">${portfolio?.totalValueUsd.toLocaleString() ?? '0'}</div>
         <div className="portfolio-subtotal">Portfolio value</div>
@@ -303,15 +325,24 @@ export default function DashboardPage() {
         <div className="portfolio-list">
           {(!portfolio || portfolio.holdings.length === 0) ? (
             <div className="data-card" style={{ textAlign: 'center', padding: '36px 20px', background: 'var(--surface-strong)' }}>
-              <p style={{ color: 'var(--ink-heading)', fontSize: '1rem', fontWeight: 600, margin: '0 0 8px' }}>
+              <p style={{ color: 'var(--ink-heading)', fontSize: '1.05rem', fontWeight: 600, margin: '0 0 8px' }}>
                 No Tokenized Stocks Detected in Connected Wallet
               </p>
-              <p style={{ color: 'var(--ink-muted)', fontSize: '0.88rem', margin: '0 0 20px' }}>
-                Your connected Solana wallet currently holds 0 tokenized stock SPL tokens. Explore the live 24/7 markets below to execute a position.
+              <p style={{ color: 'var(--ink-muted)', fontSize: '0.88rem', margin: '0 0 20px', maxWidth: '560px', marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.5 }}>
+                Your connected Solana wallet holds 0 tokenized stock SPL tokens. To test the Risk Governor and rebalance workflow on sample holdings with live market feeds, load the hackathon evaluation benchmark ($10,420).
               </p>
-              <Link href="/markets" className="button button-primary" style={{ display: 'inline-block' }}>
-                View Live PreStocks & Pyth Markets →
-              </Link>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="button button-primary"
+                  onClick={() => setIsEvaluationMode(true)}
+                >
+                  🧪 Load Evaluation Portfolio ($10,420) →
+                </button>
+                <Link href="/markets" className="button button-secondary">
+                  View Live PreStocks Markets →
+                </Link>
+              </div>
             </div>
           ) : (
             portfolio.holdings.map((holding) => {

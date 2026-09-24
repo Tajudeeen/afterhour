@@ -144,7 +144,13 @@ export default async function ActionPage({ params }: { params: Promise<{ symbol:
           </div>
 
           <div className="data-card" style={{ marginTop: 20 }}>
-            <h3>Execute on Solana</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <h3 style={{ margin: 0 }}>On-Chain Policy Execution</h3>
+              <span className="source-badge source-live">Solana SPL Memo</span>
+            </div>
+            <p style={{ fontSize: '0.82rem', color: 'var(--ink-muted)', margin: '0 0 16px', lineHeight: 1.5 }}>
+              Signs a cryptographically verifiable transaction committed to Solana via the official SPL Memo Program. This writes an immutable on-chain audit trail of your approval and policy compliance bounds prior to DEX rebalancing.
+            </p>
             {!passed ? (
               <div>
                 <p style={{ color: 'var(--red)' }}>Risk policy BLOCKED this action.</p>

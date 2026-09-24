@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { getAssetIntelligence, type PythMarketAsset } from '@/lib/api';
 
 export interface PreStocksAsset {
   name: string;
@@ -31,92 +32,16 @@ export interface PythMarketAsset {
   image: string;
 }
 
-const PYTH_MARKET_ASSETS: PythMarketAsset[] = [
-  {
-    symbol: 'NVDA',
-    name: 'NVIDIA Corporation',
-    equitySymbol: 'Equity.US.NVDA/USD',
-    equityFeedId: 'b1073854ed24cbc755dc527418f52b7d271f6cc967bbf8d8129112b18860a593',
-    tokenSymbol: 'Crypto.NVDAX/USD',
-    tokenFeedId: '4244d07890e4610f46bbde67de8f43a4bf8b569eebe904f136b469f148503b7f',
-    tokenType: 'xStock',
-    equityPrice: 223.76,
-    tokenPrice: 232.75,
-    confidenceUsd: 1.45,
-    confidenceRatioPercent: 0.65,
-    dynamicSlippageBps: 115,
-    gapPercent: 4.02,
-    gapDollar: 8.99,
-    image: 'https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a6354294274f47924c61945e618843224a98b19/svg/color/generic.svg',
-  },
-  {
-    symbol: 'AAPL',
-    name: 'Apple Inc.',
-    equitySymbol: 'Equity.US.AAPL/USD',
-    equityFeedId: '49f6b65cb1de6b10eaf75e7c03ca029c306d0357e91b5311b175084a5ad55688',
-    tokenSymbol: 'Crypto.AAPLX/USD',
-    tokenFeedId: '978e6cc68a119ce066aa830017318563a9ed04ec3a0a6439010fc11296a58675',
-    tokenType: 'xStock',
-    equityPrice: 337.71,
-    tokenPrice: 343.38,
-    confidenceUsd: 1.80,
-    confidenceRatioPercent: 0.53,
-    dynamicSlippageBps: 103,
-    gapPercent: 1.68,
-    gapDollar: 5.67,
-    image: 'https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a6354294274f47924c61945e618843224a98b19/svg/color/generic.svg',
-  },
-  {
-    symbol: 'TSLA',
-    name: 'Tesla, Inc.',
-    equitySymbol: 'Equity.US.TSLA/USD',
-    equityFeedId: '16dad506d7db8da01c87581c87ca897a012a153557d4d578c3b9c9e1bc0632f1',
-    tokenSymbol: 'Crypto.TSLAX/USD',
-    tokenFeedId: '47a156470288850a440df3a6ce85a55917b813a19bb5b31128a33a986566a362',
-    tokenType: 'xStock',
-    equityPrice: 378.61,
-    tokenPrice: 386.64,
-    confidenceUsd: 2.25,
-    confidenceRatioPercent: 0.59,
-    dynamicSlippageBps: 109,
-    gapPercent: 2.12,
-    gapDollar: 8.03,
-    image: 'https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a6354294274f47924c61945e618843224a98b19/svg/color/generic.svg',
-  },
-  {
-    symbol: 'MSFT',
-    name: 'Microsoft Corporation',
-    equitySymbol: 'Equity.US.MSFT/USD',
-    equityFeedId: '4k3DyN5wF8o2Q8rKq3e8n1W4c2X6y9J3a5K7b8L4m9N',
-    tokenSymbol: 'Crypto.MSFTX/USD',
-    tokenFeedId: '98a72b834e7681c87ca897a012a153557d4d578c3b9c9e1bc0632f116dad506d',
-    tokenType: 'xStock',
-    equityPrice: 497.58,
-    tokenPrice: 507.53,
-    confidenceUsd: 2.50,
-    confidenceRatioPercent: 0.50,
-    dynamicSlippageBps: 100,
-    gapPercent: 2.00,
-    gapDollar: 9.95,
-    image: 'https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a6354294274f47924c61945e618843224a98b19/svg/color/generic.svg',
-  },
-  {
-    symbol: 'GOOGL',
-    name: 'Alphabet Inc.',
-    equitySymbol: 'Equity.US.GOOGL/USD',
-    equityFeedId: '5a7K3e8n1W4c2X6y9J3a5K7b8L4m9N2P1Q6R7s8T9uV',
-    tokenSymbol: 'Crypto.GOOGLX/USD',
-    tokenFeedId: '82c7a897a012a153557d4d578c3b9c9e1bc0632f116dad506d47a15647028885',
-    tokenType: 'xStock',
-    equityPrice: 341.65,
-    tokenPrice: 348.48,
-    confidenceUsd: 1.75,
-    confidenceRatioPercent: 0.51,
-    dynamicSlippageBps: 101,
-    gapPercent: 2.00,
-    gapDollar: 6.83,
-    image: 'https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a6354294274f47924c61945e618843224a98b19/svg/color/generic.svg',
-  },
+/**
+ * Static Pyth feed metadata (symbols, feed IDs, names).
+ * Live prices are fetched from /api/assets/:symbol/intelligence on the client.
+ */
+const PYTH_FEED_SYMBOLS = [
+  { symbol: 'NVDA', name: 'NVIDIA Corporation', equitySymbol: 'Equity.US.NVDA/USD', tokenSymbol: 'Crypto.NVDAX/USD', tokenType: 'xStock' as const, image: 'https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a6354294278f47924c61945e618843224a98b19/svg/color/nvda.svg' },
+  { symbol: 'AAPL', name: 'Apple Inc.', equitySymbol: 'Equity.US.AAPL/USD', tokenSymbol: 'Crypto.AAPLX/USD', tokenType: 'xStock' as const, image: 'https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a6354294278f47924c61945e618843224a98b19/svg/color/aapl.svg' },
+  { symbol: 'TSLA', name: 'Tesla, Inc.', equitySymbol: 'Equity.US.TSLA/USD', tokenSymbol: 'Crypto.TSLAX/USD', tokenType: 'xStock' as const, image: 'https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a6354294278f47924c61945e618843224a98b19/svg/color/tsla.svg' },
+  { symbol: 'MSFT', name: 'Microsoft Corporation', equitySymbol: 'Equity.US.MSFT/USD', tokenSymbol: 'Crypto.MSFTX/USD', tokenType: 'xStock' as const, image: 'https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a6354294278f47924c61945e618843224a98b19/svg/color/generic.svg' },
+  { symbol: 'GOOGL', name: 'Alphabet Inc.', equitySymbol: 'Equity.US.GOOGL/USD', tokenSymbol: 'Crypto.GOOGLX/USD', tokenType: 'xStock' as const, image: 'https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a6354294278f47924c61945e618843224a98b19/svg/color/generic.svg' },
 ];
 
 interface MarketsViewProps {
@@ -126,12 +51,89 @@ interface MarketsViewProps {
 
 export function MarketsView({ prestocksAssets, isPrestocksLive }: MarketsViewProps) {
   const [tab, setTab] = useState<'pyth' | 'prestocks'>('pyth');
+  const [pythAssets, setPythAssets] = useState<PythMarketAsset[]>([]);
+  const [isPythLive, setIsPythLive] = useState(false);
+
+  // Fetch live Pyth dual-feed data for each symbol from the API
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchPythData() {
+      const results: PythMarketAsset[] = [];
+      for (const meta of PYTH_FEED_SYMBOLS) {
+        try {
+          const intel = await getAssetIntelligence(meta.symbol);
+          if (cancelled) return;
+          results.push({
+            symbol: meta.symbol,
+            name: meta.name,
+            equitySymbol: meta.equitySymbol,
+            equityFeedId: '',
+            tokenSymbol: meta.tokenSymbol,
+            tokenFeedId: '',
+            tokenType: meta.tokenType,
+            equityPrice: intel.referencePrice,
+            tokenPrice: intel.onchainPrice,
+            confidenceUsd: intel.pythConfidenceUsd ?? 0,
+            confidenceRatioPercent: intel.pythConfidenceRatioPercent ?? 0,
+            dynamicSlippageBps: intel.pythDynamicSlippageBps ?? 50,
+            gapPercent: intel.gapPercent,
+            gapDollar: intel.gapDollar,
+            image: meta.image,
+          });
+        } catch {
+          if (cancelled) return;
+          // Fallback to static metadata with seeded prices
+          results.push({
+            symbol: meta.symbol,
+            name: meta.name,
+            equitySymbol: meta.equitySymbol,
+            equityFeedId: '',
+            tokenSymbol: meta.tokenSymbol,
+            tokenFeedId: '',
+            tokenType: meta.tokenType,
+            equityPrice: 0,
+            tokenPrice: 0,
+            confidenceUsd: 0,
+            confidenceRatioPercent: 0,
+            dynamicSlippageBps: 50,
+            gapPercent: 0,
+            gapDollar: 0,
+            image: meta.image,
+          });
+        }
+      }
+      if (cancelled) return;
+      setPythAssets(results);
+      setIsPythLive(results.some(a => a.gapPercent !== 0));
+    }
+    void fetchPythData();
+    return () => { cancelled = true; };
+  }, []);
 
   const sortedPrestocks = [...prestocksAssets].sort((a, b) => {
     const gapA = Math.abs((a.tokenPrice - a.markPrice) / a.markPrice);
     const gapB = Math.abs((b.tokenPrice - b.markPrice) / b.markPrice);
     return gapB - gapA;
   });
+
+  // Merge static metadata with live prices for display
+  const pythAssetsDisplay = pythAssets.length > 0 ? pythAssets : PYTH_FEED_SYMBOLS.map(s => ({
+    symbol: s.symbol,
+    name: s.name,
+    equitySymbol: s.equitySymbol,
+    equityFeedId: '',
+    tokenSymbol: s.tokenSymbol,
+    tokenFeedId: '',
+    tokenType: s.tokenType,
+    equityPrice: 0,
+    tokenPrice: 0,
+    confidenceUsd: 0,
+    confidenceRatioPercent: 0,
+    dynamicSlippageBps: 50,
+    gapPercent: 0,
+    gapDollar: 0,
+    image: s.image,
+  } as PythMarketAsset));
 
   return (
     <div>
@@ -144,9 +146,9 @@ export function MarketsView({ prestocksAssets, isPrestocksLive }: MarketsViewPro
           style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', fontSize: '0.9rem' }}
         >
           <span>⬡</span>
-          <span>Pyth Dual-Feed Equities (xStocks / Ondo)</span>
-          <span style={{ background: 'rgba(255,255,255,0.2)', padding: '2px 6px', borderRadius: '10px', fontSize: '0.72rem' }}>
-            Bounty Target
+          <span>Pyth Dual-Feed Equities</span>
+          <span style={{ background: 'rgba(123, 97, 255, 0.2)', padding: '2px 6px', borderRadius: '10px', fontSize: '0.68rem', color: 'var(--pyth-lavender)' }}>
+            5 Feed Pairs
           </span>
         </button>
 
@@ -157,8 +159,8 @@ export function MarketsView({ prestocksAssets, isPrestocksLive }: MarketsViewPro
           style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', fontSize: '0.9rem' }}
         >
           <span>⚡</span>
-          <span>Pre-IPO Tokens (PreStocks API)</span>
-          <span style={{ background: 'rgba(255,255,255,0.2)', padding: '2px 6px', borderRadius: '10px', fontSize: '0.72rem' }}>
+          <span>Pre-IPO Tokens</span>
+          <span style={{ background: 'rgba(255,255,255,0.2)', padding: '2px 6px', borderRadius: '10px', fontSize: '0.68rem' }}>
             8 Assets
           </span>
         </button>

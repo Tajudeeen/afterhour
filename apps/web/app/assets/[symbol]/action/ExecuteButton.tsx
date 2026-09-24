@@ -82,7 +82,7 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
           <p style={{ color: 'var(--lime)', fontWeight: 700, margin: 0 }}>
-            {result.isLiveOnchain ? 'On-chain transaction confirmed!' : 'Trade executed & confirmed!'}
+            {result.isLiveOnchain ? 'On-Chain Risk Attestation Confirmed!' : 'Policy Executed & Confirmed!'}
           </p>
           <span
             style={{
@@ -97,8 +97,11 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
             {NETWORK_LABEL}
           </span>
         </div>
-        <p style={{ color: 'var(--ink-muted)', fontSize: '0.78rem', wordBreak: 'break-all', fontFamily: 'monospace', margin: '4px 0 12px 0' }}>
-          {result.signature.length > 24 ? `${result.signature.slice(0, 12)}...${result.signature.slice(-8)}` : result.signature}
+        <p style={{ color: 'var(--ink-muted)', fontSize: '0.78rem', wordBreak: 'break-all', fontFamily: 'monospace', margin: '4px 0 8px 0' }}>
+          Tx: {result.signature.length > 24 ? `${result.signature.slice(0, 12)}...${result.signature.slice(-8)}` : result.signature}
+        </p>
+        <p style={{ color: 'var(--solana-green)', fontSize: '0.74rem', margin: '0 0 12px 0', fontFamily: 'monospace' }}>
+          ✓ SPL Memo Program: Cryptographic approval & policy compliance written to Solana ledger
         </p>
         <div style={{ display: 'flex', gap: '16px' }}>
           <a
