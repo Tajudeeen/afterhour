@@ -63,6 +63,23 @@ export type { RiskPolicy };
 const config = getConfig();
 const _regimeMemory = new RegimeMemory();
 
+// In-memory rate limiter (per-Wallet, per-Endpoint)
+const EXECUTION_RATE_LIMIT = 5; // max executions per wallet per window
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute window
+const executionRateLimiter = new Map<string, { count: number; windowStart: number }>();
+
+function checkExecutionRateLimit(wallet: string): boolean {
+  const now = Date.now();
+  const entry = executionRateLimiter.get(wallet);
+  if (entry && now - entry.windowStart < RATE_LIMIT_WINDOW_MS) {
+    if (entry.count >= EXECUTION_RATE_LIMIT) return false;
+    entry.count++;
+  } else {
+    executionRateLimiter.set(wallet, { count: 1, windowStart: now });
+  }
+  return true;
+}
+
 interface CachedIntelligence {
   intelligence: AssetIntelligence;
   timestamp: number;
@@ -664,7 +681,9 @@ export function createApp(options: CreateAppOptions = {}): Hono {
   const portfolios = { ...mockPortfolios, ...options.portfolios };
   const activities = { ...mockActivities, ...options.activities };
 
-  app.use('*', cors());
+  app.use('*', cors({
+    origin: process.env.API_ORIGIN || '*',
+  }));
   app.use('*', logger());
   // Security headers on all responses
   app.use('*', async (c, next) => {
@@ -799,6 +818,8 @@ export function createApp(options: CreateAppOptions = {}): Hono {
 
   /**
    * POST /api/execute
+   * Execute a trade after user approval and risk policy validation.
+   * Rate limited: max 5 executions per wallet per 1-minute window.
    */
   app.post('/api/execute', async (c: Context) => {
     const body = await c.req.json<{
@@ -808,6 +829,11 @@ export function createApp(options: CreateAppOptions = {}): Hono {
       amountUsd: number;
       signature?: string;
     }>();
+
+    // Rate limit: prevent abuse / RPC exhaustion
+    if (!checkExecutionRateLimit(body.wallet)) {
+      return c.json({ error: { code: 'rate-limited', message: 'Rate limit exceeded. Max 5 executions per minute.' } }, 429);
+    }
 
     if (!body.signature) {
       return c.json({ error: { code: 'unauthorized', message: 'User signature required for execution.' } }, 401);

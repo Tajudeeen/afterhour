@@ -236,23 +236,29 @@ code {
   background: var(--surface-strong);
   border: 1px solid var(--line);
   color: var(--ink);
-  padding: 7px 14px;
+  padding: 5px 10px;
   border-radius: 6px;
   font-family: var(--mono);
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: 0.72rem;
+  font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  box-shadow: 2px 2px 0 var(--line-strong);
+  gap: 4px;
+  box-shadow: 1px 1px 0 var(--line-strong);
   transition: all 0.15s ease;
 }
 
 .theme-toggle-btn:hover {
   border-color: var(--signal);
   color: var(--signal);
-  transform: translate(-1px, -1px);
+  box-shadow: 1px 1px 0 var(--signal);
+}
+
+.theme-toggle-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
 }
 
 .network-badge {
