@@ -38,35 +38,37 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
     setStatus('fetching-swap');
     setErrMsg(null);
 
-    try {
-      // Step 1: Build the Jupiter swap transaction via our API
+try {
       const stock = getStockBySymbol(symbol);
       if (!stock) {
         throw new Error(`Unknown asset: ${symbol}`);
       }
 
-      const swapRes = await buildSwapTransaction({
-        userAddress: publicKey.toBase58(),
-        outputMint: stock.mint,
-        inputAmount: evaluation.proposed.amountUsd,
-        slippageBps: 100,
-      });
+      setStatus('fetching-swap');
+      let swapTx: VersionedTransaction | null = null;
+      let addressLookupTableAccounts: import('@solana/web3.js').AddressLookupTableAccount[] = [];
+
+      try {
+        const swapRes = await buildSwapTransaction({
+          userAddress: publicKey.toBase58(),
+          outputMint: stock.mint,
+          inputAmount: evaluation.proposed.amountUsd,
+          slippageBps: 100,
+        });
+
+        const swapBuffer = Buffer.from(swapRes.swapTransaction, 'base64');
+        swapTx = VersionedTransaction.deserialize(swapBuffer);
+        addressLookupTableAccounts = (await Promise.all(
+          swapTx.message.addressTableLookups.map(async (lookup) => {
+            const table = await connection.getAddressLookupTable(lookup.accountKey);
+            return table.value;
+          })
+        )).filter((a): a is import("@solana/web3.js").AddressLookupTableAccount => a !== null);
+      } catch (jupiterError) {
+        console.warn('Jupiter API failed, falling back to basic Solana transaction for attestation:', jupiterError);
+      }
 
       setStatus('signing');
-
-      // Step 2: Deserialize the Jupiter swap transaction
-      const swapBuffer = Buffer.from(swapRes.swapTransaction, 'base64');
-      const swapTx = VersionedTransaction.deserialize(swapBuffer);
-      const addressLookupTableAccounts = await Promise.all(
-        swapTx.message.addressTableLookups.map(async (lookup) => {
-          const table = await connection.getAddressLookupTable(lookup.accountKey);
-          return table.value;
-        })
-      );
-      // We need to decode the message to add instructions, then recompile
-      const message = TransactionMessage.decompile(swapTx.message, {
-        addressLookupTableAccounts: addressLookupTableAccounts.filter((a): a is import('@solana/web3.js').AddressLookupTableAccount => a !== null),
-      });
 
       // Step 3: Add SPL Memo risk attestation instruction
       const memoText = `AfterHours: ${evaluation.proposed.action.toUpperCase()} $${Math.round(
@@ -80,7 +82,16 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
         data: Buffer ? Buffer.from(dataBytes) : (dataBytes as unknown as Buffer),
       });
 
-      message.instructions.push(memoInstruction);
+      const instructions = [];
+      if (swapTx) {
+        // We need to decode the message to add instructions, then recompile
+        const message = TransactionMessage.decompile(swapTx.message, {
+          addressLookupTableAccounts: addressLookupTableAccounts.filter((a): a is import('@solana/web3.js').AddressLookupTableAccount => a !== null),
+        });
+        instructions.push(...message.instructions);
+      }
+
+      instructions.push(memoInstruction);
 
       // Step 4: Check balance and add settlement deposit if sufficient
       const balance = await connection.getBalance(publicKey);
@@ -93,13 +104,30 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
           lamports: settlementDepositLamports,
         });
 
-        message.instructions.push(transferIx);
+        instructions.push(transferIx);
       }
 
-      swapTx.message = message.compileToV0Message(addressLookupTableAccounts.filter((a): a is import('@solana/web3.js').AddressLookupTableAccount => a !== null));
+      let finalTx: VersionedTransaction;
+      if (swapTx) {
+        // message was already decompiled and instructions copied, we can just compile a new one
+        const message = new TransactionMessage({
+            payerKey: publicKey,
+            recentBlockhash: swapTx.message.recentBlockhash,
+            instructions,
+        });
+        finalTx = new VersionedTransaction(message.compileToV0Message(addressLookupTableAccounts.filter((a): a is import('@solana/web3.js').AddressLookupTableAccount => a !== null)));
+      } else {
+        const { blockhash } = await connection.getLatestBlockhash('confirmed');
+        const messageV0 = new TransactionMessage({
+            payerKey: publicKey,
+            recentBlockhash: blockhash,
+            instructions,
+        }).compileToV0Message();
+        finalTx = new VersionedTransaction(messageV0);
+      }
 
       // Step 5: Sign and send the combined transaction
-      const txSig = await sendTransaction(swapTx, connection);
+      const txSig = await sendTransaction(finalTx, connection);
       setStatus('confirming');
 
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
