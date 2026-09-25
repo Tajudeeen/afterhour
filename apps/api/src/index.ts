@@ -883,9 +883,9 @@ export function createApp(options: CreateAppOptions = {}): Hono {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          routeInfo: quote,
+          quoteResponse: quote,
           userPublicKey: body.userAddress,
-          wrapUnwrapUSD: true,
+          wrapAndUnwrapSol: true,
           computeUnitPriceMicroLamports: 1,
         }),
       });
