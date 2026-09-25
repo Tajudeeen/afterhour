@@ -51,7 +51,7 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
             fromPubkey: publicKey,
             toPubkey: PROTOCOL_TREASURY,
             lamports: settlementDepositLamports,
-          })
+          }),
         );
       }
 
@@ -65,9 +65,13 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
       const txSig = await sendTransaction(tx, connection);
       setStatus('confirming');
 
-      await connection.confirmTransaction({ signature: txSig, blockhash, lastValidBlockHeight }, 'confirmed');
+      await connection.confirmTransaction(
+        { signature: txSig, blockhash, lastValidBlockHeight },
+        'confirmed',
+      );
       setStatus('executing');
 
+      // Send to API — the wallet's on-chain transaction signature proves ownership
       const res = await executeTrade({
         wallet: publicKey.toBase58(),
         action: evaluation.proposed.action,

@@ -14,6 +14,9 @@ function testPortfolio(): Portfolio {
   };
 }
 
+const TEST_WALLET = '11111111111111111111111111111112';
+const TEST_SIGNATURE = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz123456789ABCDEFGHJKLMNPQRSTUVW';
+
 // Integration-level tests that exercise the Hono app's route handlers
 // end-to-end, including error handling and risk-governance enforcement.
 describe('API security boundaries', () => {
@@ -22,7 +25,9 @@ describe('API security boundaries', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('x-content-type-options')).toBe('nosniff');
     expect(response.headers.get('x-frame-options')).toBe('SAMEORIGIN');
-    expect(response.headers.get('referrer-policy')).toBe('no-referrer');
+    expect(response.headers.get('referrer-policy')).toBe('strict-origin-when-cross-origin');
+    expect(response.headers.get('content-security-policy')).toBeTruthy();
+    expect(response.headers.get('permissions-policy')).toBeTruthy();
   });
 
   it('returns 404 for unknown wallets', async () => {
@@ -37,24 +42,64 @@ describe('API security boundaries', () => {
     expect(res.status).toBe(404);
   });
 
-  it('blocks execution without user signature', async () => {
+  it('rejects execution with invalid wallet format', async () => {
     const app = createApp({ portfolios: { test: testPortfolio() } });
     const res = await app.request('/api/execute', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ wallet: 'test', action: 'sell', asset: 'NVDA', amountUsd: 1150 }),
     });
+    expect(res.status).toBe(400);
+  });
+
+  it('blocks execution without user signature (valid wallet format)', async () => {
+    const app = createApp({ portfolios: { [TEST_WALLET]: testPortfolio() } });
+    const res = await app.request('/api/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ wallet: TEST_WALLET, action: 'sell', asset: 'NVDA', amountUsd: 1150 }),
+    });
     expect(res.status).toBe(401);
   });
 
   it('blocks trade exceeding max trade size', async () => {
-    const app = createApp({ portfolios: { test: testPortfolio() } });
+    const app = createApp({ portfolios: { [TEST_WALLET]: testPortfolio() } });
     const res = await app.request('/api/execute', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ wallet: 'test', action: 'sell', asset: 'NVDA', amountUsd: 5000, signature: 'sig' }),
+      body: JSON.stringify({ wallet: TEST_WALLET, action: 'sell', asset: 'NVDA', amountUsd: 5000, signature: TEST_SIGNATURE }),
     });
     expect(res.status).toBe(403);
+  });
+
+  it('rejects negative amount', async () => {
+    const app = createApp({ portfolios: { [TEST_WALLET]: testPortfolio() } });
+    const res = await app.request('/api/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ wallet: TEST_WALLET, action: 'sell', asset: 'NVDA', amountUsd: -100, signature: TEST_SIGNATURE }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects invalid asset symbol', async () => {
+    const app = createApp({ portfolios: { [TEST_WALLET]: testPortfolio() } });
+    const res = await app.request('/api/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ wallet: TEST_WALLET, action: 'sell', asset: 'INVAID!@#', amountUsd: 1000, signature: TEST_SIGNATURE }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects invalid action', async () => {
+    const app = createApp({ portfolios: { [TEST_WALLET]: testPortfolio() } });
+    const res = await app.request('/api/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ wallet: TEST_WALLET, action: 'hack', asset: 'NVDA', amountUsd: 1000, signature: TEST_SIGNATURE }),
+    });
+    expect(res.status).toBe(400);
   });
 
   it('enforces default risk policy limits', () => {
