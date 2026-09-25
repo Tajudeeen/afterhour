@@ -308,7 +308,7 @@ export default async function ProofPage() {
           <div className="grid-3" style={{ gap: 16 }}>
             <div>
               <div style={{ fontSize: '0.72rem', color: 'var(--ink-subtle)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Test Suite</div>
-              <div style={{ fontFamily: 'SF Mono, monospace', fontSize: '1.8rem', fontWeight: 800, color: 'var(--ink-heading)', marginTop: 4 }}>65 / 65</div>
+              <div style={{ fontFamily: 'SF Mono, monospace', fontSize: '1.8rem', fontWeight: 800, color: 'var(--ink-heading)', marginTop: 4 }}>79 / 79</div>
               <div style={{ fontSize: '0.74rem', color: 'var(--ink-muted)', marginTop: 2 }}>Passing across 8 packages</div>
             </div>
             <div>
