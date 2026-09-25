@@ -6,8 +6,8 @@ import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import {
   PublicKey,
   SystemProgram,
-  Transaction,
   TransactionInstruction,
+  TransactionMessage,
   VersionedTransaction,
 } from '@solana/web3.js';
 import { executeTrade, buildSwapTransaction, type RiskEvaluation } from '@/lib/api';
@@ -57,6 +57,16 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
       // Step 2: Deserialize the Jupiter swap transaction
       const swapBuffer = Buffer.from(swapRes.swapTransaction, 'base64');
       const swapTx = VersionedTransaction.deserialize(swapBuffer);
+      const addressLookupTableAccounts = await Promise.all(
+        swapTx.message.addressTableLookups.map(async (lookup) => {
+          const table = await connection.getAddressLookupTable(lookup.accountKey);
+          return table.value;
+        })
+      );
+      // We need to decode the message to add instructions, then recompile
+      const message = TransactionMessage.decompile(swapTx.message, {
+        addressLookupTableAccounts: addressLookupTableAccounts.filter((a): a is import('@solana/web3.js').AddressLookupTableAccount => a !== null),
+      });
 
       // Step 3: Add SPL Memo risk attestation instruction
       const memoText = `AfterHours: ${evaluation.proposed.action.toUpperCase()} $${Math.round(
@@ -70,11 +80,7 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
         data: Buffer ? Buffer.from(dataBytes) : (dataBytes as unknown as Buffer),
       });
 
-      // Add memo instruction to the transaction's signature instructions
-      if ('transaction' in swapTx && swapTx.transaction) {
-        // VersionedTransaction
-        swapTx.transaction.add(memoInstruction);
-      }
+      message.instructions.push(memoInstruction);
 
       // Step 4: Check balance and add settlement deposit if sufficient
       const balance = await connection.getBalance(publicKey);
@@ -87,10 +93,10 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
           lamports: settlementDepositLamports,
         });
 
-        if ('transaction' in swapTx && swapTx.transaction) {
-          swapTx.transaction.add(transferIx);
-        }
+        message.instructions.push(transferIx);
       }
+
+      swapTx.message = message.compileToV0Message(addressLookupTableAccounts.filter((a): a is import('@solana/web3.js').AddressLookupTableAccount => a !== null));
 
       // Step 5: Sign and send the combined transaction
       const txSig = await sendTransaction(swapTx, connection);
