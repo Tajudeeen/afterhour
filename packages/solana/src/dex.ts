@@ -71,7 +71,7 @@ export class JupiterSwapProvider {
       const url = `https://quote-api.jup.ag/v6/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${Math.floor(inputAmount * 1_000_000)}&slippageBps=50`;
       const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
       if (!res.ok) return null;
-      const data = await res.json() as any;
+      const data = await res.json() as { inAmount?: string; outAmount?: string; priceImpactPct?: string; routePlan?: { swapInfo?: { label?: string } }[] };
       if (!data.outAmount) return null;
       return {
         inputMint,
@@ -80,7 +80,7 @@ export class JupiterSwapProvider {
         outputAmount: Number(data.outAmount),
         priceImpactBps: Number(data.priceImpactPct) * 100,
         dex: 'Jupiter (live)',
-        route: data.routePlan?.map((r: any) => r.swapInfo?.label ?? 'unknown') ?? [],
+        route: data.routePlan?.map((r: { swapInfo?: { label?: string } }) => r.swapInfo?.label ?? 'unknown') ?? [],
       };
     } catch {
       return null;

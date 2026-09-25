@@ -50,7 +50,7 @@ export function loadConfig(): Config {
     },
     apiPort: intOpt('API_PORT', 8787, 1, 65_535),
     webApiUrl: opt('NEXT_PUBLIC_API_URL', 'http://localhost:8787'),
-    llmKey: process.env.LLM_API_KEY ?? (process as any).env?.[atob('T1BFTkFJX0FQSV9LRVk=')] ?? null,
+    llmKey: process.env.LLM_API_KEY ?? process.env[atob('T1BFTkFJX0FQSV9LRVk=')] ?? null,
     llmModel: opt('LLM_MODEL', 'gpt-4o-mini'),
     groqKey: process.env.GROQ_API_KEY ?? null,
   };

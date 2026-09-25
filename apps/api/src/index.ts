@@ -126,13 +126,13 @@ async function fetchJupiterQuote(inputMint: string, outputMint: string, amountUs
     const url = `https://quote-api.jup.ag/v6/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=50`;
     const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
     if (!res.ok) return null;
-    const data = (await res.json()) as any;
+    const data = (await res.json()) as { outAmount?: string; routePlan?: { swapInfo?: { feeAmount?: string } }[]; priceImpactPct?: string };
     const outAmount = Number(data.outAmount);
     const inUSDC = amountUsdc;
     const tokenDecimals = 6;
     const outTokens = outAmount / 10 ** tokenDecimals;
     const effectivePrice = inUSDC / outTokens;
-    const feeUsd = data.routePlan.reduce((sum: number, r: any) => sum + Number(r.swapInfo.feeAmount) / 1e6, 0);
+    const feeUsd = data.routePlan?.reduce((sum: number, r: { swapInfo?: { feeAmount?: string } }) => sum + Number(r.swapInfo?.feeAmount ?? "0") / 1e6, 0) ?? 0;
     return {
       venue: 'Jupiter',
       inputMint,
@@ -170,7 +170,7 @@ async function fetchPythPrice(feedId: string): Promise<{ price: number; conf: nu
       signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) return null;
-    const data = (await res.json()) as any;
+    const data = (await res.json()) as { parsed?: { price: { price: string; expo: number; conf: string; publish_time: number } }[] };
     const p = data.parsed?.[0]?.price;
     if (!p) return null;
     const price = Number(p.price) * Math.pow(10, p.expo);
@@ -200,7 +200,7 @@ async function fetchEquityQuote(symbol: string): Promise<number | null> {
       signal: AbortSignal.timeout(4000),
     });
     if (!res.ok) return null;
-    const data = (await res.json()) as any;
+    const data = (await res.json()) as { chart?: { result?: { meta?: { regularMarketPrice?: number } }[] } };
     const price = data.chart?.result?.[0]?.meta?.regularMarketPrice;
     if (typeof price === 'number') {
       equityQuoteCache.set(symbol, { price, timestamp: Date.now() });

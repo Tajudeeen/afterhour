@@ -143,7 +143,7 @@ async function verifyPythFeed(): Promise<PythFeedReceipt> {
           signal: AbortSignal.timeout(3000),
         });
         if (apiRes.ok) {
-          const apiData = await apiRes.json() as any;
+          const apiData = await apiRes.json() as { snapshot?: { referencePrice: number; onchainPrice: number; gapPercent: number } };
           if (apiData.snapshot) {
             feedPair.equityPrice = apiData.snapshot.referencePrice;
             feedPair.tokenPrice = apiData.snapshot.onchainPrice;
@@ -168,12 +168,12 @@ async function verifyPythFeed(): Promise<PythFeedReceipt> {
       };
     }
 
-    const data = await res.json() as any;
-    const prices = data.parsed?.map((p: any) => p.price) ?? [];
+    const data = await res.json() as { parsed?: { price: { price: string; expo: number } }[] };
+    const prices = data.parsed?.map((p: { price: { price: string; expo: number } }) => p.price) ?? [];
 
     if (prices.length >= 2) {
-      const equityPrice = Number(prices[0].price) * Math.pow(10, prices[0].expo);
-      const tokenPrice = Number(prices[1].price) * Math.pow(10, prices[1].expo);
+      const equityPrice = Number(prices[0]?.price) * Math.pow(10, prices[0]?.expo ?? 0);
+      const tokenPrice = Number(prices[1]?.price) * Math.pow(10, prices[1]?.expo ?? 0);
       feedPair.equityPrice = equityPrice;
       feedPair.tokenPrice = tokenPrice;
       feedPair.gapPercent = ((tokenPrice - equityPrice) / equityPrice) * 100;
@@ -196,7 +196,7 @@ async function verifyPythFeed(): Promise<PythFeedReceipt> {
         signal: AbortSignal.timeout(3000),
       });
       if (apiRes.ok) {
-        const apiData = await apiRes.json() as any;
+        const apiData = await apiRes.json() as { snapshot?: { referencePrice: number; onchainPrice: number; gapPercent: number } };
         if (apiData.snapshot) {
           feedPair.equityPrice = apiData.snapshot.referencePrice;
           feedPair.tokenPrice = apiData.snapshot.onchainPrice;
