@@ -18,6 +18,22 @@ describe('market-engine', () => {
     it('throws for zero reference price', () => {
       expect(() => calculateGapPercent(100, 0)).toThrow('referencePrice must be positive');
     });
+
+    it('throws for negative reference price', () => {
+      expect(() => calculateGapPercent(100, -50)).toThrow('referencePrice must be positive');
+    });
+
+    it('computes -100% gap when onchain price is 0', () => {
+      expect(calculateGapPercent(0, 100)).toBe(-100);
+    });
+
+    it('handles extremely large gaps correctly', () => {
+      expect(calculateGapPercent(1000000, 100)).toBe(999900);
+    });
+
+    it('handles very small fractional prices accurately', () => {
+      expect(calculateGapPercent(0.00000105, 0.00000100)).toBeCloseTo(5.0, 2);
+    });
   });
 
   describe('classifyLiquidity', () => {
