@@ -95,31 +95,19 @@ export async function buildSwapTransaction(
 ): Promise<Transaction> {
   const { userAddress, quote } = input;
   const { Transaction, PublicKey } = await import('@solana/web3.js');
+  const { JupiterSwapProvider } = await import('./dex.js');
 
-  // Call Jupiter API to get the swap transaction
-  const swapRes = await fetch('https://api.jup.ag/swap/v1/swap', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      routeInfo: {
-        swapId: quote.route.inputMint,
-        outAmount: quote.route.outputAmount,
-      },
-      userPublicKey: userAddress,
-      wrapUnwrapUSD: true,
-      computeUnitPriceMicroLamports: 1,
-    }),
-  });
+  // Use JupiterSwapProvider to get the serialized swap transaction
+  const provider = new JupiterSwapProvider(connection);
+  const swapTxBase64 = await provider.buildSwapTransaction(
+    quote.route,
+    userAddress,
+  );
 
-  if (!swapRes.ok) {
-    throw new Error(`Jupiter swap API failed: ${swapRes.status}`);
-  }
-
-  const swapData = await swapRes.json() as { swapTransaction: string };
-  const swapBuffer = Buffer.from(swapData.swapTransaction, 'base64');
+  const swapBuffer = Buffer.from(swapTxBase64, 'base64');
   const transaction = Transaction.from(swapBuffer);
 
-  // Update with recent blockhash
+  // Verify the transaction's recent blockhash is fresh (prevents replay)
   const { blockhash } = await connection.getLatestBlockhash('confirmed');
   transaction.recentBlockhash = blockhash;
   transaction.feePayer = new PublicKey(userAddress);

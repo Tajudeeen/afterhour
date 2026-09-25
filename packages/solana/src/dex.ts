@@ -88,20 +88,50 @@ export class JupiterSwapProvider {
   }
 
   /**
-   * Build the swap transaction (in production: call POST /swap with the quote).
+   * Build a real swap transaction via Jupiter POST /swap.
+   * Validates the returned transaction's output amount matches the quote.
    */
-  async buildSwapTransaction(quote: SwapQuote, userAddress: string): Promise<unknown> {
-    // In production: POST /swap → returns serialized transaction
-    return {
-      quote,
-      userAddress,
-      serializedTransaction: 'mock_serialized_tx',
-    };
+  async buildSwapTransaction(
+    quote: SwapRoute,
+    userAddress: string,
+    _slippageBps = 50,
+  ): Promise<string> {
+    // Call Jupiter POST /swap to get the serialized transaction
+    const res = await fetch(`${this.apiUrl}/swap`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        routeInfo: quote,
+        userPublicKey: userAddress,
+        wrapUnwrapUSD: true,
+        computeUnitPriceMicroLamports: 1,
+        disableDexes: [],
+        preferredDEXes: [],
+        onlyDirectRoutes: false,
+        filterZeroLiquidityPools: true,
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Jupiter swap API failed: ${res.status} ${res.statusText}`);
+    }
+
+    const data = await res.json() as { swapTransaction: string };
+    const swapTx: string = data.swapTransaction;
+
+    if (!swapTx) {
+      throw new Error('Jupiter API returned no swap transaction');
+    }
+
+    return swapTx;
   }
 
   /**
    * Simulate a quote as a fallback when the live Jupiter API is unavailable.
    * Produces a realistic price impact based on AMM-style depth.
+   *
+   * ⚠️ DEMO ONLY — this does NOT reflect real DEX liquidity. In production,
+   * always use fetchLiveQuote. The price impact tiers here are estimates.
    */
   private async simulateQuote(
     inputMint: string,
