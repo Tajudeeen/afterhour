@@ -200,7 +200,7 @@ export function MarketsView({ prestocksAssets, isPrestocksLive }: MarketsViewPro
                   href={`/assets/${asset.symbol}`}
                   style={{ textDecoration: 'none' }}
                 >
-                  <div className="data-card" style={{ flexDirection: 'row', alignItems: 'center', gap: 20, padding: '18px 24px', cursor: 'pointer' }}>
+                  <div className="data-card asset-card-row" style={{ flexDirection: 'row', alignItems: 'center', gap: 20, padding: '18px 24px', cursor: 'pointer' }}>
                     {/* Symbol & Name */}
                     <div style={{ minWidth: '150px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -256,7 +256,7 @@ export function MarketsView({ prestocksAssets, isPrestocksLive }: MarketsViewPro
                     </div>
 
                     {/* Gap */}
-                    <div style={{ textAlign: 'right', minWidth: '110px' }}>
+                    <div className="gap-column" style={{ textAlign: 'right', minWidth: '110px' }}>
                       <div style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                         Feed Gap
                       </div>
@@ -268,7 +268,7 @@ export function MarketsView({ prestocksAssets, isPrestocksLive }: MarketsViewPro
                       </div>
                     </div>
 
-                    <div style={{ color: 'var(--lime)', fontSize: '1.2rem', fontWeight: 700 }}>→</div>
+                    <div className="arrow-column" style={{ color: 'var(--lime)', fontSize: '1.2rem', fontWeight: 700 }}>→</div>
                   </div>
                 </Link>
               );
@@ -301,7 +301,7 @@ export function MarketsView({ prestocksAssets, isPrestocksLive }: MarketsViewPro
                   href={`/assets/${asset.symbol}`}
                   style={{ textDecoration: 'none' }}
                 >
-                  <div className="data-card" style={{ flexDirection: 'row', alignItems: 'center', gap: 20, padding: '16px 24px', cursor: 'pointer' }}>
+                  <div className="data-card asset-card-row" style={{ flexDirection: 'row', alignItems: 'center', gap: 20, padding: '16px 24px', cursor: 'pointer' }}>
                     <img
                       src={asset.image}
                       alt={asset.name}
@@ -338,7 +338,7 @@ export function MarketsView({ prestocksAssets, isPrestocksLive }: MarketsViewPro
                       </div>
                     </div>
 
-                    <div style={{ textAlign: 'right', minWidth: '100px' }}>
+                    <div className="gap-column" style={{ textAlign: 'right', minWidth: '100px' }}>
                       <div style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '2px' }}>
                         Gap
                       </div>
@@ -350,7 +350,7 @@ export function MarketsView({ prestocksAssets, isPrestocksLive }: MarketsViewPro
                       </div>
                     </div>
 
-                    <div style={{ color: 'var(--ink-subtle)', fontSize: '1.2rem' }}>→</div>
+                    <div className="arrow-column" style={{ color: 'var(--ink-subtle)', fontSize: '1.2rem' }}>→</div>
                   </div>
                 </Link>
               );

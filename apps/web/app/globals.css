@@ -1617,3 +1617,22 @@ code {
 }
 
 
+
+/* Responsive Markets View */
+@media (max-width: 768px) {
+  .asset-card-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .asset-card-row > div {
+    width: 100%;
+    text-align: left !important;
+  }
+  .arrow-column {
+    display: none !important;
+  }
+  html {
+    font-size: 14px;
+  }
+}

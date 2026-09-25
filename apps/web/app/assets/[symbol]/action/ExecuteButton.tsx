@@ -58,7 +58,7 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
       const swapBuffer = Buffer.from(swapRes.swapTransaction, 'base64');
       const swapTx = VersionedTransaction.deserialize(swapBuffer);
       const addressLookupTableAccounts = await Promise.all(
-        swapTx.message.addressTableLookups.map(async (lookup) => {
+        ('addressTableLookups' in swapTx.message ? swapTx.message.addressTableLookups : []).map(async (lookup) => {
           const table = await connection.getAddressLookupTable(lookup.accountKey);
           return table.value;
         })
