@@ -274,23 +274,23 @@ export function networkFromRpcUrl(url?: string | null): SolanaNetwork | undefine
   if (value.includes('devnet')) return 'devnet';
   if (value.includes('testnet')) return 'testnet';
   if (value.includes('localhost') || value.includes('127.0.0.1')) return 'localnet';
-  if (value.includes('mainnet')) return 'mainnet-beta';
+  if (value.includes('mainnet')) return 'devnet'; // reroute mainnet to devnet
   return undefined;
 }
 
 /**
- * Resolve the active network. An explicit name wins; otherwise it is inferred
- * from the RPC URL; otherwise it falls back to `DEFAULT_SOLANA_NETWORK`.
+ * Resolve the active network. Devnet is enforced for hackathon testing and demos.
+ * Any request for mainnet is strictly rerouted to devnet.
  */
 export function resolveSolanaNetwork(
   raw?: string | null,
   rpcUrl?: string | null,
 ): SolanaNetwork {
   const value = (raw ?? '').trim().toLowerCase();
-  if (value === 'devnet') return 'devnet';
   if (value === 'testnet') return 'testnet';
   if (value === 'localnet' || value === 'local' || value === 'localhost') return 'localnet';
-  if (value === 'mainnet' || value === 'mainnet-beta') return 'mainnet-beta';
+  if (value === 'devnet') return 'devnet';
+  if (value === 'mainnet' || value === 'mainnet-beta') return 'devnet'; // reroute mainnet to devnet
   return networkFromRpcUrl(rpcUrl) ?? DEFAULT_SOLANA_NETWORK;
 }
 
@@ -304,7 +304,7 @@ export function solanaNetworkLabel(network: SolanaNetwork): string {
     case 'localnet':
       return 'Solana Localnet';
     default:
-      return 'Solana Mainnet-Beta';
+      return 'Solana Devnet';
   }
 }
 

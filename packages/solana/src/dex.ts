@@ -94,7 +94,7 @@ export class JupiterSwapProvider {
   async buildSwapTransaction(
     quote: SwapRoute,
     userAddress: string,
-    _slippageBps = 50,
+    slippageBps = 50,
   ): Promise<string> {
     // Call Jupiter POST /swap to get the serialized transaction
     const res = await fetch(`${this.apiUrl}/swap`, {
@@ -109,6 +109,7 @@ export class JupiterSwapProvider {
         preferredDEXes: [],
         onlyDirectRoutes: false,
         filterZeroLiquidityPools: true,
+        slippageBps,
       }),
     });
 

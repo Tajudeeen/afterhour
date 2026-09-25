@@ -11,22 +11,25 @@ import { NETWORK } from '@/lib/network';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 export function SolanaWalletProvider({ children }: { children: React.ReactNode }) {
-  // Network comes from the single source of truth in @/lib/network, so the
-  // connection and every UI label / explorer link always agree on the cluster.
+  // Always connect to Devnet (reroutes any mainnet requests to devnet)
   const network = useMemo(() => {
     switch (NETWORK) {
-      case 'devnet':
-        return WalletAdapterNetwork.Devnet;
       case 'testnet':
         return WalletAdapterNetwork.Testnet;
+      case 'devnet':
       default:
-        return WalletAdapterNetwork.Mainnet;
+        return WalletAdapterNetwork.Devnet;
     }
   }, []);
-  const endpoint = useMemo(
-    () => process.env.NEXT_PUBLIC_SOLANA_RPC || clusterApiUrl(network),
-    [network]
-  );
+
+  const endpoint = useMemo(() => {
+    const customRpc = process.env.NEXT_PUBLIC_SOLANA_RPC?.trim();
+    // Guard against any leftover mainnet RPC endpoint
+    if (customRpc && !customRpc.toLowerCase().includes('mainnet')) {
+      return customRpc;
+    }
+    return clusterApiUrl(network);
+  }, [network]);
 
   // Wallet Standard automatically detects installed browser wallets (Phantom, Solflare, Backpack, etc.)
   const wallets = useMemo(() => [], []);

@@ -62,8 +62,8 @@ export function SiteFooter() {
           <a href="https://prestocks.com" target="_blank" rel="noreferrer">
             PreStocks API ↗
           </a>
-          <a href="https://solana.com" target="_blank" rel="noreferrer">
-            Solana Mainnet ↗
+          <a href="https://explorer.solana.com/?cluster=devnet" target="_blank" rel="noreferrer">
+            Solana Devnet ↗
           </a>
         </div>
       </div>
@@ -86,7 +86,7 @@ export function SiteFooter() {
             </span>
             <span className="sponsor-item">
               <span className="sponsor-dot" style={{ background: '#9945FF' }} />
-              Solana Mainnet
+              Solana Devnet
             </span>
             <span className="sponsor-item">
               <span className="sponsor-dot" style={{ background: '#56c0aa' }} />

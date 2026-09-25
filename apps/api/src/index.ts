@@ -87,10 +87,11 @@ function checkExecutionRateLimit(wallet: string): boolean {
  */
 async function verifyOnChainSignature(wallet: string, signature: string): Promise<boolean> {
   try {
-    type Cluster = 'mainnet-beta' | 'testnet' | 'devnet';
-    const cluster: Cluster = NETWORK === 'mainnet-beta' ? 'mainnet-beta' : NETWORK === 'devnet' ? 'devnet' : 'devnet';
     const { Connection, PublicKey, clusterApiUrl } = await import('@solana/web3.js');
-    const connection = new Connection(clusterApiUrl(cluster), 'confirmed');
+    const rpcUrl = (process.env.SOLANA_RPC_URL && !process.env.SOLANA_RPC_URL.toLowerCase().includes('mainnet'))
+      ? process.env.SOLANA_RPC_URL
+      : clusterApiUrl('devnet');
+    const connection = new Connection(rpcUrl, 'confirmed');
     const tx = await connection.getTransaction(signature, { commitment: 'confirmed' });
     if (!tx) return false;
     const signerPubkey = new PublicKey(wallet);
