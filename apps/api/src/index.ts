@@ -845,6 +845,69 @@ export function createApp(options: CreateAppOptions = {}): Hono {
   });
 
   /**
+   * POST /api/swap/build
+   * Build a Jupiter swap transaction for the user.
+   * Calls Jupiter POST /swap server-side (avoids CORS), returns serialized tx.
+   * The client deserializes, adds SPL Memo, and sends for wallet signing.
+   */
+  app.post('/api/swap/build', async (c: Context) => {
+    const body = await c.req.json<{
+      userAddress: string;
+      outputMint: string;
+      inputAmount: number;
+      inputMint?: string;
+      slippageBps?: number;
+    }>();
+
+    if (!body.userAddress || !body.outputMint || !body.inputAmount) {
+      return c.json({ error: { code: 'bad-request', message: 'userAddress, outputMint, and inputAmount are required.' } }, 400);
+    }
+
+    // USDC mint is the default input
+    const USDC_MINT = body.inputMint || 'EPjFWdd5AufqSSqeM2qN1xB9qMLM6kq7K3e8n1W4c2X';
+    const slippageBps = body.slippageBps ?? 100;
+
+    try {
+      const quoteRes = await fetch(
+        `https://quote-api.jup.ag/v6/quote?inputMint=${USDC_MINT}&outputMint=${body.outputMint}&amount=${Math.floor(body.inputAmount * 1_000_000)}&slippageBps=${slippageBps}`,
+        { signal: AbortSignal.timeout(8000) },
+      );
+
+      if (!quoteRes.ok) {
+        throw new Error(`Jupiter quote API failed: ${quoteRes.status}`);
+      }
+
+      const quote = await quoteRes.json() as any;
+
+      const swapRes = await fetch('https://api.jup.ag/swap/v1/swap', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          routeInfo: quote,
+          userPublicKey: body.userAddress,
+          wrapUnwrapUSD: true,
+          computeUnitPriceMicroLamports: 1,
+        }),
+      });
+
+      if (!swapRes.ok) {
+        throw new Error(`Jupiter swap API failed: ${swapRes.status}`);
+      }
+
+      const swapData = await swapRes.json() as { swapTransaction: string };
+
+      if (!swapData.swapTransaction) {
+        throw new Error('Jupiter API returned no swap transaction');
+      }
+
+      return c.json({ swapTransaction: swapData.swapTransaction });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Swap build failed';
+      return c.json({ error: { code: 'swap-failed', message: msg } }, 502);
+    }
+  });
+
+  /**
    * POST /api/execute
    * Execute a trade after user approval and risk policy validation.
    * Rate limited: max 5 executions per wallet per 1-minute window.

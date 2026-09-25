@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getAssetAnalysis, getAssetIntelligence, type AIAnalysis, type AIAnalysisContext, type AssetIntelligence } from '@/lib/api';
 import { RiskSimulator } from '@/components/RiskSimulator';
+import { formatPercent } from '@/lib/format';
 
 export default async function AnalysisPage({ params }: { params: Promise<{ symbol: string }> }) {
   const { symbol } = await params;
@@ -107,7 +108,7 @@ export default async function AnalysisPage({ params }: { params: Promise<{ symbo
           </div>
           <div className="regime-item">
             <span className="label">Gap</span>
-            <span className="value">{context.gapPercent.toFixed(2)}%</span>
+            <span className="value">{formatPercent(context.gapPercent, 2, false)}</span>
           </div>
           <div className="regime-item">
             <span className="label">Concentration</span>

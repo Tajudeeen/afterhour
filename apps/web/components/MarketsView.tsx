@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getAssetIntelligence } from '@/lib/api';
+import { formatNum, formatCurrency, formatPercent } from '@/lib/format';
 
 export interface PreStocksAsset {
   name: string;
@@ -111,8 +112,10 @@ export function MarketsView({ prestocksAssets, isPrestocksLive }: MarketsViewPro
   }, []);
 
   const sortedPrestocks = [...prestocksAssets].sort((a, b) => {
-    const gapA = Math.abs((a.tokenPrice - a.markPrice) / a.markPrice);
-    const gapB = Math.abs((b.tokenPrice - b.markPrice) / b.markPrice);
+    const markA = a.markPrice || 1;
+    const markB = b.markPrice || 1;
+    const gapA = Math.abs(((a.tokenPrice ?? 0) - markA) / markA);
+    const gapB = Math.abs(((b.tokenPrice ?? 0) - markB) / markB);
     return gapB - gapA;
   });
 
@@ -219,7 +222,7 @@ export function MarketsView({ prestocksAssets, isPrestocksLive }: MarketsViewPro
                         TradFi Feed (US Close)
                       </div>
                       <div style={{ fontFamily: 'SF Mono, monospace', fontWeight: 700, fontSize: '1.05rem', color: 'var(--ink-body)', marginTop: '2px' }}>
-                        ${asset.equityPrice.toFixed(2)}
+                        {formatCurrency(asset.equityPrice, 2)}
                       </div>
                       <div style={{ fontSize: '0.65rem', color: 'var(--ink-subtle)', fontFamily: 'SF Mono, monospace' }}>
                         {asset.equitySymbol}
@@ -232,7 +235,7 @@ export function MarketsView({ prestocksAssets, isPrestocksLive }: MarketsViewPro
                         On-Chain Feed (24/7)
                       </div>
                       <div style={{ fontFamily: 'SF Mono, monospace', fontWeight: 700, fontSize: '1.05rem', color: 'var(--ink-heading)', marginTop: '2px' }}>
-                        ${asset.tokenPrice.toFixed(2)}
+                        {formatCurrency(asset.tokenPrice, 2)}
                       </div>
                       <div style={{ fontSize: '0.65rem', color: 'var(--ink-subtle)', fontFamily: 'SF Mono, monospace' }}>
                         {asset.tokenSymbol}
@@ -245,10 +248,10 @@ export function MarketsView({ prestocksAssets, isPrestocksLive }: MarketsViewPro
                         Pyth Confidence Band
                       </div>
                       <div style={{ fontFamily: 'SF Mono, monospace', fontWeight: 700, fontSize: '0.92rem', color: 'var(--pyth-lavender)', marginTop: '2px' }}>
-                        ±${asset.confidenceUsd.toFixed(2)} ({asset.confidenceRatioPercent}%)
+                        ±{formatCurrency(asset.confidenceUsd, 2)} ({formatNum(asset.confidenceRatioPercent, 2)}%)
                       </div>
                       <div style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', marginTop: '2px' }}>
-                        Slippage: {asset.dynamicSlippageBps} bps
+                        Slippage: {asset.dynamicSlippageBps ?? 50} bps
                       </div>
                     </div>
 
@@ -258,10 +261,10 @@ export function MarketsView({ prestocksAssets, isPrestocksLive }: MarketsViewPro
                         Feed Gap
                       </div>
                       <div className={isPositive ? 'gap-positive-large' : 'gap-negative-large'} style={{ fontSize: '1.25rem' }}>
-                        {isPositive ? '+' : ''}{asset.gapPercent.toFixed(2)}%
+                        {formatPercent(asset.gapPercent, 2)}
                       </div>
                       <div style={{ fontSize: '0.72rem', color: 'var(--ink-subtle)' }}>
-                        {isPositive ? '+' : ''}${Math.abs(asset.gapDollar).toFixed(2)}
+                        {(asset.gapDollar ?? 0) > 0 ? '+' : ''}${Math.abs(asset.gapDollar ?? 0).toFixed(2)}
                       </div>
                     </div>
 
@@ -286,8 +289,10 @@ export function MarketsView({ prestocksAssets, isPrestocksLive }: MarketsViewPro
 
           <div style={{ display: 'grid', gap: '12px' }}>
             {sortedPrestocks.map((asset) => {
-              const gapPercent = ((asset.tokenPrice - asset.markPrice) / asset.markPrice) * 100;
-              const gapDollar = asset.tokenPrice - asset.markPrice;
+              const mark = asset.markPrice || 1;
+              const token = asset.tokenPrice ?? 0;
+              const gapPercent = ((token - mark) / mark) * 100;
+              const gapDollar = token - mark;
               const isPositive = gapPercent > 0;
 
               return (
@@ -319,7 +324,7 @@ export function MarketsView({ prestocksAssets, isPrestocksLive }: MarketsViewPro
                         Fair Value
                       </div>
                       <div style={{ fontFamily: 'SF Mono, monospace', fontWeight: 700, color: 'var(--ink-body)' }}>
-                        ${asset.markPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                        {formatCurrency(asset.markPrice, 2)}
                       </div>
                       <span className="prestocks-badge" style={{ marginTop: '4px' }}>PreStocks</span>
                     </div>
@@ -329,7 +334,7 @@ export function MarketsView({ prestocksAssets, isPrestocksLive }: MarketsViewPro
                         On-chain
                       </div>
                       <div style={{ fontFamily: 'SF Mono, monospace', fontWeight: 700, color: 'var(--ink-heading)' }}>
-                        ${asset.tokenPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                        {formatCurrency(asset.tokenPrice, 2)}
                       </div>
                     </div>
 
@@ -338,7 +343,7 @@ export function MarketsView({ prestocksAssets, isPrestocksLive }: MarketsViewPro
                         Gap
                       </div>
                       <div className={isPositive ? 'gap-positive-large' : 'gap-negative-large'} style={{ fontSize: '1.2rem' }}>
-                        {isPositive ? '+' : ''}{gapPercent.toFixed(2)}%
+                        {formatPercent(gapPercent, 2)}
                       </div>
                       <div style={{ fontSize: '0.72rem', color: 'var(--ink-subtle)' }}>
                         {isPositive ? '+' : ''}${Math.abs(gapDollar).toFixed(2)} per token

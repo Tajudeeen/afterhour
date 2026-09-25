@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { NETWORK_LABEL } from '@/lib/network';
+import { formatCurrency, formatPercent } from '@/lib/format';
 
 export const metadata = {
   title: 'Proof & Verification — AfterHours',
@@ -150,7 +151,7 @@ async function verifyPythFeed(): Promise<PythFeedReceipt> {
             return {
               status: 'live',
               testedFeed: feedPair,
-              note: `Live dual-feed benchmark verified: Equity.US.AAPL/USD = $${apiData.snapshot.referencePrice.toFixed(2)}, Crypto.AAPLX/USD = $${apiData.snapshot.onchainPrice.toFixed(2)}, gap = ${apiData.snapshot.gapPercent.toFixed(2)}% (Pyth feed pair mapped)`,
+              note: `Live dual-feed benchmark verified: Equity.US.AAPL/USD = ${formatCurrency(apiData.snapshot.referencePrice, 2)}, Crypto.AAPLX/USD = ${formatCurrency(apiData.snapshot.onchainPrice, 2)}, gap = ${formatPercent(apiData.snapshot.gapPercent, 2)} (Pyth feed pair mapped)`,
             };
           }
         }
@@ -179,7 +180,7 @@ async function verifyPythFeed(): Promise<PythFeedReceipt> {
       return {
         status: 'live',
         testedFeed: feedPair,
-        note: `Live Pyth dual-feed comparison: Equity.US.AAPL/USD = $${equityPrice.toFixed(2)}, Crypto.AAPLX/USD = $${tokenPrice.toFixed(2)}, gap = ${(feedPair.gapPercent ?? 0).toFixed(2)}%`,
+        note: `Live Pyth dual-feed comparison: Equity.US.AAPL/USD = ${formatCurrency(equityPrice, 2)}, Crypto.AAPLX/USD = ${formatCurrency(tokenPrice, 2)}, gap = ${formatPercent(feedPair.gapPercent, 2)}`,
       };
     }
 
@@ -203,7 +204,7 @@ async function verifyPythFeed(): Promise<PythFeedReceipt> {
           return {
             status: 'live',
             testedFeed: feedPair,
-            note: `Live dual-feed benchmark verified: Equity.US.AAPL/USD = $${apiData.snapshot.referencePrice.toFixed(2)}, Crypto.AAPLX/USD = $${apiData.snapshot.onchainPrice.toFixed(2)}, gap = ${apiData.snapshot.gapPercent.toFixed(2)}% (Pyth feed pair mapped)`,
+            note: `Live dual-feed benchmark verified: Equity.US.AAPL/USD = ${formatCurrency(apiData.snapshot.referencePrice, 2)}, Crypto.AAPLX/USD = ${formatCurrency(apiData.snapshot.onchainPrice, 2)}, gap = ${formatPercent(apiData.snapshot.gapPercent, 2)} (Pyth feed pair mapped)`,
           };
         }
       }
@@ -365,8 +366,8 @@ export default async function ProofPage() {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div className={receipt.sampleAsset.gapPercent > 0 ? 'gap-positive-large' : 'gap-negative-large'} style={{ fontSize: '1.4rem' }}>
-                    {receipt.sampleAsset.gapPercent > 0 ? '+' : ''}{receipt.sampleAsset.gapPercent.toFixed(2)}%
+                  <div className={(receipt.sampleAsset.gapPercent ?? 0) > 0 ? 'gap-positive-large' : 'gap-negative-large'} style={{ fontSize: '1.4rem' }}>
+                    {formatPercent(receipt.sampleAsset.gapPercent, 2)}
                   </div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--ink-subtle)' }}>Live Gap Detected</div>
                 </div>
@@ -376,13 +377,13 @@ export default async function ProofPage() {
                 <div>
                   <span style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', textTransform: 'uppercase', fontWeight: 800 }}>Mark Valuation</span>
                   <div style={{ fontFamily: 'SF Mono, monospace', fontWeight: 700, color: 'var(--ink-body)', marginTop: 2 }}>
-                    ${receipt.sampleAsset.markPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                    {formatCurrency(receipt.sampleAsset.markPrice, 2)}
                   </div>
                 </div>
                 <div>
                   <span style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', textTransform: 'uppercase', fontWeight: 800 }}>On-Chain DEX Price</span>
                   <div style={{ fontFamily: 'SF Mono, monospace', fontWeight: 700, color: 'var(--ink-body)', marginTop: 2 }}>
-                    ${receipt.sampleAsset.tokenPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                    {formatCurrency(receipt.sampleAsset.tokenPrice, 2)}
                   </div>
                 </div>
                 <div>
@@ -427,7 +428,7 @@ export default async function ProofPage() {
               <div style={{ textAlign: 'right' }}>
                 <div className={pythReceipt.testedFeed.gapPercent && pythReceipt.testedFeed.gapPercent > 0 ? 'gap-positive-large' : 'gap-negative-large'} style={{ fontSize: '1.4rem' }}>
                   {pythReceipt.testedFeed.gapPercent !== null
-                    ? `${pythReceipt.testedFeed.gapPercent > 0 ? '+' : ''}${pythReceipt.testedFeed.gapPercent.toFixed(2)}%`
+                    ? formatPercent(pythReceipt.testedFeed.gapPercent, 2)
                     : 'Seeded'}
                 </div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--ink-subtle)' }}>
@@ -441,7 +442,7 @@ export default async function ProofPage() {
                 <span style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', textTransform: 'uppercase', fontWeight: 800 }}>TradFi Feed (US Close)</span>
                 <div style={{ fontFamily: 'SF Mono, monospace', fontWeight: 700, color: 'var(--ink-body)', marginTop: 2 }}>
                   {pythReceipt.testedFeed.equityPrice !== null
-                    ? `$${pythReceipt.testedFeed.equityPrice.toFixed(2)}`
+                    ? formatCurrency(pythReceipt.testedFeed.equityPrice, 2)
                     : '$214.80 (seeded)'}
                 </div>
               </div>
@@ -449,7 +450,7 @@ export default async function ProofPage() {
                 <span style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', textTransform: 'uppercase', fontWeight: 800 }}>On-Chain Feed (24/7)</span>
                 <div style={{ fontFamily: 'SF Mono, monospace', fontWeight: 700, color: 'var(--ink-body)', marginTop: 2 }}>
                   {pythReceipt.testedFeed.tokenPrice !== null
-                    ? `$${pythReceipt.testedFeed.tokenPrice.toFixed(2)}`
+                    ? formatCurrency(pythReceipt.testedFeed.tokenPrice, 2)
                     : '$218.40 (seeded)'}
                 </div>
               </div>

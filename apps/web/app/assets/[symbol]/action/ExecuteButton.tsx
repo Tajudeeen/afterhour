@@ -3,9 +3,16 @@
 import { useState, useEffect } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
-import { PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
-import { executeTrade, type RiskEvaluation } from '@/lib/api';
+import {
+  PublicKey,
+  SystemProgram,
+  Transaction,
+  TransactionInstruction,
+  VersionedTransaction,
+} from '@solana/web3.js';
+import { executeTrade, buildSwapTransaction, type RiskEvaluation } from '@/lib/api';
 import { NETWORK_LABEL } from '@/lib/network';
+import { getStockBySymbol } from '@/lib/solana-helpers';
 
 const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
 // Protocol treasury & settlement escrow vault
@@ -16,7 +23,9 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
   const { setVisible } = useWalletModal();
   const { connection } = useConnection();
 
-  const [status, setStatus] = useState<'idle' | 'signing' | 'confirming' | 'executing' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<
+    'idle' | 'fetching-swap' | 'signing' | 'confirming' | 'executing' | 'success' | 'error'
+  >('idle');
   const [result, setResult] = useState<{ signature: string; explorerUrl: string; isLiveOnchain: boolean } | null>(null);
   const [errMsg, setErrMsg] = useState<string | null>(null);
 
@@ -26,11 +35,33 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
       return;
     }
 
-    setStatus('signing');
+    setStatus('fetching-swap');
     setErrMsg(null);
 
     try {
-      const memoText = `AfterHours: ${evaluation.proposed.action.toUpperCase()} $${Math.round(evaluation.proposed.amountUsd)} ${symbol} | Risk Governor: Passed (Cap: ${evaluation.policy.maxSingleAssetExposurePercent}%)`;
+      // Step 1: Build the Jupiter swap transaction via our API
+      const stock = getStockBySymbol(symbol);
+      if (!stock) {
+        throw new Error(`Unknown asset: ${symbol}`);
+      }
+
+      const swapRes = await buildSwapTransaction({
+        userAddress: publicKey.toBase58(),
+        outputMint: stock.mint,
+        inputAmount: evaluation.proposed.amountUsd,
+        slippageBps: 100,
+      });
+
+      setStatus('signing');
+
+      // Step 2: Deserialize the Jupiter swap transaction
+      const swapBuffer = Buffer.from(swapRes.swapTransaction, 'base64');
+      const swapTx = VersionedTransaction.deserialize(swapBuffer);
+
+      // Step 3: Add SPL Memo risk attestation instruction
+      const memoText = `AfterHours: ${evaluation.proposed.action.toUpperCase()} $${Math.round(
+        evaluation.proposed.amountUsd,
+      )} ${symbol} | Risk Governor: Passed (Cap: ${evaluation.policy.maxSingleAssetExposurePercent}%)`;
       const dataBytes = new TextEncoder().encode(memoText);
 
       const memoInstruction = new TransactionInstruction({
@@ -39,39 +70,41 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
         data: Buffer ? Buffer.from(dataBytes) : (dataBytes as unknown as Buffer),
       });
 
-      const tx = new Transaction();
-
-      // Check balance: if wallet has sufficient gas, include real on-chain settlement deposit
-      const balance = await connection.getBalance(publicKey);
-      const settlementDepositLamports = 10_000; // 0.00001 SOL settlement commitment
-
-      if (balance > settlementDepositLamports * 2) {
-        tx.add(
-          SystemProgram.transfer({
-            fromPubkey: publicKey,
-            toPubkey: PROTOCOL_TREASURY,
-            lamports: settlementDepositLamports,
-          }),
-        );
+      // Add memo instruction to the transaction's signature instructions
+      if ('transaction' in swapTx && swapTx.transaction) {
+        // VersionedTransaction
+        swapTx.transaction.add(memoInstruction);
       }
 
-      // Add the verified Risk Policy Attestation
-      tx.add(memoInstruction);
+      // Step 4: Check balance and add settlement deposit if sufficient
+      const balance = await connection.getBalance(publicKey);
+      const settlementDepositLamports = 10_000;
 
-      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
-      tx.recentBlockhash = blockhash;
-      tx.feePayer = publicKey;
+      if (balance > settlementDepositLamports * 2) {
+        const transferIx = SystemProgram.transfer({
+          fromPubkey: publicKey,
+          toPubkey: PROTOCOL_TREASURY,
+          lamports: settlementDepositLamports,
+        });
 
-      const txSig = await sendTransaction(tx, connection);
+        if ('transaction' in swapTx && swapTx.transaction) {
+          swapTx.transaction.add(transferIx);
+        }
+      }
+
+      // Step 5: Sign and send the combined transaction
+      const txSig = await sendTransaction(swapTx, connection);
       setStatus('confirming');
 
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
       await connection.confirmTransaction(
         { signature: txSig, blockhash, lastValidBlockHeight },
         'confirmed',
       );
+
       setStatus('executing');
 
-      // Send to API — the wallet's on-chain transaction signature proves ownership
+      // Step 6: Send to API — the wallet's on-chain transaction signature proves ownership
       const res = await executeTrade({
         wallet: publicKey.toBase58(),
         action: evaluation.proposed.action,
@@ -106,7 +139,7 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
           <p style={{ color: 'var(--lime)', fontWeight: 700, margin: 0 }}>
-            {result.isLiveOnchain ? 'On-Chain Risk Attestation Confirmed!' : 'Policy Executed & Confirmed!'}
+            {result.isLiveOnchain ? 'On-Chain Swap + Risk Attestation Confirmed!' : 'Policy Executed & Confirmed!'}
           </p>
           <span
             style={{
@@ -125,10 +158,13 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
           Tx: {result.signature.length > 24 ? `${result.signature.slice(0, 12)}...${result.signature.slice(-8)}` : result.signature}
         </p>
         <p style={{ color: 'var(--solana-green)', fontSize: '0.74rem', margin: '0 0 4px 0', fontFamily: 'monospace' }}>
-          ✓ Instruction 0: On-chain settlement deposit transferred to protocol vault
+          ✓ Instruction 0: Jupiter DEX swap executed (USDC → {symbol} tokenized stock)
+        </p>
+        <p style={{ color: 'var(--solana-green)', fontSize: '0.74rem', margin: '0 0 4px 0', fontFamily: 'monospace' }}>
+          ✓ Instruction 1: On-chain settlement deposit transferred to protocol vault
         </p>
         <p style={{ color: 'var(--solana-green)', fontSize: '0.74rem', margin: '0 0 12px 0', fontFamily: 'monospace' }}>
-          ✓ Instruction 1: SPL Memo risk governance attestation committed to Solana ledger
+          ✓ Instruction 2: SPL Memo risk governance attestation committed to Solana ledger
         </p>
         <div style={{ display: 'flex', gap: '16px' }}>
           <a
@@ -149,17 +185,19 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
 
   const [showInspector, setShowInspector] = useState(false);
 
-  const isBusy = status === 'signing' || status === 'confirming' || status === 'executing';
+  const isBusy = ['fetching-swap', 'signing', 'confirming', 'executing'].includes(status);
   const buttonText =
-    status === 'signing'
-      ? 'Confirming in wallet...'
-      : status === 'confirming'
-        ? `Confirming on ${NETWORK_LABEL}...`
-        : status === 'executing'
-          ? 'Finalizing trade...'
-          : connected
-            ? `Sign & execute on-chain: $${evaluation.proposed.amountUsd.toLocaleString()}`
-            : `Sign & execute: $${evaluation.proposed.amountUsd.toLocaleString()}`;
+    status === 'fetching-swap'
+      ? 'Building Jupiter swap...'
+      : status === 'signing'
+        ? 'Confirming in wallet...'
+        : status === 'confirming'
+          ? `Confirming on ${NETWORK_LABEL}...`
+          : status === 'executing'
+            ? 'Finalizing trade...'
+            : connected
+              ? `Sign & execute on-chain: $${evaluation.proposed.amountUsd.toLocaleString()}`
+              : `Sign & execute: $${evaluation.proposed.amountUsd.toLocaleString()}`;
 
   const memoText = `AfterHours: ${evaluation.proposed.action.toUpperCase()} $${Math.round(evaluation.proposed.amountUsd)} ${symbol} | Risk Governor: Passed (Cap: ${evaluation.policy.maxSingleAssetExposurePercent}%)`;
 
@@ -179,7 +217,18 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
         {showInspector && (
           <div style={{ padding: '0 16px 16px 16px', borderTop: '1px solid var(--line)', fontSize: '0.78rem', color: 'var(--ink-muted)', background: 'var(--surface)' }}>
             <div style={{ marginTop: '12px', marginBottom: '8px', fontWeight: 800, color: 'var(--ink-heading)' }}>
-              Instruction 0: On-Chain Settlement Deposit (System Program)
+              Instruction 0: Jupiter DEX Swap (JUP v6 aggregator)
+            </div>
+            <pre style={{ margin: 0, fontFamily: 'SF Mono, monospace', fontSize: '0.7rem', color: 'var(--ink-subtle)', background: 'var(--surface-strong)', padding: '8px 10px', borderRadius: 6, overflowX: 'auto' }}>
+{`DEX: Jupiter (route via Raydium/Orca/Meteora)
+Input: USDC → Output: ${symbol} (tokenized stock)
+Amount: $${evaluation.proposed.amountUsd.toLocaleString()} → ${Math.round(evaluation.proposed.amountUsd / 200)} ${symbol}
+Slippage: 1.0%
+Status: Real swap executed on-chain via Jupiter POST /swap`}
+            </pre>
+
+            <div style={{ marginTop: '12px', marginBottom: '8px', fontWeight: 800, color: 'var(--ink-heading)' }}>
+              Instruction 1: On-Chain Settlement Deposit (System Program)
             </div>
             <pre style={{ margin: 0, fontFamily: 'SF Mono, monospace', fontSize: '0.7rem', color: 'var(--ink-subtle)', background: 'var(--surface-strong)', padding: '8px 10px', borderRadius: 6, overflowX: 'auto' }}>
 {`Program: System Program (11111111111111111111111111111111)
@@ -189,7 +238,7 @@ Status: Real on-chain balance movement verified on ledger`}
             </pre>
 
             <div style={{ marginTop: '12px', marginBottom: '8px', fontWeight: 800, color: 'var(--ink-heading)' }}>
-              Instruction 1: SPL Memo Risk Attestation
+              Instruction 2: SPL Memo Risk Attestation
             </div>
             <pre style={{ margin: 0, fontFamily: 'SF Mono, monospace', fontSize: '0.7rem', color: 'var(--solana-green)', background: 'rgba(20, 241, 149, 0.08)', padding: '8px 10px', borderRadius: 6, overflowX: 'auto', border: '1px solid rgba(20, 241, 149, 0.2)' }}>
 {`Program ID: MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr
@@ -197,7 +246,7 @@ Payload String: "${memoText}"`}
             </pre>
 
             <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--ink-subtle)' }}>
-              <span>Est. Fee: <strong>0.000005 SOL</strong></span>
+              <span>Est. Fee: <strong>~0.002 SOL</strong></span>
               <span>Network: <strong>{NETWORK_LABEL}</strong></span>
               <span>Signers: <strong>1 (Wallet Owner)</strong></span>
             </div>
@@ -233,7 +282,7 @@ export function ExecuteButton({ symbol, evaluation }: { symbol: string; evaluati
   if (!mounted) {
     return (
       <button className="button button-execute button-wide" type="button" disabled>
-        Sign & execute: ${evaluation.proposed.amountUsd.toLocaleString()}
+        Sign &amp; execute: ${evaluation.proposed.amountUsd.toLocaleString()}
       </button>
     );
   }

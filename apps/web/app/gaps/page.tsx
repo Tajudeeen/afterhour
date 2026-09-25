@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getGapRadar, type GapRadarAsset } from '@/lib/api';
 import { WalletBar } from '@/components/WalletBar';
+import { formatNum, formatCurrency, formatPercent } from '@/lib/format';
 
 export default function GapsPage() {
   const [assets, setAssets] = useState<GapRadarAsset[]>([]);
@@ -65,11 +66,11 @@ export default function GapsPage() {
     );
   }
 
-  const premiumGaps = assets.filter((a) => a.gapPercent > 0);
-  const discountGaps = assets.filter((a) => a.gapPercent < 0);
+  const premiumGaps = assets.filter((a) => (a.gapPercent ?? 0) > 0);
+  const discountGaps = assets.filter((a) => (a.gapPercent ?? 0) < 0);
   const largestGap =
     assets.length > 0
-      ? assets.reduce((max: GapRadarAsset, a) => (Math.abs(a.gapPercent) > Math.abs(max.gapPercent) ? a : max), assets[0]!)
+      ? assets.reduce((max: GapRadarAsset, a) => (Math.abs(a.gapPercent ?? 0) > Math.abs(max.gapPercent ?? 0) ? a : max), assets[0]!)
       : null;
 
   return (
@@ -123,8 +124,8 @@ export default function GapsPage() {
                 Largest Gap
               </span>
               <div style={{ fontFamily: 'var(--mono)', fontSize: '1.3rem', fontWeight: 800 }}>
-                <span className={largestGap.gapPercent > 0 ? 'gap-positive' : 'gap-negative'}>
-                  {largestGap.gapPercent > 0 ? '+' : ''}{largestGap.gapPercent.toFixed(1)}% {largestGap.symbol}
+                <span className={(largestGap.gapPercent ?? 0) > 0 ? 'gap-positive' : 'gap-negative'}>
+                  {formatPercent(largestGap.gapPercent, 1)} {largestGap.symbol}
                 </span>
               </div>
             </div>
@@ -175,19 +176,19 @@ export default function GapsPage() {
                       </Link>
                     </td>
                     <td style={{ padding: '14px 16px', textAlign: 'right', borderBottom: '1px solid var(--line)', fontFamily: 'var(--mono)', fontSize: '0.9rem' }}>
-                      ${a.onchainPrice.toFixed(2)}
+                      {formatCurrency(a.onchainPrice, 2)}
                     </td>
                     <td style={{ padding: '14px 16px', textAlign: 'right', borderBottom: '1px solid var(--line)', fontFamily: 'var(--mono)', fontSize: '0.9rem', color: 'var(--ink-muted)' }}>
-                      ${a.referencePrice.toFixed(2)}
+                      {formatCurrency(a.referencePrice, 2)}
                     </td>
                     <td style={{ padding: '14px 16px', textAlign: 'right', borderBottom: '1px solid var(--line)' }}>
                       <span className="gap-positive" style={{ fontFamily: 'var(--mono)', fontSize: '1rem' }}>
-                        +{a.gapPercent.toFixed(2)}%
+                        +{formatNum(a.gapPercent, 2)}%
                       </span>
                     </td>
                     <td style={{ padding: '14px 16px', textAlign: 'right', borderBottom: '1px solid var(--line)' }}>
-                      <span style={{ color: getRiskColor(a.riskScore.band), fontFamily: 'var(--mono)', fontSize: '0.85rem', fontWeight: 700 }}>
-                        {a.riskScore.band} ({a.riskScore.score})
+                      <span style={{ color: getRiskColor(a.riskScore?.band ?? 'Normal'), fontFamily: 'var(--mono)', fontSize: '0.85rem', fontWeight: 700 }}>
+                        {a.riskScore?.band ?? 'Normal'} ({a.riskScore?.score ?? 0})
                       </span>
                     </td>
                   </tr>
@@ -235,19 +236,19 @@ export default function GapsPage() {
                       </Link>
                     </td>
                     <td style={{ padding: '14px 16px', textAlign: 'right', borderBottom: '1px solid var(--line)', fontFamily: 'var(--mono)', fontSize: '0.9rem' }}>
-                      ${a.onchainPrice.toFixed(2)}
+                      {formatCurrency(a.onchainPrice, 2)}
                     </td>
                     <td style={{ padding: '14px 16px', textAlign: 'right', borderBottom: '1px solid var(--line)', fontFamily: 'var(--mono)', fontSize: '0.9rem', color: 'var(--ink-muted)' }}>
-                      ${a.referencePrice.toFixed(2)}
+                      {formatCurrency(a.referencePrice, 2)}
                     </td>
                     <td style={{ padding: '14px 16px', textAlign: 'right', borderBottom: '1px solid var(--line)' }}>
                       <span className="gap-negative" style={{ fontFamily: 'var(--mono)', fontSize: '1rem' }}>
-                        {a.gapPercent.toFixed(2)}%
+                        {formatPercent(a.gapPercent, 2)}
                       </span>
                     </td>
                     <td style={{ padding: '14px 16px', textAlign: 'right', borderBottom: '1px solid var(--line)' }}>
-                      <span style={{ color: getRiskColor(a.riskScore.band), fontFamily: 'var(--mono)', fontSize: '0.85rem', fontWeight: 700 }}>
-                        {a.riskScore.band} ({a.riskScore.score})
+                      <span style={{ color: getRiskColor(a.riskScore?.band ?? 'Normal'), fontFamily: 'var(--mono)', fontSize: '0.85rem', fontWeight: 700 }}>
+                        {a.riskScore?.band ?? 'Normal'} ({a.riskScore?.score ?? 0})
                       </span>
                     </td>
                   </tr>

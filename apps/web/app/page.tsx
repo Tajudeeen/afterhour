@@ -6,6 +6,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { WalletBar } from '@/components/WalletBar';
 import { getPortfolio, getGapRadar, type AssetSummary, type Portfolio, type GapRadarAsset } from '@/lib/api';
+import { formatNum, formatCurrency, formatPercent } from '@/lib/format';
 
 export default function DashboardPage() {
   const { connected, publicKey } = useWallet();
@@ -58,7 +59,7 @@ export default function DashboardPage() {
   }, []);
 
   const topGaps = radar.slice(0, 5);
-  const totalGapValue = topGaps.reduce((sum, a) => sum + Math.abs(a.gapPercent), 0);
+  const totalGapValue = topGaps.reduce((sum, a) => sum + Math.abs(a.gapPercent ?? 0), 0);
   const avgGap = topGaps.length > 0 ? totalGapValue / topGaps.length : 0;
   const largestGap = topGaps.length > 0 ? topGaps[0] : null;
 
@@ -124,8 +125,8 @@ export default function DashboardPage() {
                       {g.source === 'live' ? 'LIVE' : 'DEMO'}
                     </span>
                   </div>
-                  <span className={g.gapPercent > 0 ? 'gap-positive' : 'gap-negative'} style={{ fontSize: '0.95rem', fontFamily: 'var(--mono)' }}>
-                    {g.gapPercent > 0 ? '+' : ''}{g.gapPercent.toFixed(2)}% — Risk {g.riskScore.score}
+                  <span className={(g.gapPercent ?? 0) > 0 ? 'gap-positive' : 'gap-negative'} style={{ fontSize: '0.95rem', fontFamily: 'var(--mono)' }}>
+                    {formatPercent(g.gapPercent, 2)} — Risk {g.riskScore?.score ?? 0}
                   </span>
                 </div>
               ))}
@@ -146,8 +147,8 @@ export default function DashboardPage() {
                   <Link href={`/assets/${g.symbol}/analysis`} style={{ textDecoration: 'none' }}>
                     <span style={{ fontFamily: 'var(--mono)', fontWeight: 800, color: 'var(--ink-heading)' }}>{g.symbol}</span>
                   </Link>
-                  <span className={g.gapPercent > 0 ? 'gap-positive' : 'gap-negative'} style={{ fontSize: '0.95rem', fontFamily: 'var(--mono)' }}>
-                    {g.gapPercent > 0 ? '+' : ''}{g.gapPercent.toFixed(2)}%
+                  <span className={(g.gapPercent ?? 0) > 0 ? 'gap-positive' : 'gap-negative'} style={{ fontSize: '0.95rem', fontFamily: 'var(--mono)' }}>
+                    {formatPercent(g.gapPercent, 2)}
                   </span>
                 </div>
               ))}
@@ -155,14 +156,14 @@ export default function DashboardPage() {
             <div style={{ display: 'flex', gap: '28px', marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--line)' }}>
               <div>
                 <span style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', fontFamily: 'var(--mono)', fontWeight: 800, textTransform: 'uppercase' }}>Avg Gap</span>
-                <div style={{ fontFamily: 'var(--mono)', fontSize: '1.3rem', fontWeight: 800, color: 'var(--ink-heading)' }}>{avgGap.toFixed(1)}%</div>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: '1.3rem', fontWeight: 800, color: 'var(--ink-heading)' }}>{formatNum(avgGap, 1)}%</div>
               </div>
               {largestGap && (
                 <div>
                   <span style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', fontFamily: 'var(--mono)', fontWeight: 800, textTransform: 'uppercase' }}>Largest Gap</span>
                   <div style={{ fontFamily: 'var(--mono)', fontSize: '1.3rem', fontWeight: 800 }}>
-                    <span className={largestGap.gapPercent > 0 ? 'gap-positive' : 'gap-negative'}>
-                      {largestGap.gapPercent > 0 ? '+' : ''}{largestGap.gapPercent.toFixed(1)}% {largestGap.symbol}
+                    <span className={(largestGap.gapPercent ?? 0) > 0 ? 'gap-positive' : 'gap-negative'}>
+                      {formatPercent(largestGap.gapPercent, 1)} {largestGap.symbol}
                     </span>
                   </div>
                 </div>
@@ -276,17 +277,17 @@ export default function DashboardPage() {
                   <div className="symbol">{g.symbol}</div>
                   <div className="meta">
                     <div className="value">
-                      Onchain: ${g.onchainPrice.toFixed(2)}
+                      Onchain: {formatCurrency(g.onchainPrice, 2)}
                       {'  |  '}
-                      Fair Value: ${g.referencePrice.toFixed(2)}
+                      Fair Value: {formatCurrency(g.referencePrice, 2)}
                     </div>
                     <div className="data-label">
                       {marketHours && <span style={{ color: getStatusColor(marketHours.status) }}>{marketHours.status}</span>}
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div className={`value ${g.gapPercent > 0 ? 'gap-positive' : 'gap-negative'}`}>
-                      {g.gapPercent > 0 ? '+' : ''}{g.gapPercent.toFixed(2)}%
+                    <div className={`value ${(g.gapPercent ?? 0) > 0 ? 'gap-positive' : 'gap-negative'}`}>
+                      {formatPercent(g.gapPercent, 2)}
                     </div>
                   </div>
                 </div>
@@ -296,14 +297,14 @@ export default function DashboardPage() {
           <div style={{ display: 'flex', gap: '28px', marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--line)' }}>
             <div>
               <span style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', fontFamily: 'var(--mono)', fontWeight: 800, textTransform: 'uppercase' }}>Avg Gap</span>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: '1.3rem', fontWeight: 800, color: 'var(--ink-heading)' }}>{avgGap.toFixed(1)}%</div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: '1.3rem', fontWeight: 800, color: 'var(--ink-heading)' }}>{formatNum(avgGap, 1)}%</div>
             </div>
             {largestGap && (
               <div>
                 <span style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', fontFamily: 'var(--mono)', fontWeight: 800, textTransform: 'uppercase' }}>Largest Gap</span>
                 <div style={{ fontFamily: 'var(--mono)', fontSize: '1.3rem', fontWeight: 800 }}>
-                  <span className={largestGap.gapPercent > 0 ? 'gap-positive' : 'gap-negative'}>
-                    {largestGap.gapPercent > 0 ? '+' : ''}{largestGap.gapPercent.toFixed(1)}% {largestGap.symbol}
+                  <span className={(largestGap.gapPercent ?? 0) > 0 ? 'gap-positive' : 'gap-negative'}>
+                    {formatPercent(largestGap.gapPercent, 1)} {largestGap.symbol}
                   </span>
                 </div>
               </div>
@@ -347,21 +348,21 @@ export default function DashboardPage() {
           ) : (
             portfolio.holdings.map((holding) => {
               const asset = assets.find((a) => a.symbol === holding.symbol);
-              const gapClass = (asset && asset.gapPercent > 0) ? 'gap-positive' : (asset && asset.gapPercent < 0) ? 'gap-negative' : '';
+              const gapClass = (asset && (asset.gapPercent ?? 0) > 0) ? 'gap-positive' : (asset && (asset.gapPercent ?? 0) < 0) ? 'gap-negative' : '';
               return (
                 <Link href={`/assets/${holding.symbol}`} key={holding.symbol} className="portfolio-row">
                   <div className="symbol">{holding.symbol}</div>
                   <div className="meta">
-                    <div className="value">${holding.valueUsd.toLocaleString()}</div>
+                    <div className="value">${(holding.valueUsd ?? 0).toLocaleString()}</div>
                     {asset && (
                       <div className={`value ${gapClass}`} style={{ fontSize: '0.85rem' }}>
-                        Gap: {asset.gapPercent > 0 ? '+' : ''}{asset.gapPercent.toFixed(2)}%
+                        Gap: {formatPercent(asset.gapPercent, 2)}
                       </div>
                     )}
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <StatusPill band={asset?.riskScore.band ?? 'Normal'} />
-                    <div className="weight">{Math.round(holding.weightPercent)}%</div>
+                    <StatusPill band={asset?.riskScore?.band ?? 'Normal'} />
+                    <div className="weight">{Math.round(holding.weightPercent ?? 0)}%</div>
                   </div>
                 </Link>
               );
@@ -370,7 +371,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {assets.filter((a) => a.gapPercent > 1 || a.gapPercent < -1).length > 0 && (
+      {assets.filter((a) => (a.gapPercent ?? 0) > 1 || (a.gapPercent ?? 0) < -1).length > 0 && (
         <section style={{ marginTop: '40px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h2 style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: '1.6rem', color: 'var(--ink-heading)' }}>
@@ -382,26 +383,26 @@ export default function DashboardPage() {
           </div>
           <div style={{ display: 'grid', gap: '14px' }}>
             {assets
-              .filter((a) => Math.abs(a.gapPercent) > 1)
+              .filter((a) => Math.abs(a.gapPercent ?? 0) > 1)
               .map((asset) => (
                 <Link href={`/assets/${asset.symbol}/analysis`} key={asset.symbol}>
                   <div className="gap-row">
                     <div className="symbol">{asset.symbol}</div>
                     <div className="meta">
                       <div className="value">
-                        Onchain: ${asset.onchainPrice.toFixed(2)}
+                        Onchain: {formatCurrency(asset.onchainPrice, 2)}
                         {'  |  '}
-                        Reference: ${asset.referencePrice.toFixed(2)}
+                        Reference: {formatCurrency(asset.referencePrice, 2)}
                       </div>
                       <div className="data-label">
                         Market: {asset.marketStatus} · Liquidity: {asset.liquidity}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div className={`value ${asset.gapPercent > 0 ? 'gap-positive' : 'gap-negative'}`}>
-                        {asset.gapPercent > 0 ? '+' : ''}{asset.gapPercent.toFixed(2)}%
+                      <div className={`value ${(asset.gapPercent ?? 0) > 0 ? 'gap-positive' : 'gap-negative'}`}>
+                        {formatPercent(asset.gapPercent, 2)}
                       </div>
-                      <StatusPill band={asset.riskScore.band} />
+                      <StatusPill band={asset.riskScore?.band ?? 'Normal'} />
                     </div>
                   </div>
                 </Link>

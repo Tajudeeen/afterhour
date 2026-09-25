@@ -247,3 +247,27 @@ export async function executeTrade(body: {
   }
   return res.json();
 }
+
+export interface SwapBuildResult {
+  swapTransaction: string;
+}
+
+export async function buildSwapTransaction(body: {
+  userAddress: string;
+  outputMint: string;
+  inputAmount: number;
+  inputMint?: string;
+  slippageBps?: number;
+}): Promise<SwapBuildResult> {
+  const res = await fetch(`${apiUrl()}/api/swap/build`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message ?? `Swap build failed: ${res.status}`);
+  }
+  return res.json();
+}

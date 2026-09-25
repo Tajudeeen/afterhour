@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getAssetIntelligence, type AssetIntelligence } from '@/lib/api';
+import { formatNum, formatCurrency } from '@/lib/format';
 
 interface RiskSimulatorProps {
   symbol: string;
@@ -35,7 +36,7 @@ export function RiskSimulator({ symbol, initialIntelligence }: RiskSimulatorProp
   // Use live intelligence if simulating, otherwise fall back to initial snapshot
   const intel = isSimulating && liveIntelligence ? liveIntelligence : initialIntelligence;
   const absGap = Math.abs(sliderValue);
-  const referencePrice = intel.referencePrice;
+  const referencePrice = intel.referencePrice ?? 0;
   const simulatedOnchainPrice = Number((referencePrice * (1 + sliderValue / 100)).toFixed(2));
 
   const getBand = (score: number) => {
@@ -47,12 +48,12 @@ export function RiskSimulator({ symbol, initialIntelligence }: RiskSimulatorProp
   };
 
   // Use the REAL engine's risk score when simulating, fall back to inline for initial state
-  const simScoreClamped = isSimulating && liveIntelligence ? intel.riskScore.score : computeInlineRiskScore(intel, sliderValue);
+  const simScoreClamped = isSimulating && liveIntelligence ? (intel.riskScore?.score ?? 50) : computeInlineRiskScore(intel, sliderValue);
   const bandInfo = getBand(simScoreClamped);
 
   // Dynamic slippage — use real engine value when available
-  const pythConfUsd = intel.pythConfidenceUsd || Number((referencePrice * 0.0075).toFixed(2));
-  const pythConfRatio = Number(((pythConfUsd / referencePrice) * 100).toFixed(2));
+  const pythConfUsd = intel.pythConfidenceUsd ?? Number((referencePrice * 0.0075).toFixed(2));
+  const pythConfRatio = referencePrice > 0 ? Number(((pythConfUsd / referencePrice) * 100).toFixed(2)) : 0.75;
   const dynamicSlippageBps = intel.pythDynamicSlippageBps
     ? intel.pythDynamicSlippageBps + Math.round(absGap * 5)
     : Math.min(500, Math.max(50, 50 + Math.round(pythConfRatio * 100) + Math.round(absGap * 5)));
@@ -157,10 +158,10 @@ export function RiskSimulator({ symbol, initialIntelligence }: RiskSimulatorProp
         <div style={{ padding: '14px', background: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--line)' }}>
           <div style={{ fontSize: '0.68rem', color: 'var(--ink-subtle)', textTransform: 'uppercase', fontWeight: 800 }}>Simulated DEX Price</div>
           <div style={{ fontFamily: 'SF Mono, monospace', fontSize: '1.2rem', fontWeight: 800, color: 'var(--ink-heading)', marginTop: '4px' }}>
-            ${simulatedOnchainPrice.toFixed(2)}
+            {formatCurrency(simulatedOnchainPrice, 2)}
           </div>
           <div style={{ fontSize: '0.7rem', color: 'var(--ink-subtle)', marginTop: '2px' }}>
-            Ref: ${referencePrice.toFixed(2)}
+            Ref: {formatCurrency(referencePrice, 2)}
           </div>
         </div>
 
@@ -180,7 +181,7 @@ export function RiskSimulator({ symbol, initialIntelligence }: RiskSimulatorProp
             {dynamicSlippageBps} BPS
           </div>
           <div style={{ fontSize: '0.7rem', color: 'var(--ink-subtle)', marginTop: '2px' }}>
-            Pyth Band: ±${pythConfUsd.toFixed(2)} ({pythConfRatio}%)
+            Pyth Band: ±{formatCurrency(pythConfUsd, 2)} ({formatNum(pythConfRatio, 2)}%)
           </div>
         </div>
       </div>
