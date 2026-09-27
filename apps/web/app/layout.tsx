@@ -6,6 +6,7 @@ import { SplashScreen } from '@/components/SplashScreen';
 import { NavigationHeader } from '@/components/NavigationHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Analytics } from '@vercel/analytics/next';
 
 export const metadata: Metadata = {
   title: {
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           </div>
         </SolanaWalletProviderClient>
         <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
