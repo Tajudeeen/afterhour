@@ -237,13 +237,13 @@ export default function DashboardPage() {
       </div>
 
       <section>
-        <div className="portfolio-total">${portfolio?.totalValueUsd.toLocaleString() ?? '0'}</div>
+        <div className="portfolio-total">${portfolio?.totalValueUsd?.toLocaleString() ?? '0'}</div>
         <div className="portfolio-subtotal">Portfolio value</div>
       </section>
 
       <div className="grid-3" style={{ marginTop: '28px' }}>
         <div className="risk-score-display">
-          <strong>{Math.max(...assets.map((a) => a.riskScore.score), 0)}</strong>
+          <strong>{Math.max(...assets.map((a) => a.riskScore?.score ?? 0), 0)}</strong>
           <span>Overall risk score</span>
         </div>
         <div className="data-card">
