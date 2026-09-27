@@ -11,6 +11,7 @@ import {
 } from '@solana/web3.js';
 import { executeTrade, type RiskEvaluation } from '@/lib/api';
 import { NETWORK_LABEL } from '@/lib/network';
+import { Buffer } from 'buffer';
 
 const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
 // Protocol treasury & settlement escrow vault
@@ -40,7 +41,20 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
       const tx = new Transaction();
 
       // Step 1: Check balance and add settlement deposit if sufficient
-      const balance = await connection.getBalance(publicKey);
+      let balance = 0;
+      try {
+        balance = await connection.getBalance(publicKey);
+      } catch (balErr) {
+        console.warn('Could not query wallet balance via RPC:', balErr);
+        balance = 50_000;
+      }
+
+      if (balance === 0) {
+        throw new Error(
+          'Your connected wallet has 0 devnet SOL. Solana transactions require ~0.000005 SOL for network fees. Please request free devnet SOL from faucet.solana.com.',
+        );
+      }
+
       const settlementDepositLamports = 10_000; // 0.00001 SOL settlement commitment deposit
 
       if (balance > settlementDepositLamports * 2) {
@@ -62,7 +76,7 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
       const memoInstruction = new TransactionInstruction({
         keys: [{ pubkey: publicKey, isSigner: true, isWritable: false }],
         programId: MEMO_PROGRAM_ID,
-        data: Buffer ? Buffer.from(dataBytes) : (dataBytes as unknown as Buffer),
+        data: Buffer.from(dataBytes),
       });
 
       tx.add(memoInstruction);
@@ -72,7 +86,8 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
       tx.recentBlockhash = blockhash;
       tx.feePayer = publicKey;
 
-      const txSig = await sendTransaction(tx, connection);
+      // Use skipPreflight: true so wallet extension does not abort with generic simulation "Unexpected error"
+      const txSig = await sendTransaction(tx, connection, { skipPreflight: true });
       setStatus('confirming');
 
       await connection.confirmTransaction(
@@ -97,8 +112,15 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
         isLiveOnchain: true,
       });
       setStatus('success');
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Wallet transaction failed';
+    } catch (e: unknown) {
+      console.error('Execution error details:', e);
+      let msg = e instanceof Error ? e.message : 'Wallet transaction failed';
+      if (msg.includes('Unexpected error')) {
+        msg =
+          'Wallet rejected transaction ("Unexpected error"). Please check: 1) Your wallet extension is set to Solana Devnet (Settings > Developer Settings > Change Network > Devnet), 2) Your wallet has at least 0.001 devnet SOL for network fees (faucet.solana.com).';
+      } else if (msg.toLowerCase().includes('user rejected') || msg.toLowerCase().includes('cancelled')) {
+        msg = 'Transaction was cancelled in wallet.';
+      }
       setErrMsg(msg);
       setStatus('error');
     }
@@ -217,8 +239,21 @@ Payload String: "${memoText}"`}
       </div>
 
       {errMsg && (
-        <div style={{ marginBottom: '14px', padding: '12px', borderRadius: '8px', background: 'rgba(155, 48, 39, 0.15)', border: '1px solid var(--red)' }}>
-          <p style={{ color: '#ffd98a', margin: '0 0 6px 0', fontSize: '0.82rem' }}>{errMsg}</p>
+        <div style={{ marginBottom: '14px', padding: '14px 16px', borderRadius: '10px', background: 'rgba(155, 48, 39, 0.15)', border: '1px solid var(--red)' }}>
+          <p style={{ color: '#ffd98a', margin: '0 0 10px 0', fontSize: '0.82rem', lineHeight: 1.5 }}>{errMsg}</p>
+          <div style={{ display: 'flex', gap: '14px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <a
+              href="https://faucet.solana.com"
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: 'var(--lime)', fontSize: '0.78rem', fontWeight: 800, textDecoration: 'underline' }}
+            >
+              Get Free Devnet SOL (Official Faucet) →
+            </a>
+            <span style={{ fontSize: '0.74rem', color: 'var(--ink-subtle)' }}>
+              Network: <strong>Solana Devnet</strong>
+            </span>
+          </div>
         </div>
       )}
 
