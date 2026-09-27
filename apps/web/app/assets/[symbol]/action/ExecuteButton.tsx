@@ -90,10 +90,14 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
       const txSig = await sendTransaction(tx, connection, { skipPreflight: true });
       setStatus('confirming');
 
-      await connection.confirmTransaction(
-        { signature: txSig, blockhash, lastValidBlockHeight },
-        'confirmed',
-      );
+      try {
+        await connection.confirmTransaction(
+          { signature: txSig, blockhash, lastValidBlockHeight },
+          'confirmed',
+        );
+      } catch (confirmErr) {
+        console.warn('Devnet confirmation warning (proceeding to verification):', confirmErr);
+      }
 
       setStatus('executing');
 
