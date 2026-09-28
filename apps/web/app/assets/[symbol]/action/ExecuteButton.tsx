@@ -5,7 +5,6 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import {
   PublicKey,
-  SystemProgram,
   Transaction,
   TransactionInstruction,
 } from '@solana/web3.js';
@@ -14,8 +13,6 @@ import { NETWORK_LABEL } from '@/lib/network';
 import { Buffer } from 'buffer';
 
 const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
-// Protocol treasury & settlement escrow vault
-const PROTOCOL_TREASURY = new PublicKey('6dbRFHr7SxG8i5kHnBLY5YFvU3x5xVJoY5hK5a5qJ8eR');
 
 function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation: RiskEvaluation }) {
   const { connected, publicKey, sendTransaction } = useWallet();
@@ -27,6 +24,27 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
   >('idle');
   const [result, setResult] = useState<{ signature: string; explorerUrl: string; isLiveOnchain: boolean } | null>(null);
   const [errMsg, setErrMsg] = useState<string | null>(null);
+  const [isAirdropping, setIsAirdropping] = useState(false);
+  const [airdropMsg, setAirdropMsg] = useState<string | null>(null);
+
+  const handleAirdrop = async () => {
+    if (!publicKey) return;
+    setIsAirdropping(true);
+    setAirdropMsg(null);
+    try {
+      const sig = await connection.requestAirdrop(publicKey, 1_000_000_000); // 1 SOL
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+      await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed');
+      setAirdropMsg('✓ Received 1 Devnet SOL! You can now execute the transaction.');
+      setErrMsg(null);
+    } catch {
+      // If devnet public RPC airdrop rate limits, open official faucet directly
+      window.open(`https://faucet.solana.com/?address=${publicKey.toBase58()}`, '_blank');
+      setAirdropMsg('Opened Solana Faucet in a new tab. Request test SOL and click Sign & execute again.');
+    } finally {
+      setIsAirdropping(false);
+    }
+  };
 
   const handleLiveOnchainExecution = async () => {
     if (!connected || !publicKey) {
@@ -40,7 +58,7 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
     try {
       const tx = new Transaction();
 
-      // Step 1: Check balance and add settlement deposit if sufficient
+      // Check balance: Solana consensus requires ~0.000005 SOL signature fee on Devnet
       let balance = 0;
       try {
         balance = await connection.getBalance(publicKey);
@@ -51,23 +69,11 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
 
       if (balance === 0) {
         throw new Error(
-          'Your connected wallet has 0 devnet SOL. Solana transactions require ~0.000005 SOL for network fees. Please request free devnet SOL from faucet.solana.com.',
+          'Your connected wallet has 0 Devnet SOL. Solana Devnet transactions require a micro network fee (~0.000005 free test SOL) to verify the transaction on-chain. Please request free Devnet SOL using the button below.',
         );
       }
 
-      const settlementDepositLamports = 10_000; // 0.00001 SOL settlement commitment deposit
-
-      if (balance > settlementDepositLamports * 2) {
-        tx.add(
-          SystemProgram.transfer({
-            fromPubkey: publicKey,
-            toPubkey: PROTOCOL_TREASURY,
-            lamports: settlementDepositLamports,
-          }),
-        );
-      }
-
-      // Step 2: Add SPL Memo risk attestation instruction
+      // Add SPL Memo risk governance attestation instruction (Zero token transfer)
       const memoText = `AfterHours: ${evaluation.proposed.action.toUpperCase()} $${Math.round(
         evaluation.proposed.amountUsd,
       )} ${symbol} | Risk Governor: Passed (Cap: ${evaluation.policy.maxSingleAssetExposurePercent}%)`;
@@ -81,12 +87,12 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
 
       tx.add(memoInstruction);
 
-      // Step 3: Get recent blockhash and send transaction
+      // Get recent blockhash and configure fee payer
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
       tx.recentBlockhash = blockhash;
       tx.feePayer = publicKey;
 
-      // Use skipPreflight: true so wallet extension does not abort with generic simulation "Unexpected error"
+      // Use skipPreflight: true so wallet extension does not abort with generic simulation errors
       const txSig = await sendTransaction(tx, connection, { skipPreflight: true });
       setStatus('confirming');
 
@@ -101,7 +107,7 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
 
       setStatus('executing');
 
-      // Step 4: Send to API — the wallet's on-chain transaction signature proves ownership
+      // Send to API — the wallet's on-chain transaction signature proves ownership
       const res = await executeTrade({
         wallet: publicKey.toBase58(),
         action: evaluation.proposed.action,
@@ -121,7 +127,7 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
       let msg = e instanceof Error ? e.message : 'Wallet transaction failed';
       if (msg.includes('Unexpected error')) {
         msg =
-          'Wallet rejected transaction ("Unexpected error"). Please check: 1) Your wallet extension is set to Solana Devnet (Settings > Developer Settings > Change Network > Devnet), 2) Your wallet has at least 0.001 devnet SOL for network fees (faucet.solana.com).';
+          'Wallet rejected transaction ("Unexpected error"). Please check: 1) Your wallet extension is set to Solana Devnet (Settings > Developer Settings > Change Network > Devnet), 2) Your wallet has free devnet SOL for the ~0.000005 SOL network fee.';
       } else if (msg.toLowerCase().includes('user rejected') || msg.toLowerCase().includes('cancelled')) {
         msg = 'Transaction was cancelled in wallet.';
       }
@@ -161,11 +167,8 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
         <p style={{ color: 'var(--ink-muted)', fontSize: '0.78rem', wordBreak: 'break-all', fontFamily: 'monospace', margin: '4px 0 8px 0' }}>
           Tx: {result.signature.length > 24 ? `${result.signature.slice(0, 12)}...${result.signature.slice(-8)}` : result.signature}
         </p>
-        <p style={{ color: 'var(--solana-green)', fontSize: '0.74rem', margin: '0 0 4px 0', fontFamily: 'monospace' }}>
-          ✓ Instruction 0: On-chain settlement deposit transferred to protocol vault
-        </p>
         <p style={{ color: 'var(--solana-green)', fontSize: '0.74rem', margin: '0 0 12px 0', fontFamily: 'monospace' }}>
-          ✓ Instruction 1: SPL Memo risk governance attestation committed to Solana ledger
+          ✓ SPL Memo risk governance attestation committed to Solana Devnet ledger
         </p>
         <div style={{ display: 'flex', gap: '16px' }}>
           <a
@@ -216,25 +219,17 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
         {showInspector && (
           <div style={{ padding: '0 16px 16px 16px', borderTop: '1px solid var(--line)', fontSize: '0.78rem', color: 'var(--ink-muted)', background: 'var(--surface)' }}>
             <div style={{ marginTop: '12px', marginBottom: '8px', fontWeight: 800, color: 'var(--ink-heading)' }}>
-              Instruction 0: On-Chain Settlement Deposit (System Program)
-            </div>
-            <pre style={{ margin: 0, fontFamily: 'SF Mono, monospace', fontSize: '0.7rem', color: 'var(--ink-subtle)', background: 'var(--surface-strong)', padding: '8px 10px', borderRadius: 6, overflowX: 'auto' }}>
-{`Program: System Program (11111111111111111111111111111111)
-Transfer: 0.00001 SOL -> Protocol Settlement Escrow
-Recipient: ${PROTOCOL_TREASURY.toBase58().slice(0, 8)}...${PROTOCOL_TREASURY.toBase58().slice(-8)}
-Status: Real on-chain balance movement verified on ledger`}
-            </pre>
-
-            <div style={{ marginTop: '12px', marginBottom: '8px', fontWeight: 800, color: 'var(--ink-heading)' }}>
-              Instruction 1: SPL Memo Risk Attestation
+              Instruction: SPL Memo Risk Governance Attestation
             </div>
             <pre style={{ margin: 0, fontFamily: 'SF Mono, monospace', fontSize: '0.7rem', color: 'var(--solana-green)', background: 'rgba(20, 241, 149, 0.08)', padding: '8px 10px', borderRadius: 6, overflowX: 'auto', border: '1px solid rgba(20, 241, 149, 0.2)' }}>
 {`Program ID: MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr
-Payload String: "${memoText}"`}
+Action: ${evaluation.proposed.action.toUpperCase()} $${Math.round(evaluation.proposed.amountUsd)} ${symbol}
+Payload String: "${memoText}"
+Token Transfer: 0 SOL (Pure cryptographic policy attestation — zero tokens deducted)`}
             </pre>
 
-            <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--ink-subtle)' }}>
-              <span>Est. Fee: <strong>0.000005 SOL</strong></span>
+            <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--ink-subtle)', flexWrap: 'wrap', gap: '8px' }}>
+              <span>Network Fee: <strong>~0.000005 Devnet SOL (Free test token)</strong></span>
               <span>Network: <strong>{NETWORK_LABEL}</strong></span>
               <span>Signers: <strong>1 (Wallet Owner)</strong></span>
             </div>
@@ -242,21 +237,41 @@ Payload String: "${memoText}"`}
         )}
       </div>
 
+      {airdropMsg && (
+        <div style={{ marginBottom: '14px', padding: '12px 14px', borderRadius: '10px', background: 'rgba(20, 241, 149, 0.1)', border: '1px solid var(--solana-green)' }}>
+          <p style={{ color: 'var(--solana-green)', margin: 0, fontSize: '0.8rem', fontWeight: 600 }}>{airdropMsg}</p>
+        </div>
+      )}
+
       {errMsg && (
         <div style={{ marginBottom: '14px', padding: '14px 16px', borderRadius: '10px', background: 'rgba(155, 48, 39, 0.15)', border: '1px solid var(--red)' }}>
           <p style={{ color: '#ffd98a', margin: '0 0 10px 0', fontSize: '0.82rem', lineHeight: 1.5 }}>{errMsg}</p>
           <div style={{ display: 'flex', gap: '14px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={handleAirdrop}
+              disabled={isAirdropping}
+              style={{
+                background: 'var(--lime)',
+                color: '#000',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '6px 12px',
+                fontSize: '0.78rem',
+                fontWeight: 800,
+                cursor: 'pointer',
+              }}
+            >
+              {isAirdropping ? 'Requesting Devnet SOL...' : '⚡ Airdrop 1 Free Devnet SOL'}
+            </button>
             <a
               href="https://faucet.solana.com"
               target="_blank"
               rel="noreferrer"
               style={{ color: 'var(--lime)', fontSize: '0.78rem', fontWeight: 800, textDecoration: 'underline' }}
             >
-              Get Free Devnet SOL (Official Faucet) →
+              Solana Web Faucet →
             </a>
-            <span style={{ fontSize: '0.74rem', color: 'var(--ink-subtle)' }}>
-              Network: <strong>Solana Devnet</strong>
-            </span>
           </div>
         </div>
       )}
@@ -269,6 +284,10 @@ Payload String: "${memoText}"`}
       >
         {buttonText}
       </button>
+
+      <div style={{ marginTop: '8px', textAlign: 'center', fontSize: '0.72rem', color: 'var(--ink-subtle)' }}>
+        ⚡ Network: <strong>Solana Devnet</strong> · Zero token transfer · Test network fee (~0.000005 Devnet SOL)
+      </div>
     </div>
   );
 }

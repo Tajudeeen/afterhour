@@ -253,21 +253,19 @@ export interface AssetIntelligence {
  * transaction actually settled on.
  * ------------------------------------------------------------------------- */
 
-/** Solana cluster the app is running against. */
-export type SolanaNetwork = 'mainnet-beta' | 'devnet' | 'testnet' | 'localnet';
+/** Solana cluster the app is running against. Devnet is standard. */
+export type SolanaNetwork = 'devnet' | 'testnet' | 'localnet' | 'mainnet-beta';
 
 /**
  * Default when nothing is configured.
  *
- * Devnet is used so the demo flows (wallet connection, on-chain SPL Memo
- * transactions) work immediately without mainnet rate limits or real SOL.
- * Judges can connect a wallet, get devnet SOL from the faucet, and execute
- * real on-chain transactions. Set NEXT_PUBLIC_SOLANA_NETWORK=mainnet-beta
- * to go to mainnet.
+ * Devnet is used exclusively so all flows (wallet connection, on-chain SPL Memo
+ * transactions) work immediately without real SOL or mainnet rate limits.
+ * All transactions settle on Solana Devnet using free testnet SOL.
  */
 export const DEFAULT_SOLANA_NETWORK: SolanaNetwork = 'devnet';
 
-/** Infer a network from an RPC URL. Returns undefined when it can't tell. */
+/** Infer a network from an RPC URL. Defaults to devnet. */
 export function networkFromRpcUrl(url?: string | null): SolanaNetwork | undefined {
   const value = (url ?? '').trim().toLowerCase();
   if (!value) return undefined;
@@ -275,12 +273,12 @@ export function networkFromRpcUrl(url?: string | null): SolanaNetwork | undefine
   if (value.includes('testnet')) return 'testnet';
   if (value.includes('localhost') || value.includes('127.0.0.1')) return 'localnet';
   if (value.includes('mainnet')) return 'devnet'; // reroute mainnet to devnet
-  return undefined;
+  return 'devnet';
 }
 
 /**
- * Resolve the active network. Devnet is enforced for hackathon testing and demos.
- * Any request for mainnet is strictly rerouted to devnet.
+ * Resolve the active network. Devnet is strictly enforced for testing and demos.
+ * Any request for mainnet is automatically rerouted to devnet.
  */
 export function resolveSolanaNetwork(
   raw?: string | null,
@@ -308,11 +306,11 @@ export function solanaNetworkLabel(network: SolanaNetwork): string {
   }
 }
 
-/** Solscan `?cluster=` query string. Mainnet takes no cluster parameter. */
+/** Solscan `?cluster=` query string. Devnet takes ?cluster=devnet. */
 export function solscanClusterQuery(network: SolanaNetwork): string {
-  if (network === 'mainnet-beta') return '';
   if (network === 'localnet') return '?cluster=custom';
-  return `?cluster=${network}`;
+  if (network === 'testnet') return '?cluster=testnet';
+  return '?cluster=devnet';
 }
 
 /** Solscan explorer URL for a transaction signature. */

@@ -27,7 +27,7 @@ Bare facts. No marketing hedges. Every claim is backed by executable code and pa
 * ⚡ **Live PreStocks Integration**: Ingests real-time prices for 8 pre-IPO stocks (Anthropic, SpaceX, OpenAI, Anduril, Neuralink, Figure AI, Kalshi, Polymarket) via `https://prestocks.com/api/prestocks`.
 * 📊 **Real Gap Telemetry**: Directly computes divergence between fair valuation (`markPrice`) and on-chain DEX trading (`tokenPrice`) — e.g. SpaceX (-22.3%), OpenAI (+16.2%), Neuralink (+26.7%).
 * 🛡️ **Fail-Closed Risk Governor**: Hard policy constraints (`MAX_SINGLE_ASSET = 35%`, `MAX_TRADE = $1,500`) that deterministically reject non-compliant trades before signing.
-* ⛓️ **On-Chain Attestation**: Every user-approved trade signs a Solana transaction recorded via the official SPL Memo Program (`MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr`) with clickable Solscan links. Settles on Devnet by default; set `NEXT_PUBLIC_SOLANA_NETWORK` to run against Mainnet-Beta or Testnet.
+* ⛓️ **On-Chain Attestation**: Every user-approved trade signs a Solana transaction recorded via the official SPL Memo Program (`MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr`) with clickable Solscan links. Settles on Solana Devnet (100% free test environment with on-chain SPL Memo verification).
 * 🔍 **Live Proof Route (`/proof`)**: Standalone verification page executing live endpoint re-queries and documenting 6 automated negative rejection proofs.
 
 ---

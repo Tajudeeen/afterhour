@@ -6,7 +6,7 @@
  * before importing this module. Every value here is either non-secret
  * (RPC URL, etc.) or a reference to a secret that must NOT be logged.
  */
-import { SOLANA_CHAIN_ID, SOLANA_LOCALNET_RPC_URL } from './solana.js';
+import { SOLANA_CHAIN_ID, SOLANA_DEVNET_RPC_URL } from './solana.js';
 
 export interface SolanaConfig {
   rpcUrl: string;
@@ -45,7 +45,7 @@ function intOpt(name: string, fallback: number, min: number, max: number): numbe
 export function loadConfig(): Config {
   return {
     solana: {
-      rpcUrl: opt('SOLANA_RPC_URL', SOLANA_LOCALNET_RPC_URL),
+      rpcUrl: opt('SOLANA_RPC_URL', SOLANA_DEVNET_RPC_URL),
       chainId: intOpt('SOLANA_CHAIN_ID', SOLANA_CHAIN_ID, 1, Number.MAX_SAFE_INTEGER),
     },
     apiPort: intOpt('API_PORT', 8787, 1, 65_535),

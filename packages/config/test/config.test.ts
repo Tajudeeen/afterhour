@@ -17,8 +17,8 @@ describe('config', () => {
   describe('loadConfig', () => {
     it('loads with sensible defaults when optional vars are absent', () => {
       const c = loadConfig();
-      expect(c.solana.chainId).toBe(101); // Solana mainnet
-      expect(c.solana.rpcUrl).toContain('127.0.0.1'); // localnet default
+      expect(c.solana.chainId).toBe(103); // Solana devnet
+      expect(c.solana.rpcUrl).toContain('devnet.solana.com'); // devnet default
       expect(c.apiPort).toBe(8787);
       expect(c.llmModel).toBe('gpt-4o-mini');
     });
