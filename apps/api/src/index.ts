@@ -679,12 +679,63 @@ function makeOpenAiProvider(): LLMProvider | null {
 }
 
 const llmProvider: LLMProvider = makeGroqProvider() ?? makeOpenAiProvider() ?? {
-  async generate(_prompt: string): Promise<string> {
+  async generate(prompt: string): Promise<string> {
+    let asset = 'NVDA';
+    let gapPercent = 4.0;
+    let exposure = 46.0;
+    let maxAllowed = 35.0;
+    let onchainPrice = 189.7;
+    let referencePrice = 182.4;
+    let marketStatus = 'closed';
+
+    try {
+      const match = prompt.match(/STRUCTURED MARKET DATA:\s*(\{[\s\S]*?\})\s*TASK:/);
+      if (match?.[1]) {
+        const data = JSON.parse(match[1]) as Record<string, unknown>;
+        if (typeof data.asset === 'string') asset = data.asset;
+        if (typeof data.gap_percent === 'number') gapPercent = data.gap_percent;
+        if (typeof data.portfolio_exposure_percent === 'number') exposure = data.portfolio_exposure_percent;
+        if (typeof data.max_allowed_exposure_percent === 'number') maxAllowed = data.max_allowed_exposure_percent;
+        if (typeof data.onchain_price === 'number') onchainPrice = data.onchain_price;
+        if (typeof data.reference_price === 'number') referencePrice = data.reference_price;
+        if (typeof data.market_status === 'string') marketStatus = data.market_status;
+      }
+    } catch {
+      // Use defaults if parse fails
+    }
+
+    let action: 'buy' | 'sell' | 'hold' = 'hold';
+    let amountUsd = 0;
+    let explanation = '';
+    let primaryRisk = '';
+
+    if (exposure > maxAllowed) {
+      action = 'sell';
+      amountUsd = Math.min(1500, Math.max(250, Math.round(((exposure - maxAllowed) / 100) * 10420)));
+      explanation = `${asset} is trading at $${onchainPrice.toFixed(2)} (${gapPercent >= 0 ? '+' : ''}${gapPercent.toFixed(1)}% gap to $${referencePrice.toFixed(2)} reference). Your portfolio concentration is ${Math.round(exposure)}%, exceeding the ${maxAllowed}% single-asset risk cap.`;
+      primaryRisk = `Portfolio concentration in ${asset} exceeds the ${maxAllowed}% risk policy threshold during ${marketStatus} hours`;
+    } else if (gapPercent < -1.5 && exposure < maxAllowed * 0.7) {
+      action = 'buy';
+      amountUsd = Math.min(1500, Math.max(300, Math.round(Math.abs(gapPercent) * 150)));
+      explanation = `${asset} is trading at $${onchainPrice.toFixed(2)}, an attractive ${gapPercent.toFixed(1)}% discount relative to its $${referencePrice.toFixed(2)} traditional reference price. Portfolio exposure is currently low (${Math.round(exposure)}%).`;
+      primaryRisk = `Liquidity divergence on-chain prior to traditional market open; position size bounded to prevent slippage`;
+    } else if (gapPercent > 3.0) {
+      action = 'sell';
+      amountUsd = Math.min(1500, 750);
+      explanation = `${asset} is commanding an elevated ${gapPercent.toFixed(1)}% on-chain premium over traditional reference price of $${referencePrice.toFixed(2)}. Taking partial profits before market open captures the spread.`;
+      primaryRisk = `Premium mean-reversion risk when equity market opens at $${referencePrice.toFixed(2)}`;
+    } else {
+      action = 'hold';
+      amountUsd = 0;
+      explanation = `${asset} is trading near fair value at $${onchainPrice.toFixed(2)} with a moderate gap of ${gapPercent.toFixed(1)}%. Current portfolio exposure of ${Math.round(exposure)}% is well within the ${maxAllowed}% limit.`;
+      primaryRisk = `Normal off-market spread fluctuations within acceptable volatility thresholds`;
+    }
+
     return JSON.stringify({
-      explanation: 'NVDA is trading 4% above its reference price while the underlying market is closed. Liquidity is currently thin and your portfolio has elevated exposure. This creates gap risk at the next market open.',
-      primaryRisk: 'Portfolio concentration in NVDA exceeds policy limits during thin liquidity',
-      recommendation: { action: 'sell', asset: 'NVDA', amountUsd: 1150 },
-      confidence: 0.87,
+      explanation,
+      primaryRisk,
+      recommendation: { action, asset, amountUsd },
+      confidence: 0.88,
     });
   },
 };
@@ -834,9 +885,11 @@ export function createApp(options: CreateAppOptions = {}): Hono {
     const analysis = await new AIAnalyst(llmProvider, DEFAULT_RISK_POLICY).analyze(context);
     const evaluation = evaluateRisk(DEFAULT_RISK_POLICY, {
       proposal: {
-        action: analysis.recommendation.action === 'hold' ? 'sell' : analysis.recommendation.action,
+        action: analysis.recommendation.action === 'hold'
+          ? (context.portfolioExposure > DEFAULT_RISK_POLICY.maxSingleAssetExposurePercent ? 'sell' : 'buy')
+          : analysis.recommendation.action,
         asset: symbol,
-        amountUsd: analysis.recommendation.amountUsd,
+        amountUsd: analysis.recommendation.amountUsd > 0 ? analysis.recommendation.amountUsd : 500,
       },
       portfolio,
       dailyPnLPercent: 0,
