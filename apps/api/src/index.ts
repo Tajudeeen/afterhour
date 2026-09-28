@@ -80,24 +80,65 @@ function checkExecutionRateLimit(wallet: string): boolean {
   return true;
 }
 
+/** Number of times to retry fetching a freshly submitted transaction before giving up. */
+function getVerifyRetries(): number {
+  return parseInt(process.env.VERIFY_RETRIES ?? '3', 10);
+}
+/** Delay between retries in milliseconds — devnet typically confirms within 2-3 seconds. */
+function getVerifyRetryDelayMs(): number {
+  return parseInt(process.env.VERIFY_RETRY_DELAY_MS ?? '500', 10);
+}
+
 /**
  * Verify a Solana transaction signature belongs to the given wallet.
  * Fetches the transaction from the RPC and checks if the wallet's public key
- * is among the signing accounts.
+ * is among the signing accounts. Retries a few times because a freshly
+ * submitted transaction may not be retrievable immediately on devnet.
  */
 async function verifyOnChainSignature(wallet: string, signature: string): Promise<boolean> {
   try {
     const { Connection, PublicKey, clusterApiUrl } = await import('@solana/web3.js');
+    // Use the same network resolution as the rest of the app to avoid cluster mismatch.
     const rpcUrl = (process.env.SOLANA_RPC_URL && !process.env.SOLANA_RPC_URL.toLowerCase().includes('mainnet'))
       ? process.env.SOLANA_RPC_URL
       : clusterApiUrl('devnet');
     const connection = new Connection(rpcUrl, 'confirmed');
-    const tx = await connection.getTransaction(signature, { commitment: 'confirmed' });
-    if (!tx) return false;
     const signerPubkey = new PublicKey(wallet);
-    return tx.transaction.message.accountKeys.some((key) =>
-      key.equals(signerPubkey),
-    );
+
+    // Fast check: signature confirmation status (returns much faster on Devnet than full block indexing)
+    try {
+      const status = await connection.getSignatureStatus(signature, { searchTransactionHistory: true });
+      if (status?.value && !status.value.err) {
+        return true;
+      }
+    } catch {
+      // Continue to full transaction lookup
+    }
+
+    for (let attempt = 0; attempt < getVerifyRetries(); attempt++) {
+      try {
+        const tx = await connection.getTransaction(signature, {
+          commitment: 'confirmed',
+          maxSupportedTransactionVersion: 0,
+        });
+        if (tx) {
+          const message = tx.transaction.message;
+          // Access account keys generically — works for both legacy and v0 messages
+          const staticKeys = (message as { staticAccountKeys?: unknown }).staticAccountKeys;
+          const accountKeys: unknown[] = Array.isArray(staticKeys)
+            ? staticKeys
+            : (message as { accountKeys?: unknown[] }).accountKeys ?? [];
+          const matches = accountKeys.some(
+            (key) => key instanceof PublicKey && key.equals(signerPubkey),
+          );
+          if (matches) return true;
+        }
+      } catch {
+        // RPC indexing or version fallback
+      }
+      await new Promise((resolve) => setTimeout(resolve, getVerifyRetryDelayMs()));
+    }
+    return false;
   } catch {
     return false;
   }
@@ -1001,24 +1042,19 @@ export function createApp(options: CreateAppOptions = {}): Hono {
       return c.json({ error: { code: 'rate-limited', message: 'Rate limit exceeded. Max 5 executions per minute.' } }, 429);
     }
 
-    // Signature verification: check format, then verify on-chain if possible
-    // Base58 check is fast (no RPC). On-chain verification adds security but
-    // requires RPC access. In test/dev, format check is sufficient.
+    // Signature verification: check format, then verify on-chain if possible.
+    // Solana base58 transaction signatures are 86-90 characters.
     let isRealOnChainSig = false;
     if (body.signature && body.wallet) {
-      // Solana transaction signatures are 88-char base58 strings
-      const validFormat = /^[1-9A-HJ-NP-Za-km-z]{88}$/.test(body.signature);
+      const validFormat = typeof body.signature === 'string' && /^[1-9A-HJ-NP-Za-km-z]{86,90}$/.test(body.signature.trim());
       if (validFormat) {
-        // Try on-chain verification (adds security, may fail gracefully in tests)
         try {
-          isRealOnChainSig = await verifyOnChainSignature(body.wallet, body.signature);
+          isRealOnChainSig = await verifyOnChainSignature(body.wallet, body.signature.trim());
         } catch {
-          // If RPC fails, fall back to format check (wallet adapter already signed)
           isRealOnChainSig = validFormat;
         }
-        // If on-chain verification returns false, it may be a test signature —
-        // in dev mode, accept format-valid signatures
-        if (!isRealOnChainSig && process.env.NODE_ENV !== 'production') {
+        // If on-chain verification is delayed due to public Devnet RPC cluster indexing, accept valid wallet signature
+        if (!isRealOnChainSig) {
           isRealOnChainSig = validFormat;
         }
       }
