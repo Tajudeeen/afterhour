@@ -20,7 +20,16 @@ export default function DashboardPage() {
   const [isEvaluationMode, setIsEvaluationMode] = useState(false);
 
   useEffect(() => {
-    if (!connected || !publicKey) {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('demo') === '1' || params.get('sandbox') === '1') {
+        setIsEvaluationMode(true);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!connected && !isEvaluationMode) {
       setPortfolio(null);
       setAssets([]);
       setError(null);
@@ -28,7 +37,7 @@ export default function DashboardPage() {
     }
     const fetchPortfolio = async () => {
       try {
-        const walletAddress = isEvaluationMode ? 'demo' : publicKey.toBase58();
+        const walletAddress = (!connected || isEvaluationMode) ? 'demo' : publicKey!.toBase58();
         const data = await getPortfolio(walletAddress);
         setPortfolio(data.portfolio);
         setAssets(data.assets);
@@ -73,7 +82,7 @@ export default function DashboardPage() {
     }
   };
 
-  if (!connected) {
+  if (!connected && !isEvaluationMode) {
     return (
       <div className="dashboard-shell">
         <WalletBar />
@@ -173,16 +182,40 @@ export default function DashboardPage() {
 
           <section style={{ marginTop: 40, textAlign: 'center' }}>
             <p style={{ margin: '0 0 20px', color: 'var(--ink-muted)', fontSize: '1rem' }}>
-              Connect a wallet to view your portfolio and risk analysis.
+              Connect a wallet to view your portfolio and risk analysis, or explore instantly with the canonical demo portfolio.
             </p>
-            <button
-              type="button"
-              className="button button-primary"
-              style={{ minWidth: '200px' }}
-              onClick={() => setVisible(true)}
-            >
-              Connect Wallet →
-            </button>
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="button button-primary"
+                style={{ minWidth: '180px' }}
+                onClick={() => setVisible(true)}
+              >
+                Connect Wallet →
+              </button>
+              <button
+                type="button"
+                className="button"
+                style={{
+                  minWidth: '220px',
+                  background: 'transparent',
+                  border: '1px solid var(--lime)',
+                  color: 'var(--lime)',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                }}
+                onClick={() => setIsEvaluationMode(true)}
+              >
+                <span>⚡</span> Launch Demo Portfolio ($10,420)
+              </button>
+            </div>
+            <p style={{ marginTop: '12px', fontSize: '0.75rem', color: 'var(--ink-subtle)' }}>
+              Instant 1-click sandbox · No wallet or seed phrase required
+            </p>
           </section>
         </section>
       </div>
@@ -219,21 +252,42 @@ export default function DashboardPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 0 16px', padding: '12px 18px', borderRadius: '12px', background: isEvaluationMode ? 'rgba(216, 255, 79, 0.08)' : 'var(--surface-strong)', border: `1px solid ${isEvaluationMode ? 'var(--lime)' : 'var(--line)'}`, flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <span style={{ fontSize: '0.74rem', fontFamily: 'var(--mono)', fontWeight: 800, color: isEvaluationMode ? 'var(--lime)' : 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            {isEvaluationMode ? '🧪 Hackathon Evaluation Sandbox Active' : '● Live On-Chain Wallet Mode'}
+            {isEvaluationMode ? '🧪 Hackathon Demo Portfolio Sandbox' : '● Live On-Chain Wallet Mode'}
           </span>
           <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--ink-subtle)' }}>
             {isEvaluationMode
-              ? 'Evaluating Risk Governor on canonical $10,420 portfolio. Wallet signs real Solana transactions on-chain.'
+              ? 'Exploring canonical $10,420 portfolio. Test the complete AI Analyst & Risk Governor flow in 1-click.'
               : `Displaying on-chain SPL token holdings for ${publicKey?.toBase58().slice(0, 4)}...${publicKey?.toBase58().slice(-4)}`}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setIsEvaluationMode(!isEvaluationMode)}
-          style={{ background: 'transparent', border: '1px solid var(--line)', color: 'var(--ink-body)', padding: '6px 14px', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'var(--mono)', fontWeight: 600 }}
-        >
-          {isEvaluationMode ? '← View Real Wallet Balances' : 'Load Evaluation Portfolio ($10,420) →'}
-        </button>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {!connected ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setVisible(true)}
+                style={{ background: 'var(--lime)', color: '#000', border: 'none', padding: '6px 14px', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'var(--mono)', fontWeight: 700 }}
+              >
+                Connect Wallet →
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsEvaluationMode(false)}
+                style={{ background: 'transparent', border: '1px solid var(--line)', color: 'var(--ink-muted)', padding: '6px 12px', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'var(--mono)' }}
+              >
+                Exit Demo ✕
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsEvaluationMode(!isEvaluationMode)}
+              style={{ background: 'transparent', border: '1px solid var(--line)', color: 'var(--ink-body)', padding: '6px 14px', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'var(--mono)', fontWeight: 600 }}
+            >
+              {isEvaluationMode ? '← View Real Wallet Balances' : 'Load Evaluation Portfolio ($10,420) →'}
+            </button>
+          )}
+        </div>
       </div>
 
       <section>
