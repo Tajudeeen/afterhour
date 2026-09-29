@@ -44,9 +44,15 @@ export function evaluateRisk(policy: RiskPolicy, context: RiskContext): RiskEval
   const usdcReservePercent = totalValue > 0 ? (usdcAfterTrade / totalValue) * 100 : 0;
 
   // 3. Check exposure limit
-  if (proposedExposure > policy.maxSingleAssetExposurePercent) {
+  // Allow a 0.1% tolerance for floating-point calculation when selling to de-risk
+  const exposureLimitTolerance = proposal.action === 'sell' ? 0.1 : 0;
+  if (proposedExposure > policy.maxSingleAssetExposurePercent + exposureLimitTolerance) {
+    const roundedExposure = Math.round(proposedExposure);
+    const displayExposure = roundedExposure <= policy.maxSingleAssetExposurePercent
+      ? proposedExposure.toFixed(1)
+      : String(roundedExposure);
     return blocked(policy, proposal, portfolio, dailyPnLPercent,
-      `${proposal.asset} exposure after trade would be ${Math.round(proposedExposure)}% (limit: ${policy.maxSingleAssetExposurePercent}%)`);
+      `${proposal.asset} exposure after trade would be ${displayExposure}% (limit: ${policy.maxSingleAssetExposurePercent}%)`);
   }
 
   // 4. Check USDC reserve
