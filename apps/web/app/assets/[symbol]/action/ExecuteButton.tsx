@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import {
@@ -9,6 +10,7 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import { executeTrade, type RiskEvaluation } from '@/lib/api';
+import { saveLocalActivity } from '@/lib/activity';
 import { NETWORK_LABEL, txExplorerUrl } from '@/lib/network';
 import { Buffer } from 'buffer';
 
@@ -44,6 +46,58 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
       setAirdropMsg('Opened Solana Faucet in a new tab. Request test SOL and click Sign & execute again.');
     } finally {
       setIsAirdropping(false);
+    }
+  };
+
+  const handleDemoExecution = async () => {
+    setStatus('confirming');
+    setErrMsg(null);
+
+    try {
+      const chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+      let demoSig = 'Demo';
+      for (let i = 0; i < 84; i++) {
+        demoSig += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+
+      const verb = evaluation.proposed.action === 'buy' ? 'Bought' : 'Sold';
+      saveLocalActivity({
+        id: `demo_${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        description: `${verb} $${Math.round(evaluation.proposed.amountUsd)} ${symbol} — demo risk simulation approved`,
+        txSignature: demoSig,
+        status: 'success',
+      });
+
+      setStatus('executing');
+
+      let explorerUrl = txExplorerUrl(demoSig);
+      try {
+        const res = await executeTrade({
+          wallet: 'demo',
+          action: evaluation.proposed.action,
+          asset: symbol,
+          amountUsd: evaluation.proposed.amountUsd,
+          signature: demoSig,
+        });
+
+        if (res?.result?.explorerUrl) {
+          explorerUrl = res.result.explorerUrl;
+        }
+      } catch (apiErr) {
+        console.warn('API execution notification warning (demo simulated):', apiErr);
+      }
+
+      setResult({
+        signature: demoSig,
+        explorerUrl,
+        isLiveOnchain: false,
+      });
+      setStatus('success');
+    } catch (e: unknown) {
+      console.error('Demo execution error:', e);
+      setErrMsg(e instanceof Error ? e.message : 'Demo execution failed');
+      setStatus('error');
     }
   };
 
@@ -105,6 +159,16 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
       } catch (confirmErr) {
         console.warn('Devnet confirmation warning (proceeding to verification):', confirmErr);
       }
+
+      // Record immediately in local activity log
+      const verb = evaluation.proposed.action === 'buy' ? 'Bought' : 'Sold';
+      saveLocalActivity({
+        id: `tx_${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        description: `${verb} $${Math.round(evaluation.proposed.amountUsd)} ${symbol} — risk governor approved`,
+        txSignature: txSig,
+        status: 'success',
+      });
 
       setStatus('executing');
 
@@ -187,7 +251,9 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
           Tx: {displaySig}
         </p>
         <p style={{ color: 'var(--solana-green)', fontSize: '0.74rem', margin: '0 0 12px 0', fontFamily: 'monospace' }}>
-          ✓ SPL Memo risk governance attestation committed to Solana Devnet ledger
+          {result.isLiveOnchain
+            ? '✓ SPL Memo risk governance attestation committed to Solana Devnet ledger'
+            : '✓ Simulated execution verified & logged to activity audit trail'}
         </p>
         <div style={{ display: 'flex', gap: '16px' }}>
           <a
@@ -196,11 +262,11 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
             rel="noreferrer"
             style={{ color: 'var(--lime)', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'underline' }}
           >
-            View on Solscan →
+            {result.isLiveOnchain ? 'View on Solscan →' : 'Simulated Explorer →'}
           </a>
-          <a href="/activity" style={{ color: 'var(--ink-muted)', fontSize: '0.82rem', textDecoration: 'underline' }}>
+          <Link href="/activity" style={{ color: 'var(--ink-muted)', fontSize: '0.82rem', textDecoration: 'underline' }}>
             View Activity Log →
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -301,6 +367,32 @@ Token Transfer: 0 SOL (Pure cryptographic policy attestation — zero tokens ded
       >
         {buttonText}
       </button>
+
+      {!connected && (
+        <button
+          type="button"
+          disabled={isBusy}
+          onClick={handleDemoExecution}
+          style={{
+            width: '100%',
+            marginTop: '10px',
+            padding: '12px 16px',
+            borderRadius: '10px',
+            background: 'transparent',
+            border: '1px solid var(--lime)',
+            color: 'var(--lime)',
+            fontWeight: 700,
+            cursor: isBusy ? 'not-allowed' : 'pointer',
+            fontSize: '0.84rem',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
+          <span>⚡</span> Execute Demo Simulation (No Wallet Required)
+        </button>
+      )}
 
       <div style={{ marginTop: '8px', textAlign: 'center', fontSize: '0.72rem', color: 'var(--ink-subtle)' }}>
         ⚡ Network: <strong>Solana Devnet</strong> · Zero token transfer · Test network fee (~0.000005 Devnet SOL)

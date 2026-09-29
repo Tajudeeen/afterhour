@@ -318,7 +318,7 @@ export async function getAssetIntelligence(symbol: string, simulatedGapPercent?:
         });
       }
     } else {
-      const fallbackData: Record<string, any> = {
+      const fallbackData: Record<string, { tokenPrice: number; markPrice: number }> = {
         ANTHROPIC: { tokenPrice: 1046.18, markPrice: 1038.34 },
         SPACEX: { tokenPrice: 116.26, markPrice: 147.52 },
         OPENAI: { tokenPrice: 1323.86, markPrice: 1023.68 },
@@ -632,7 +632,12 @@ async function buildPortfolioForWallet(wallet: string): Promise<Portfolio> {
   }
 }
 
-async function fetchTokenBalance(connection: any, wallet: string, mint: string, _decimals: number): Promise<number | null> {
+async function fetchTokenBalance(
+  connection: import('@solana/web3.js').Connection,
+  wallet: string,
+  mint: string,
+  _decimals: number,
+): Promise<number | null> {
   try {
     const pubkey = new (await import('@solana/web3.js')).PublicKey(wallet);
     const mintPubkey = new (await import('@solana/web3.js')).PublicKey(mint);
@@ -870,8 +875,9 @@ export function createApp(options: CreateAppOptions = {}): Hono {
     try {
       const intelligence = await getAssetIntelligence(symbol, simulatedGapPercent);
       return c.json(intelligence);
-    } catch (e: any) {
-      return c.json({ error: { code: 'not-found', message: e.message } }, 404);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Not found';
+      return c.json({ error: { code: 'not-found', message: msg } }, 404);
     }
   });
 
@@ -883,8 +889,9 @@ export function createApp(options: CreateAppOptions = {}): Hono {
     try {
       const intelligence = await getAssetIntelligence(symbol);
       return c.json(intelligence.routes);
-    } catch (e: any) {
-      return c.json({ error: { code: 'not-found', message: e.message } }, 404);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Not found';
+      return c.json({ error: { code: 'not-found', message: msg } }, 404);
     }
   });
 
@@ -896,8 +903,9 @@ export function createApp(options: CreateAppOptions = {}): Hono {
     try {
       const { snapshot, riskScore } = await getAssetSnapshot(symbol);
       return c.json({ snapshot, riskScore });
-    } catch (e: any) {
-      return c.json({ error: { code: 'not-found', message: e.message } }, 404);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Not found';
+      return c.json({ error: { code: 'not-found', message: msg } }, 404);
     }
   });
 
@@ -972,7 +980,7 @@ export function createApp(options: CreateAppOptions = {}): Hono {
         throw new Error(`Jupiter quote API failed: ${quoteRes.status}`);
       }
 
-      const quote = await quoteRes.json() as any;
+      const quote = (await quoteRes.json()) as Record<string, unknown>;
 
       const swapRes = await fetch('https://api.jup.ag/swap/v1/swap', {
         method: 'POST',
@@ -1016,8 +1024,9 @@ export function createApp(options: CreateAppOptions = {}): Hono {
       signature?: string;
     }>();
 
-    // Validate wallet address format
-    if (!body.wallet || !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(body.wallet)) {
+    // Validate wallet address format: allow valid Solana base58 address OR 'demo'
+    const isDemo = body.wallet === 'demo';
+    if (!body.wallet || (!isDemo && !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(body.wallet))) {
       return c.json({ error: { code: 'invalid-wallet', message: 'Invalid wallet address format.' } }, 400);
     }
 
@@ -1043,9 +1052,10 @@ export function createApp(options: CreateAppOptions = {}): Hono {
     }
 
     // Signature verification: check format, then verify on-chain if possible.
-    // Solana base58 transaction signatures are 86-90 characters.
     let isRealOnChainSig = false;
-    if (body.signature && body.wallet) {
+    if (isDemo) {
+      isRealOnChainSig = Boolean(body.signature && body.signature.trim().length >= 4);
+    } else if (body.signature && body.wallet) {
       const validFormat = typeof body.signature === 'string' && /^[1-9A-HJ-NP-Za-km-z]{86,90}$/.test(body.signature.trim());
       if (validFormat) {
         try {
@@ -1089,13 +1099,20 @@ export function createApp(options: CreateAppOptions = {}): Hono {
       portfolios[body.wallet] = portfolio;
       const walletActivities = activities[body.wallet] ?? (activities[body.wallet] = []);
       const verb = body.action === 'buy' ? 'Bought' : 'Sold';
-      walletActivities.push({
+      const newActivity: ActivityItem = {
         id: `tx_${Date.now()}`,
         timestamp: new Date().toISOString(),
         description: `${verb} $${Math.round(body.amountUsd)} ${body.asset} — risk governor approved`,
         txSignature: signature,
         status: 'success',
-      });
+      };
+      walletActivities.unshift(newActivity);
+
+      if (body.wallet !== 'demo') {
+        const demoActivities = activities['demo'] ?? (activities['demo'] = []);
+        demoActivities.unshift(newActivity);
+        portfolios['demo'] = { ...portfolio, wallet: 'demo' };
+      }
     }
 
     return c.json({ result: finalResult });
@@ -1176,8 +1193,21 @@ export function createApp(options: CreateAppOptions = {}): Hono {
    */
   app.get('/api/activity/:wallet', async (c: Context) => {
     const wallet = getParam(c, 'wallet');
-    const activity = activities[wallet] ?? [];
-    return c.json({ activities: activity });
+    const userActivity = activities[wallet] ?? [];
+    if (wallet !== 'demo') {
+      const demoActivity = activities['demo'] ?? mockActivities['demo'] ?? [];
+      const seen = new Set<string>();
+      const combined: ActivityItem[] = [];
+      for (const item of [...userActivity, ...demoActivity]) {
+        const key = item.txSignature || item.id;
+        if (!seen.has(key)) {
+          seen.add(key);
+          combined.push(item);
+        }
+      }
+      return c.json({ activities: combined });
+    }
+    return c.json({ activities: userActivity });
   });
 
   return app;

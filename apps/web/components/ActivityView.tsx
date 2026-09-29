@@ -3,34 +3,63 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { getActivity, type ActivityItem } from '@/lib/api';
+import { getLocalActivities } from '@/lib/activity';
 import { txExplorerUrl } from '@/lib/network';
 
 interface ActivityViewProps {
   initialActivities: ActivityItem[];
 }
 
+function mergeActivities(...sources: ActivityItem[][]): ActivityItem[] {
+  const seen = new Set<string>();
+  const result: ActivityItem[] = [];
+  for (const list of sources) {
+    if (!Array.isArray(list)) continue;
+    for (const item of list) {
+      const key = item.txSignature || item.id;
+      if (!seen.has(key)) {
+        seen.add(key);
+        result.push(item);
+      }
+    }
+  }
+  result.sort((a, b) => {
+    const timeA = new Date(a.timestamp).getTime() || 0;
+    const timeB = new Date(b.timestamp).getTime() || 0;
+    return timeB - timeA;
+  });
+  return result;
+}
+
 export function ActivityView({ initialActivities }: ActivityViewProps) {
-  const [activities, setActivities] = useState<ActivityItem[]>(initialActivities);
+  const [activities, setActivities] = useState<ActivityItem[]>(() =>
+    mergeActivities(initialActivities, getLocalActivities()),
+  );
   const [error, setError] = useState<string | null>(null);
   const [isLive, setIsLive] = useState(false);
   const { publicKey } = useWallet();
 
   const fetchActivity = useCallback(async () => {
+    const local = getLocalActivities();
     try {
       const wallet = publicKey ? publicKey.toBase58() : 'demo';
       const data = await getActivity(wallet);
-      setActivities(data.activities);
+      const merged = mergeActivities(local, data.activities, initialActivities);
+      setActivities(merged);
       setError(null);
       setIsLive(true);
     } catch {
-      setError('API unavailable — showing recent activity');
+      const fallback = mergeActivities(local, initialActivities);
+      setActivities(fallback);
+      setError('Live sync unavailable — displaying local & cached activity trail');
       setIsLive(false);
     }
-  }, [publicKey]);
+  }, [publicKey, initialActivities]);
 
   useEffect(() => {
+    // Initial sync
     void fetchActivity();
-    const interval = setInterval(fetchActivity, 5000);
+    const interval = setInterval(fetchActivity, 4000);
     return () => clearInterval(interval);
   }, [fetchActivity]);
 

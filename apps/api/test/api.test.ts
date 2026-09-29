@@ -110,4 +110,31 @@ describe('api execute', () => {
     });
     expect(res.status).toBe(400);
   });
+
+  it('executes demo trade and records in activity log', async () => {
+    const portfolio = testPortfolio();
+    const app = createApp({ portfolios: { demo: portfolio } });
+    const res = await app.request('/api/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        wallet: 'demo',
+        action: 'sell',
+        asset: 'ANTHROPIC',
+        amountUsd: 1000,
+        signature: 'DemoSignature12345678',
+      }),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.result.status).toBe('confirmed');
+
+    // Verify activity record is present
+    const actRes = await app.request('/api/activity/demo');
+    expect(actRes.status).toBe(200);
+    const actBody = await actRes.json();
+    expect(actBody.activities.length).toBeGreaterThan(0);
+    expect(actBody.activities[0].description).toContain('Sold $1000 ANTHROPIC');
+  });
 });
+
