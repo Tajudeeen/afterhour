@@ -114,6 +114,7 @@ export interface ExecuteResult {
   signature: string;
   explorerUrl: string;
   status: 'confirmed' | 'failed';
+  error?: string;
 }
 
 export interface GapRadarAsset {

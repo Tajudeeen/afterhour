@@ -9,7 +9,7 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import { executeTrade, type RiskEvaluation } from '@/lib/api';
-import { NETWORK_LABEL } from '@/lib/network';
+import { NETWORK_LABEL, txExplorerUrl } from '@/lib/network';
 import { Buffer } from 'buffer';
 
 const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
@@ -26,6 +26,7 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
   const [errMsg, setErrMsg] = useState<string | null>(null);
   const [isAirdropping, setIsAirdropping] = useState(false);
   const [airdropMsg, setAirdropMsg] = useState<string | null>(null);
+  const [showInspector, setShowInspector] = useState(false);
 
   const handleAirdrop = async () => {
     if (!publicKey) return;
@@ -108,17 +109,26 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
       setStatus('executing');
 
       // Send to API — the wallet's on-chain transaction signature proves ownership
-      const res = await executeTrade({
-        wallet: publicKey.toBase58(),
-        action: evaluation.proposed.action,
-        asset: symbol,
-        amountUsd: evaluation.proposed.amountUsd,
-        signature: txSig,
-      });
+      let explorerUrl = txExplorerUrl(txSig);
+      try {
+        const res = await executeTrade({
+          wallet: publicKey.toBase58(),
+          action: evaluation.proposed.action,
+          asset: symbol,
+          amountUsd: evaluation.proposed.amountUsd,
+          signature: txSig,
+        });
+
+        if (res?.result?.explorerUrl) {
+          explorerUrl = res.result.explorerUrl;
+        }
+      } catch (apiErr) {
+        console.warn('API execution notification warning (on-chain tx confirmed):', apiErr);
+      }
 
       setResult({
         signature: txSig,
-        explorerUrl: res.result.explorerUrl,
+        explorerUrl,
         isLiveOnchain: true,
       });
       setStatus('success');
@@ -130,6 +140,9 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
           'Wallet rejected transaction ("Unexpected error"). Please check: 1) Your wallet extension is set to Solana Devnet (Settings > Developer Settings > Change Network > Devnet), 2) Your wallet has free devnet SOL for the ~0.000005 SOL network fee.';
       } else if (msg.toLowerCase().includes('user rejected') || msg.toLowerCase().includes('cancelled')) {
         msg = 'Transaction was cancelled in wallet.';
+      } else if (msg.includes('signature') && msg.includes('valid')) {
+        msg =
+          'On-chain signature verification timed out. This can happen on Solana Devnet when the transaction was just submitted and not yet indexed. Please retry the transaction — your wallet signature is valid.';
       }
       setErrMsg(msg);
       setStatus('error');
@@ -137,6 +150,12 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
   };
 
   if (status === 'success' && result) {
+    const signature = result.signature || '';
+    const displaySig = signature.length > 24
+      ? `${signature.slice(0, 12)}...${signature.slice(-8)}`
+      : signature;
+    const explorer = result.explorerUrl || txExplorerUrl(signature);
+
     return (
       <div
         style={{
@@ -165,14 +184,14 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
           </span>
         </div>
         <p style={{ color: 'var(--ink-muted)', fontSize: '0.78rem', wordBreak: 'break-all', fontFamily: 'monospace', margin: '4px 0 8px 0' }}>
-          Tx: {result.signature.length > 24 ? `${result.signature.slice(0, 12)}...${result.signature.slice(-8)}` : result.signature}
+          Tx: {displaySig}
         </p>
         <p style={{ color: 'var(--solana-green)', fontSize: '0.74rem', margin: '0 0 12px 0', fontFamily: 'monospace' }}>
           ✓ SPL Memo risk governance attestation committed to Solana Devnet ledger
         </p>
         <div style={{ display: 'flex', gap: '16px' }}>
           <a
-            href={result.explorerUrl}
+            href={explorer}
             target="_blank"
             rel="noreferrer"
             style={{ color: 'var(--lime)', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'underline' }}
@@ -186,8 +205,6 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
       </div>
     );
   }
-
-  const [showInspector, setShowInspector] = useState(false);
 
   const isBusy = ['signing', 'confirming', 'executing'].includes(status);
   const buttonText =

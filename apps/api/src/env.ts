@@ -6,3 +6,10 @@ import { config } from 'dotenv';
 import { fileURLToPath } from 'node:url';
 
 config({ path: fileURLToPath(new URL('../../../.env', import.meta.url)) });
+
+// Fast signature verification retries in test mode so tests don't wait for
+// real RPC backoff when verifying test/mock signatures.
+if (process.env.NODE_ENV !== 'production') {
+  process.env.VERIFY_RETRIES = process.env.VERIFY_RETRIES ?? '0';
+  process.env.VERIFY_RETRY_DELAY_MS = process.env.VERIFY_RETRY_DELAY_MS ?? '0';
+}
