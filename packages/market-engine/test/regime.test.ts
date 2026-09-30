@@ -71,11 +71,11 @@ describe('market-engine regime', () => {
       expect(mem.history()).toHaveLength(1);
 
       mem.push(normal);
-      // Same regime — no new transition
+      // Same regime - no new transition
       expect(mem.history()).toHaveLength(1);
 
       mem.push(high);
-      // Different label — new transition recorded
+      // Different label - new transition recorded
       expect(mem.history()).toHaveLength(2);
       expect(mem.history()[1]!.to).toBe('HIGH GAP RISK');
     });

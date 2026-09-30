@@ -62,7 +62,7 @@ export default async function AssetPage({ params }: { params: Promise<{ symbol: 
           {intelligence.referenceSource === 'prestocks-live' ? 'Live · PreStocks Feed' : 'Live · Market Data'}
         </span>
         <span className="pyth-badge pyth-live">
-          {intelligence.referenceSource === 'prestocks-live' ? '⚡ PreStocks 24/7' : '⬡ Pyth Network'}
+          {intelligence.referenceSource === 'prestocks-live' ? ' PreStocks 24/7' : '⬡ Pyth Network'}
         </span>
       </div>
 
@@ -145,7 +145,7 @@ export default async function AssetPage({ params }: { params: Promise<{ symbol: 
         <div className="data-card">
           <h3>Liquidity & Slippage</h3>
           <div className="data-value">
-             {intelligence.routes[0] ? `$${Math.round(intelligence.routes[0].liquidityUsd).toLocaleString()}` : '—'}
+             {intelligence.routes[0] ? `$${Math.round(intelligence.routes[0].liquidityUsd).toLocaleString()}` : '-'}
           </div>
           <div className="data-label">
             {intelligence.liquidity} liquidity · {intelligence.pythDynamicSlippageBps || 50} BPS Slippage
@@ -204,6 +204,6 @@ function StatusPill({ band }: { band: string }) {
 
 function formatTime(value: string): string {
   const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return '—';
+  if (Number.isNaN(d.getTime())) return '-';
   return d.toLocaleString('en', { timeZone: 'UTC', dateStyle: 'medium', timeStyle: 'short' });
 }

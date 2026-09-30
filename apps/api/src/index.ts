@@ -1,16 +1,16 @@
 /**
- * AfterHours API — REST API for the AfterHours hackathon product.
+ * AfterHours API - REST API for the AfterHours hackathon product.
  *
  * Endpoints:
- *   GET  /health                    — liveness
- *   GET  /version                   — release identity
- *   GET  /ready                     — repository readiness
- *   GET  /api/portfolio/:wallet     — portfolio snapshot + risk summary
- *   GET  /api/assets/:symbol        — asset gap analysis (onchain vs reference)
- *   GET  /api/assets/:symbol/analysis — AI Analyst explanation + recommendation
- *   GET  /api/assets/:symbol/risk   — Risk Governor evaluation
- *   POST /api/execute               — execute a trade (after user approval)
- *   GET  /api/activity/:wallet      — activity log
+ *   GET  /health                    - liveness
+ *   GET  /version                   - release identity
+ *   GET  /ready                     - repository readiness
+ *   GET  /api/portfolio/:wallet     - portfolio snapshot + risk summary
+ *   GET  /api/assets/:symbol        - asset gap analysis (onchain vs reference)
+ *   GET  /api/assets/:symbol/analysis - AI Analyst explanation + recommendation
+ *   GET  /api/assets/:symbol/risk   - Risk Governor evaluation
+ *   POST /api/execute               - execute a trade (after user approval)
+ *   GET  /api/activity/:wallet      - activity log
  *
  * The AI Analyst explains. The Risk Governor enforces. The user approves.
  * Solana executes.
@@ -84,7 +84,7 @@ function checkExecutionRateLimit(wallet: string): boolean {
 function getVerifyRetries(): number {
   return parseInt(process.env.VERIFY_RETRIES ?? '3', 10);
 }
-/** Delay between retries in milliseconds — devnet typically confirms within 2-3 seconds. */
+/** Delay between retries in milliseconds - devnet typically confirms within 2-3 seconds. */
 function getVerifyRetryDelayMs(): number {
   return parseInt(process.env.VERIFY_RETRY_DELAY_MS ?? '500', 10);
 }
@@ -123,7 +123,7 @@ async function verifyOnChainSignature(wallet: string, signature: string): Promis
         });
         if (tx) {
           const message = tx.transaction.message;
-          // Access account keys generically — works for both legacy and v0 messages
+          // Access account keys generically - works for both legacy and v0 messages
           const staticKeys = (message as { staticAccountKeys?: unknown }).staticAccountKeys;
           const accountKeys: unknown[] = Array.isArray(staticKeys)
             ? staticKeys
@@ -1102,7 +1102,7 @@ export function createApp(options: CreateAppOptions = {}): Hono {
       const newActivity: ActivityItem = {
         id: `tx_${Date.now()}`,
         timestamp: new Date().toISOString(),
-        description: `${verb} $${Math.round(body.amountUsd)} ${body.asset} — risk governor approved`,
+        description: `${verb} $${Math.round(body.amountUsd)} ${body.asset} - risk governor approved`,
         txSignature: signature,
         status: 'success',
       };
@@ -1120,7 +1120,7 @@ export function createApp(options: CreateAppOptions = {}): Hono {
 
   /**
    * GET /api/radar
-   * Public endpoint — no wallet required. Returns all tracked assets with live
+   * Public endpoint - no wallet required. Returns all tracked assets with live
    * gap data for the public gap radar dashboard.
    */
   app.get('/api/radar', async (c: Context) => {
@@ -1322,7 +1322,7 @@ async function executeTradeSimulation(_trade: {
   asset: string;
   amountUsd: number;
 }): Promise<{ signature: string; explorerUrl: string; status: 'confirmed' | 'failed' }> {
-  // Deterministic mock signature for demo mode — clearly identifiable as non-real
+  // Deterministic mock signature for demo mode - clearly identifiable as non-real
   // (starts with 'demo_'), but deterministic so it doesn't change on every call.
   const seed = `${_trade.action}:${_trade.asset}:${_trade.amountUsd}`;
   const hash = Array.from(seed).reduce((acc, char) => acc + char.charCodeAt(0), 0);

@@ -1,11 +1,11 @@
-# ADRs — AfterHours
+# ADRs - AfterHours
 
 Architectural Decision Records. One per significant decision. New entries go at the
 top; existing entries are never silently overridden.
 
-## 2026-09-23 — ADR-4: Solana network is a single, env-driven source of truth
+## 2026-09-23 - ADR-4: Solana network is a single, env-driven source of truth
 
-**Status:** Accepted — supersedes the network choice in ADR-3
+**Status:** Accepted - supersedes the network choice in ADR-3
 
 **Context:** ADR-3 specified Solana Devnet for wallet connection and attestation, but the
 shipped code had drifted into a contradiction: `SolanaWalletProvider` defaulted to
@@ -14,7 +14,7 @@ shipped code had drifted into a contradiction: `SolanaWalletProvider` defaulted 
 hardcoded `?cluster=devnet` into their Solscan links. The UI therefore connected to one
 cluster and labelled the result with another. A subsequent copy-only edit changed a README
 heading to "mainnet" while the surrounding text, and every explorer link, still said
-Devnet — making the claim false rather than merely inconsistent.
+Devnet - making the claim false rather than merely inconsistent.
 
 **Decision:**
 1. Added `SolanaNetwork`, `resolveSolanaNetwork`, `solanaNetworkLabel`, `solscanClusterQuery`,
@@ -31,7 +31,7 @@ Setting `SOLANA_NETWORK=devnet` switches the wallet connection, every UI network
 every explorer link together. ADR-3's dual-mode (real wallet + 1-click demo) and SPL Memo
 attestation decisions remain in force; only its Devnet-specific default is superseded.
 
-## 2026-09-20 — ADR-3: Dual-Mode Live Solana Devnet & SPL Memo Attestation
+## 2026-09-20 - ADR-3: Dual-Mode Live Solana Devnet & SPL Memo Attestation
 
 **Status:** Accepted
 
@@ -45,12 +45,12 @@ attestation decisions remain in force; only its Devnet-specific default is super
 
 **Consequences:** Hackathon judges can either test with real wallets and verify genuine on-chain attestations on Solscan Devnet or test instantaneously via 1-click Demo mode.
 
-## 2026-08-29 — ADR-0: Pivot from Ambit to AfterHours
+## 2026-08-29 - ADR-0: Pivot from Ambit to AfterHours
 
 **Status:** Accepted
 
-**Context:** The repo was previously Ambit — an ERC-8004 agent marketplace on BSC.
-The hackathon requires a pivot to AfterHours — 24/7 intelligence for tokenized
+**Context:** The repo was previously Ambit - an ERC-8004 agent marketplace on BSC.
+The hackathon requires a pivot to AfterHours - 24/7 intelligence for tokenized
 stocks on Solana.
 
 **Decision:** Fully replaced the BSC stack with Solana:
@@ -62,7 +62,7 @@ stocks on Solana.
 **Consequences:** The entire codebase is rebuilt. No BSC code remains. The
 visual identity (dark theme, lime accents, Georgia serif) is preserved.
 
-## 2026-08-29 — ADR-1: Deterministic engine + AI analyst separation
+## 2026-08-29 - ADR-1: Deterministic engine + AI analyst separation
 
 **Status:** Accepted
 
@@ -80,7 +80,7 @@ authority over portfolio decisions is dangerous.
 **Consequences:** The AI is useful (explains, recommends) without being dangerous
 (can't violate policy, can't trade without user approval).
 
-## 2026-08-29 — ADR-2: Risk Governor as the security boundary
+## 2026-08-29 - ADR-2: Risk Governor as the security boundary
 
 **Status:** Accepted
 

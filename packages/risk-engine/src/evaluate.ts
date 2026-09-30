@@ -1,5 +1,5 @@
 /**
- * Risk evaluation logic — the core of the Governor's deterministic checks.
+ * Risk evaluation logic - the core of the Governor's deterministic checks.
  */
 import type {
   Portfolio,
@@ -120,7 +120,7 @@ function computeProposedExposure(
   let newValue: number;
 
   if (proposal.action === 'sell') {
-    // Selling reduces the asset, converts to USDC — total portfolio value unchanged
+    // Selling reduces the asset, converts to USDC - total portfolio value unchanged
     const holding = portfolio.holdings.find((h) => h.symbol === proposal.asset);
     if (!holding) return currentExposure;
     newAssetValue = Math.max(0, holding.valueUsd - proposal.amountUsd);

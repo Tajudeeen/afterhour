@@ -1,5 +1,5 @@
 /**
- * Token balance reader — reads SPL token balances from Solana RPC.
+ * Token balance reader - reads SPL token balances from Solana RPC.
  */
 import { Connection, PublicKey } from '@solana/web3.js';
 import { USDC_DECIMALS, USDC_MINT } from './assets.js';
@@ -106,7 +106,7 @@ export async function getTokenPriceUsd(mint: string): Promise<number> {
   if (!stock) return 0;
 
   // Simulate a small random gap from the reference price
-  // (0-5% premium/discount) — in production this comes from real on-chain DEX price
+  // (0-5% premium/discount) - in production this comes from real on-chain DEX price
   const randomGap = (Math.random() * 4 - 2) / 100; // -2% to +2%
   return stock.referencePrice * (1 + randomGap);
 }

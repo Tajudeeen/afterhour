@@ -39,8 +39,8 @@ AI Analyst                     │
         ▼                      │
 Risk Governor ◄────────────────┘
         │
-   PASS? ──yes──▶ User approval
-         └─no───▶ BLOCK (explain why)
+   PASS? ──yes── User approval
+         └─no─── BLOCK (explain why)
         │
         ▼
 Solana execution (Jupiter DEX swap)
@@ -53,37 +53,37 @@ Portfolio update + activity log
 
 ### Market Gap Engine (`packages/market-engine`)
 
-- `calculateGapPercent(onchain, reference)` — the core formula
-- `buildPriceSnapshot(...)` — assembles a snapshot from onchain + reference data
-- `classifyLiquidity(volume)` — low/medium/high based on USD thresholds
-- `classifyVolatility(prices[])` — ATR-based volatility classification
-- `classifyMarketStatus(date)` — pre-market / open / post-market / closed
-- `classifyRegime(inputs)` — maps current state to a regime label
-- `computeGapRiskScore(inputs)` — 0–100 score with 5 bands
-- `RegimeMemory` — tracks regime transitions over time
+- `calculateGapPercent(onchain, reference)` - the core formula
+- `buildPriceSnapshot(...)` - assembles a snapshot from onchain + reference data
+- `classifyLiquidity(volume)` - low/medium/high based on USD thresholds
+- `classifyVolatility(prices[])` - ATR-based volatility classification
+- `classifyMarketStatus(date)` - pre-market / open / post-market / closed
+- `classifyRegime(inputs)` - maps current state to a regime label
+- `computeGapRiskScore(inputs)` - 0–100 score with 5 bands
+- `RegimeMemory` - tracks regime transitions over time
 
 The engine is deterministic. No LLM needed for computation.
 
 ### Risk Engine (`packages/risk-engine`)
 
-- `DEFAULT_RISK_POLICY` — hardcoded policy (35% max exposure, $1500 max trade, etc.)
-- `RiskGovernor` — class wrapping the policy; `evaluate(...)` checks every constraint
-- `evaluateRisk(...)` — pure function that returns `{ passed, reason, proposedState }`
+- `DEFAULT_RISK_POLICY` - hardcoded policy (35% max exposure, $1500 max trade, etc.)
+- `RiskGovernor` - class wrapping the policy; `evaluate(...)` checks every constraint
+- `evaluateRisk(...)` - pure function that returns `{ passed, reason, proposedState }`
 
 The Governor checks:
 1. Trade size within `MAX_TRADE`
 2. Exposure after trade within `MAX_SINGLE_ASSET`
 3. USDC reserve after trade >= `MIN_USDC_RESERVE`
 4. Daily PnL within `MAX_DAILY_DRAWDOWN`
-5. `REQUIRE_USER_APPROVAL` — the AI proposes, the Governor checks, the user signs
+5. `REQUIRE_USER_APPROVAL` - the AI proposes, the Governor checks, the user signs
 
 The AI cannot override these. They are enforced deterministically.
 
 ### AI Analyst (`packages/agent`)
 
-- `AIContextBuilder` — converts engine output into structured JSON for the LLM
-- `AIAnalyst` — class that formats a prompt, calls the LLM, parses the response
-- `LLMProvider` — interface that can be injected (OpenAI, Azure, local, or mock)
+- `AIContextBuilder` - converts engine output into structured JSON for the LLM
+- `AIAnalyst` - class that formats a prompt, calls the LLM, parses the response
+- `LLMProvider` - interface that can be injected (OpenAI, Azure, local, or mock)
 - Falls back to deterministic recommendation if LLM output is unparseable
 
 The AI receives structured data (gap %, volatility, regime, exposure, policy limits)
@@ -91,11 +91,11 @@ and returns: explanation, primary risk, recommendation, confidence.
 
 ### Solana (`packages/solana`)
 
-- `SUPPORTED_STOCKS` — verified tokenized stock mint addresses (NVDA, AAPL, TSLA)
-- `WalletManager` / `WalletAdapter` — connects Phantom, Solflare, Backpack, etc.
-- `readBalances(connection, wallet)` — reads SPL token balances
-- `JupiterSwapProvider` — queries Jupiter for swap quotes, builds transactions
-- `executeSwap(connection, input)` — signs and sends the swap on Solana
+- `SUPPORTED_STOCKS` - verified tokenized stock mint addresses (NVDA, AAPL, TSLA)
+- `WalletManager` / `WalletAdapter` - connects Phantom, Solflare, Backpack, etc.
+- `readBalances(connection, wallet)` - reads SPL token balances
+- `JupiterSwapProvider` - queries Jupiter for swap quotes, builds transactions
+- `executeSwap(connection, input)` - signs and sends the swap on Solana
 
 ### API (`apps/api`)
 
@@ -127,16 +127,16 @@ Next.js 15 app router with 7 routes:
 | `/proof` | Live Verification Suite |
 
 > **Note:** this list previously said "5 screens". `/markets` and `/proof` were added for
-> the PreStocks and Pyth bounty tracks and are load-bearing — see `BUILD-PLAN.md` C1.
+> the PreStocks and Pyth bounty tracks and are load-bearing - see `BUILD-PLAN.md` C1.
 
 ### Asset universe
 
-AfterHours carries two layered universes — see `BUILD-PLAN.md` §2:
+AfterHours carries two layered universes - see `BUILD-PLAN.md` §2:
 
-- **Public equities** — NVDA, AAPL, TSLA (`SUPPORTED_STOCKS` in `packages/solana`).
+- **Public equities** - NVDA, AAPL, TSLA (`SUPPORTED_STOCKS` in `packages/solana`).
   The canonical demo path: the $10,420 portfolio, `docs/DEMO.md`, and the +4.02% gap
   example are all built on it.
-- **Pre-IPO equities** — ANTHROPIC, SPACEX, OPENAI, ANDURIL, NEURALINK, FIGUREAI,
+- **Pre-IPO equities** - ANTHROPIC, SPACEX, OPENAI, ANDURIL, NEURALINK, FIGUREAI,
   KALSHI, POLYMARKET, served by the API's `isPreStocks` branch from the PreStocks feed.
   Backs `/markets` and the PreStocks bounty track.
 

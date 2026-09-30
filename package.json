@@ -2,7 +2,7 @@
   "name": "afterhours",
   "private": true,
   "version": "0.0.0",
-  "description": "AfterHours — 24/7 intelligence for tokenized stocks on Solana. Detects market gaps, explains them, assesses portfolio risk, and executes bounded actions on Solana.",
+  "description": "AfterHours - 24/7 intelligence for tokenized stocks on Solana. Detects market gaps, explains them, assesses portfolio risk, and executes bounded actions on Solana.",
   "scripts": {
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",

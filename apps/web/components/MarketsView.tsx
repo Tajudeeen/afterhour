@@ -161,7 +161,6 @@ export function MarketsView({ prestocksAssets, isPrestocksLive }: MarketsViewPro
           className={`button ${tab === 'prestocks' ? 'button-primary' : 'button-secondary'}`}
           style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', fontSize: '0.9rem' }}
         >
-          <span>⚡</span>
           <span>Pre-IPO Tokens</span>
           <span style={{ background: 'rgba(255,255,255,0.2)', padding: '2px 6px', borderRadius: '10px', fontSize: '0.68rem' }}>
             8 Assets
@@ -282,7 +281,7 @@ export function MarketsView({ prestocksAssets, isPrestocksLive }: MarketsViewPro
           {!isPrestocksLive && (
             <div className="data-card" style={{ marginBottom: 20, borderColor: 'rgba(141,90,6,0.4)' }}>
               <p style={{ color: '#ffd98a', margin: 0, fontSize: '0.9rem' }}>
-                ⚠ PreStocks API unavailable — showing cached seed data
+                 PreStocks API unavailable - showing cached seed data
               </p>
             </div>
           )}

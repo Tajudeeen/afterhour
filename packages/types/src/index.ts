@@ -1,5 +1,5 @@
 /**
- * AfterHours shared types — tokenized stock gap intelligence on Solana.
+ * AfterHours shared types - tokenized stock gap intelligence on Solana.
  *
  * When Wall Street closes, Solana keeps trading. AfterHours detects the price
  * gap between on-chain markets and traditional reference prices, explains why,
@@ -33,7 +33,7 @@ export type VolatilityLevel = 'low' | 'medium' | 'high';
 /** Portfolio concentration signal. */
 export type ConcentrationLevel = 'low' | 'medium' | 'high';
 
-/** Market regime state — Regime Memory engine output. */
+/** Market regime state - Regime Memory engine output. */
 export interface RegimeState {
   /** e.g. "weekend", "market-closed", "normal" */
   session: string;

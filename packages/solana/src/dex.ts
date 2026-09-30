@@ -29,7 +29,7 @@ export interface SwapQuote {
 }
 
 /**
- * Jupiter swap provider — queries quotes and builds swap transactions.
+ * Jupiter swap provider - queries quotes and builds swap transactions.
  */
 export class JupiterSwapProvider {
   private connection: Connection;
@@ -131,7 +131,7 @@ export class JupiterSwapProvider {
    * Simulate a quote as a fallback when the live Jupiter API is unavailable.
    * Produces a realistic price impact based on AMM-style depth.
    *
-   * ⚠️ DEMO ONLY — this does NOT reflect real DEX liquidity. In production,
+   *  DEMO ONLY - this does NOT reflect real DEX liquidity. In production,
    * always use fetchLiveQuote. The price impact tiers here are estimates.
    */
   private async simulateQuote(
@@ -140,7 +140,7 @@ export class JupiterSwapProvider {
     inputAmount: number,
     _slippageBps: number,
   ): Promise<SwapRoute> {
-    // Use a simple price feed — in production this is real DEX pricing
+    // Use a simple price feed - in production this is real DEX pricing
     const inputToken = await this.lookupToken(inputMint);
     const outputToken = await this.lookupToken(outputMint);
 

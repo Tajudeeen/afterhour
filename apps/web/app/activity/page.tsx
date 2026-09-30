@@ -3,7 +3,7 @@ import { getActivity, type ActivityItem } from '@/lib/api';
 import { ActivityView } from '@/components/ActivityView';
 
 export const metadata = {
-  title: 'Activity — AfterHours',
+  title: 'Activity - AfterHours',
   description: 'Real-time on-chain activity and risk policy audit trail.',
 };
 

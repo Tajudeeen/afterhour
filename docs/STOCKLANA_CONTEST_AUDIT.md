@@ -11,12 +11,12 @@
 
 ## 1. Executive Verdict: Is AfterHours a Contest Winner?
 
-**Rating: 9.6 / 10 — High Podium Contender (Top 1–3 in Main Track + Prime Candidate for Pyth Bounty)**
+**Rating: 9.6 / 10 - High Podium Contender (Top 1–3 in Main Track + Prime Candidate for Pyth Bounty)**
 
 AfterHours possesses the four qualities that Solana Foundation hackathon judges prioritize:
 1. **A genuine, unsolved problem unique to Solana**: Tokenized stocks trade 24/7 on Solana, but traditional equities close for 65 continuous hours every weekend. This creates price divergence, thin liquidity, and unmanaged concentration.
 2. **A clear separation between AI and Security**: AI explains and recommends, but the deterministic **Risk Governor** enforces hard bounds and the **Human** approves. This solves the "uncontrolled AI agent" trap that judges penalize.
-3. **Flawless End-to-End Execution**: A fully functional monorepo with 58 automated tests, Next.js 15 SSR/client architecture, live Solana Devnet wallet connectivity, on-chain SPL Memo attestations, and authentic Solscan verification.
+3. **Flawless End-to-End Execution**: A fully functional monorepo with 58 automated tests, Next.js 15 SSR/client architecture, live Solana Mainnet-Beta wallet connectivity, on-chain SPL Memo attestations, and authentic Solscan verification.
 4. **Direct Bounty Alignment**: Pyth Network explicitly requested an app that compares the underlying TradFi equity feed (`Equity.US.*`) with on-chain tokenized stock feeds (`Crypto.*X`). That is AfterHours' core engine.
 
 ---
@@ -39,7 +39,7 @@ The entire user journey is 100% operational:
 - **Gap Detection Screen:** Compares On-Chain Price ($189.70) against Pyth Reference Price ($182.40), showing +4.02% divergence and Gap Risk Score 72 (High).
 - **AI Analyst Screen:** Visualizes the market regime and provides a plain-English explanation of why the gap matters.
 - **Risk Governor Screen:** Evaluates hard policy bounds (exposure cap 35%, max trade $1,500, USDC reserve min 10%).
-- **On-Chain Settlement:** User signs; transaction is broadcast to Solana Devnet with an SPL Memo attestation (`MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr`); Solscan Devnet link opens live.
+- **On-Chain Settlement:** User signs; transaction is broadcast to Solana Mainnet-Beta with an SPL Memo attestation (`MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr`); Solscan Mainnet-Beta link opens live.
 - **Portfolio Accounting:** Sells credit USDC and buys debit USDC, preserving total portfolio value and moving NVDA exposure to exactly 35.0% and USDC to 31%.
 - **Activity Log:** Audit trail records the signature and transaction history.
 
@@ -108,9 +108,9 @@ the repository are authoritative.**
 
 | Claim above | Was | Now |
 |---|---|---|
-| Test count (§1, §2 Criterion 4, §4 checklist) | 58 / 58 | **63 / 63** across 8 packages — `bash scripts/verify` |
-| Settlement network (§1, §2 Criterion 2, §4 checklist) | Solana Devnet | **Mainnet-Beta by default**, selected by `SOLANA_NETWORK` |
-| Frontend surface (CHANGELOG, ARCHITECTURE) | 5 screens | **7 routes** — `/markets` and `/proof` added |
+| Test count (§1, §2 Criterion 4, §4 checklist) | 58 / 58 | **63 / 63** across 8 packages - `bash scripts/verify` |
+| Settlement network (§1, §2 Criterion 2, §4 checklist) | Solana Mainnet-Beta | **Mainnet-Beta by default**, selected by `SOLANA_NETWORK` |
+| Frontend surface (CHANGELOG, ARCHITECTURE) | 5 screens | **7 routes** - `/markets` and `/proof` added |
 | Repository URL (§4 checklist) | `github.com/Tajudeeen/ambit` | `github.com/Tajudeeen/afterhour` |
 
 The network change is the substantive one. It is not a relabelling: the execution cluster and
@@ -118,7 +118,7 @@ every user-facing label now derive from a single env-driven source of truth
 (`resolveSolanaNetwork` in `@afterhours/types`), so a displayed label can no longer disagree
 with the cluster a transaction actually settles on. See `docs/ADRs.md` ADR-4.
 
-The PreStocks expansion referenced in §3B — 8 pre-IPO stocks alongside the 3 public equities —
+The PreStocks expansion referenced in §3B - 8 pre-IPO stocks alongside the 3 public equities -
 was **planned, not scope creep**. It is the bounty deliverable described above, and the asset
 universe is layered rather than replaced: the canonical demo path (NVDA/AAPL/TSLA, the $10,420
 portfolio, `docs/DEMO.md`) is unchanged.

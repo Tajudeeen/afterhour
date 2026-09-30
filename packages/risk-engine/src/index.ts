@@ -1,5 +1,5 @@
 /**
- * AfterHours Risk Engine — the Risk Governor.
+ * AfterHours Risk Engine - the Risk Governor.
  *
  * This is your security layer. The AI proposes an action. The Governor checks
  * it against hard policy constraints. The AI cannot override these policies.

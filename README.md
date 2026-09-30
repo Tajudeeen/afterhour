@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Solana](https://img.shields.io/badge/Solana-Devnet-14F195?style=for-the-badge&logo=solana&logoColor=black)](https://solana.com)
+[![Solana](https://img.shields.io/badge/Solana-Mainnet-Beta-14F195?style=for-the-badge&logo=solana&logoColor=black)](https://solana.com)
 [![Pyth Network](https://img.shields.io/badge/Pyth_Network-Oracle-7B61FF?style=for-the-badge&logo=pyth&logoColor=white)](https://pyth.network)
 [![PreStocks](https://img.shields.io/badge/PreStocks-Pre--IPO_Tokens-D8FF4F?style=for-the-badge&logoColor=black)](https://prestocks.com)
 [![Tests](https://img.shields.io/badge/Tests-79%2F79_Passing-brightgreen?style=for-the-badge&logo=vitest&logoColor=white)](#receipts)
@@ -22,19 +22,19 @@
 
 Bare facts. No marketing hedges. Every claim is backed by executable code and passing tests.
 
-* 🎯 **79 / 79 Tests Passing**: 100% test pass rate across 8 workspace packages (`types`, `config`, `market-engine`, `risk-engine`, `agent`, `solana`, `api`, `web`).
-* 🔮 **Pyth Network Dual-Feed Market Intelligence**: Directly compares TradFi equity feeds (`Equity.US.*`) with on-chain tokenized stock feeds (`Crypto.*X` xStocks and Ondo feeds) via Pyth Hermes oracle feeds, computing real-time basis divergence and dynamic slippage bounds.
-* ⚡ **Live PreStocks Integration**: Ingests real-time prices for 8 pre-IPO stocks (Anthropic, SpaceX, OpenAI, Anduril, Neuralink, Figure AI, Kalshi, Polymarket) via `https://prestocks.com/api/prestocks`.
-* 📊 **Real Gap Telemetry**: Directly computes divergence between fair valuation (`markPrice`) and on-chain DEX trading (`tokenPrice`) — e.g. SpaceX (-22.3%), OpenAI (+16.2%), Neuralink (+26.7%).
-* 🛡️ **Fail-Closed Risk Governor**: Hard policy constraints (`MAX_SINGLE_ASSET = 35%`, `MAX_TRADE = $1,500`) that deterministically reject non-compliant trades before signing.
-* ⛓️ **On-Chain Attestation**: Every user-approved trade signs a Solana transaction recorded via the official SPL Memo Program (`MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr`) with clickable Solscan links. Settles on Solana Devnet (100% free test environment with on-chain SPL Memo verification).
-* 🔍 **Live Proof Route (`/proof`)**: Standalone verification page executing live endpoint re-queries and documenting 6 automated negative rejection proofs.
+* **79 / 79 Tests Passing**: 100% test pass rate across 8 workspace packages (`types`, `config`, `market-engine`, `risk-engine`, `agent`, `solana`, `api`, `web`).
+* **Pyth Network Dual-Feed Market Intelligence**: Directly compares TradFi equity feeds (`Equity.US.*`) with on-chain tokenized stock feeds (`Crypto.*X` xStocks and Ondo feeds) via Pyth Hermes oracle feeds, computing real-time basis divergence and dynamic slippage bounds.
+* **Live PreStocks Integration**: Ingests real-time prices for 8 pre-IPO stocks (Anthropic, SpaceX, OpenAI, Anduril, Neuralink, Figure AI, Kalshi, Polymarket) via `https://prestocks.com/api/prestocks`.
+* **Real Gap Telemetry**: Directly computes divergence between fair valuation (`markPrice`) and on-chain DEX trading (`tokenPrice`) - e.g. SpaceX (-22.3%), OpenAI (+16.2%), Neuralink (+26.7%).
+* **Fail-Closed Risk Governor**: Hard policy constraints (`MAX_SINGLE_ASSET = 35%`, `MAX_TRADE = $1,500`) that deterministically reject non-compliant trades before signing.
+* **On-Chain Attestation**: Every user-approved trade signs a Solana transaction recorded via the official SPL Memo Program (`MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr`) with clickable Solscan links. Settles on Solana Mainnet-Beta.
+* **Live Proof Route (`/proof`)**: Standalone verification page executing live endpoint re-queries and documenting 6 automated negative rejection proofs.
 
 ---
 
 ## The Problem & The Edge
 
-Traditional equity markets close at 4:00 PM ET on Friday and do not open until 9:30 AM ET Monday — a **65-hour information blackout**.
+Traditional equity markets close at 4:00 PM ET on Friday and do not open until 9:30 AM ET Monday - a **65-hour information blackout**.
 
 Tokenized equities on Solana trade **24 hours a day, 7 days a week**.
 
@@ -121,7 +121,7 @@ The AI Analyst is strictly advisory. The mathematical risk evaluation is 100% de
 * **Human-in-the-Loop**: 100% of trades require explicit wallet signature.
 
 ### 6. Solana Settlement
-Dual-mode execution supporting both real wallet connections (Phantom, Solflare) on Solana Devnet and instant single-click demo simulations for reviewers.
+Dual-mode execution supporting both real wallet connections (Phantom, Solflare) on Solana Mainnet-Beta and instant single-click demo simulations for reviewers.
 
 ---
 
@@ -132,7 +132,7 @@ Dual-mode execution supporting both real wallet connections (Phantom, Solflare) 
 | **Frontend** | Next.js 15 (App Router), React 19, TypeScript | High-performance dashboard with ISR (30s cache) |
 | **Styling** | Vanilla CSS Design System, Solana & Pyth Palettes | Terminal aesthetic, high-contrast accessible buttons |
 | **Backend API** | Hono, Node.js | Low-latency REST API (`:8787`) with security headers |
-| **Blockchain** | `@solana/web3.js`, `@solana/wallet-adapter` | Solana Devnet connection, SPL Memo transaction assembly |
+| **Blockchain** | `@solana/web3.js`, `@solana/wallet-adapter` | Solana Mainnet-Beta connection, SPL Memo transaction assembly |
 | **Data & Oracles** | PreStocks API, Pyth Network Hermes | Live pre-IPO token feeds and equity price feeds |
 | **Testing** | Vitest, ESLint, TypeScript compiler | 79 unit, integration, and security regression tests |
 
@@ -179,14 +179,14 @@ A production risk system is defined by the dangerous operations it rejects. Afte
 1. **Exposure Cap Violation**: Rejects orders that would push portfolio asset concentration above 35%. Returns `REJECTED: Portfolio exposure cap exceeded`. Zero gas spent.
 2. **Order Size Ceiling**: Orders larger than $1,500 are blocked or clamped down to the policy maximum, preventing rogue or fat-finger executions.
 3. **Unauthenticated Execution**: Any execution request sent without a valid cryptographic signature returns `HTTP 401 Unauthorized`.
-4. **Oracle Staleness Lockout**: If feed timestamps exceed 120 seconds, the asset is tagged `⚠ PYTH STALE` and receives an automatic risk penalty.
+4. **Oracle Staleness Lockout**: If feed timestamps exceed 120 seconds, the asset is tagged `PYTH STALE` and receives an automatic risk penalty.
 
 ---
 
 ## Known Limitations & Boundaries
 
 In alignment with honest engineering standards, current boundaries are disclosed openly:
-* **On-Chain Attestation Scope**: Real transactions sign and commit to Solana (Devnet by default) via the SPL Memo program. Tokenized stock liquidity pools are experimental-scale.
+* **On-Chain Attestation Scope**: Real transactions sign and commit to Solana (Mainnet-Beta by default) via the SPL Memo program. Tokenized stock liquidity pools are experimental-scale.
 * **PreStocks Rate Limiting**: The PreStocks API is cached using Next.js ISR (30-second stale-while-revalidate window) to maintain high availability and stay within upstream limits.
 * **In-Memory Portfolio State**: Demo portfolio states are maintained in-memory on the API server for hackathon evaluation; PostgreSQL schema definitions are packaged in `packages/db`.
 
@@ -217,4 +217,4 @@ afterhours/
 
 ## License
 
-MIT © 2026 AfterHours
+MIT (c) 2026 AfterHours

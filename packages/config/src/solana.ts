@@ -1,5 +1,5 @@
 /**
- * Solana network constants — verified public RPC endpoints and chain IDs.
+ * Solana network constants - verified public RPC endpoints and chain IDs.
  *
  * SOURCE OF TRUTH: Solana documentation and public RPC providers.
  * https://solana.com/docs/rpc
@@ -11,7 +11,7 @@ export const SOLANA_CHAIN_ID = 103;
 /** Local validator default RPC URL. */
 export const SOLANA_LOCALNET_RPC_URL = 'http://127.0.0.1:8899';
 
-/** Public devnet RPC — used for AfterHours (free, no real funds needed). */
+/** Public devnet RPC - used for AfterHours (free, no real funds needed). */
 export const SOLANA_DEVNET_RPC_URL = 'https://api.devnet.solana.com';
 
 /** Public testnet RPC. */

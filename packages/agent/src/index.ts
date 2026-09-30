@@ -1,5 +1,5 @@
 /**
- * AfterHours Agent — the AI Analyst.
+ * AfterHours Agent - the AI Analyst.
  *
  * DON'T let the LLM calculate everything. The deterministic backend computes:
  *   percentages, exposure, risk scores, price gaps, limits, portfolio weights,
@@ -22,7 +22,7 @@ export { analyzeGap, type LLMProvider, type AnalysisConfig } from './analyze.js'
 
 /**
  * The AI Analyst interprets structured market data and produces an explanation
- * + bounded recommendation. It does NOT execute trades — that's the Risk Governor's
+ * + bounded recommendation. It does NOT execute trades - that's the Risk Governor's
  * job, and the user must approve.
  */
 export class AIAnalyst {

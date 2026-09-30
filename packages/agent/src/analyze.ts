@@ -1,5 +1,5 @@
 /**
- * AI Analyst — gap analysis logic.
+ * AI Analyst - gap analysis logic.
  *
  * The LLM provider is injected so this works with any endpoint (OpenAI,
  * Azure OpenAI, local model via OpenRouter, etc.).

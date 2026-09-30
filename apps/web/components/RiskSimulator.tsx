@@ -51,14 +51,14 @@ export function RiskSimulator({ symbol, initialIntelligence }: RiskSimulatorProp
   const simScoreClamped = isSimulating && liveIntelligence ? (intel.riskScore?.score ?? 50) : computeInlineRiskScore(intel, sliderValue);
   const bandInfo = getBand(simScoreClamped);
 
-  // Dynamic slippage — use real engine value when available
+  // Dynamic slippage - use real engine value when available
   const pythConfUsd = intel.pythConfidenceUsd ?? Number((referencePrice * 0.0075).toFixed(2));
   const pythConfRatio = referencePrice > 0 ? Number(((pythConfUsd / referencePrice) * 100).toFixed(2)) : 0.75;
   const dynamicSlippageBps = intel.pythDynamicSlippageBps
     ? intel.pythDynamicSlippageBps + Math.round(absGap * 5)
     : Math.min(500, Math.max(50, 50 + Math.round(pythConfRatio * 100) + Math.round(absGap * 5)));
 
-  // Governor verdict — derived from the real risk score when simulating
+  // Governor verdict - derived from the real risk score when simulating
   let governorVerdict = 'PASS: Proposed trade within limits';
   let isBlocked = false;
   if (simScoreClamped >= 60) {
@@ -189,7 +189,7 @@ export function RiskSimulator({ symbol, initialIntelligence }: RiskSimulatorProp
       {/* Live Governor Verdict */}
       <div style={{ marginTop: '16px', padding: '12px 16px', borderRadius: '10px', background: isBlocked ? 'rgba(155, 48, 39, 0.15)' : 'rgba(20, 241, 149, 0.08)', border: isBlocked ? '1px solid rgba(155, 48, 39, 0.4)' : '1px solid rgba(20, 241, 149, 0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: '0.82rem', fontFamily: 'SF Mono, monospace', color: isBlocked ? '#ff8a80' : 'var(--solana-green)', fontWeight: 700 }}>
-          🛡️ Governor: {governorVerdict}
+           Governor: {governorVerdict}
         </div>
       </div>
     </div>
@@ -197,7 +197,7 @@ export function RiskSimulator({ symbol, initialIntelligence }: RiskSimulatorProp
 }
 
 /**
- * Inline risk score fallback — used only for the initial non-simulated state
+ * Inline risk score fallback - used only for the initial non-simulated state
  * until the first real engine fetch completes.
  */
 function computeInlineRiskScore(intelligence: AssetIntelligence, sliderGap: number): number {

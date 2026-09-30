@@ -64,7 +64,7 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
       saveLocalActivity({
         id: `demo_${Date.now()}`,
         timestamp: new Date().toISOString(),
-        description: `${verb} $${Math.round(evaluation.proposed.amountUsd)} ${symbol} — demo risk simulation approved`,
+        description: `${verb} $${Math.round(evaluation.proposed.amountUsd)} ${symbol} - demo risk simulation approved`,
         txSignature: demoSig,
         status: 'success',
       });
@@ -165,14 +165,14 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
       saveLocalActivity({
         id: `tx_${Date.now()}`,
         timestamp: new Date().toISOString(),
-        description: `${verb} $${Math.round(evaluation.proposed.amountUsd)} ${symbol} — risk governor approved`,
+        description: `${verb} $${Math.round(evaluation.proposed.amountUsd)} ${symbol} - risk governor approved`,
         txSignature: txSig,
         status: 'success',
       });
 
       setStatus('executing');
 
-      // Send to API — the wallet's on-chain transaction signature proves ownership
+      // Send to API - the wallet's on-chain transaction signature proves ownership
       let explorerUrl = txExplorerUrl(txSig);
       try {
         const res = await executeTrade({
@@ -206,7 +206,7 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
         msg = 'Transaction was cancelled in wallet.';
       } else if (msg.includes('signature') && msg.includes('valid')) {
         msg =
-          'On-chain signature verification timed out. This can happen on Solana Devnet when the transaction was just submitted and not yet indexed. Please retry the transaction — your wallet signature is valid.';
+          'On-chain signature verification timed out. This can happen on Solana Devnet when the transaction was just submitted and not yet indexed. Please retry the transaction - your wallet signature is valid.';
       }
       setErrMsg(msg);
       setStatus('error');
@@ -295,7 +295,7 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
           onClick={() => setShowInspector(!showInspector)}
           style={{ width: '100%', padding: '12px 16px', background: 'transparent', border: 'none', color: 'var(--solana-green)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: 'SF Mono, monospace', fontSize: '0.78rem', fontWeight: 800 }}
         >
-          <span>🔍 Solana Instruction Payload Inspector</span>
+          <span> Solana Instruction Payload Inspector</span>
           <span>{showInspector ? '▲ Hide' : '▼ Inspect Bytes'}</span>
         </button>
 
@@ -308,7 +308,7 @@ function ExecuteButtonInner({ symbol, evaluation }: { symbol: string; evaluation
 {`Program ID: MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr
 Action: ${evaluation.proposed.action.toUpperCase()} $${Math.round(evaluation.proposed.amountUsd)} ${symbol}
 Payload String: "${memoText}"
-Token Transfer: 0 SOL (Pure cryptographic policy attestation — zero tokens deducted)`}
+Token Transfer: 0 SOL (Pure cryptographic policy attestation - zero tokens deducted)`}
             </pre>
 
             <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--ink-subtle)', flexWrap: 'wrap', gap: '8px' }}>
@@ -345,7 +345,7 @@ Token Transfer: 0 SOL (Pure cryptographic policy attestation — zero tokens ded
                 cursor: 'pointer',
               }}
             >
-              {isAirdropping ? 'Requesting Devnet SOL...' : '⚡ Airdrop 1 Free Devnet SOL'}
+              {isAirdropping ? 'Requesting Devnet SOL...' : ' Airdrop 1 Free Devnet SOL'}
             </button>
             <a
               href="https://faucet.solana.com"
@@ -390,12 +390,12 @@ Token Transfer: 0 SOL (Pure cryptographic policy attestation — zero tokens ded
             gap: '8px',
           }}
         >
-          <span>⚡</span> Execute Demo Simulation (No Wallet Required)
+          Execute Demo Simulation (No Wallet Required)
         </button>
       )}
 
       <div style={{ marginTop: '8px', textAlign: 'center', fontSize: '0.72rem', color: 'var(--ink-subtle)' }}>
-        ⚡ Network: <strong>Solana Devnet</strong> · Zero token transfer · Test network fee (~0.000005 Devnet SOL)
+         Network: <strong>Solana Devnet</strong> · Zero token transfer · Test network fee (~0.000005 Devnet SOL)
       </div>
     </div>
   );

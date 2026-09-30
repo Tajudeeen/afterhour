@@ -3,7 +3,7 @@ import { NETWORK_LABEL } from '@/lib/network';
 import { formatCurrency, formatPercent } from '@/lib/format';
 
 export const metadata = {
-  title: 'Proof & Verification — AfterHours',
+  title: 'Proof & Verification - AfterHours',
   description: `Live re-verification of PreStocks market feeds, ${NETWORK_LABEL} attestation receipts, and deterministic negative proofs.`,
 };
 
@@ -51,7 +51,7 @@ async function verifyLiveFeed(): Promise<LiveMarketReceipt> {
         apiCrossVerified = Array.isArray(apiData.assets) && apiData.assets.length > 0;
       }
     } catch {
-      // API cross-verification failed but PreStocks is live — still ok
+      // API cross-verification failed but PreStocks is live - still ok
     }
 
     // Pick top divergent asset
@@ -136,7 +136,7 @@ async function verifyPythFeed(): Promise<PythFeedReceipt> {
     });
 
     if (!res.ok || res.status === 401) {
-      // Direct unauthenticated Hermes query returned 401 — cross-reference live benchmark feed from API
+      // Direct unauthenticated Hermes query returned 401 - cross-reference live benchmark feed from API
       try {
         const apiRes = await fetch(`${API_URL}/api/assets/AAPL`, {
           next: { revalidate: 0 },
@@ -163,8 +163,8 @@ async function verifyPythFeed(): Promise<PythFeedReceipt> {
         status: 'seeded',
         testedFeed: feedPair,
         note: res.status === 401
-          ? 'Pyth Hermes returns 401 — set PYTH_HERMES_API_KEY for direct oracle access. Live gap data cross-referenced via API benchmark feeds.'
-          : 'Pyth Hermes unreachable — using seeded reference prices as fallback.',
+          ? 'Pyth Hermes returns 401 - set PYTH_HERMES_API_KEY for direct oracle access. Live gap data cross-referenced via API benchmark feeds.'
+          : 'Pyth Hermes unreachable - using seeded reference prices as fallback.',
       };
     }
 
@@ -187,7 +187,7 @@ async function verifyPythFeed(): Promise<PythFeedReceipt> {
     return {
       status: 'seeded',
       testedFeed: feedPair,
-      note: 'Pyth Hermes returned empty price payload — using seeded reference prices.',
+      note: 'Pyth Hermes returned empty price payload - using seeded reference prices.',
     };
   } catch {
     try {
@@ -215,7 +215,7 @@ async function verifyPythFeed(): Promise<PythFeedReceipt> {
     return {
       status: 'seeded',
       testedFeed: feedPair,
-      note: 'Pyth Hermes fetch failed — using seeded reference prices from PYTH_EQUITY_FEEDS config.',
+      note: 'Pyth Hermes fetch failed - using seeded reference prices from PYTH_EQUITY_FEEDS config.',
     };
   }
 }
@@ -256,7 +256,7 @@ export default async function ProofPage() {
       title: 'Oracle Staleness Lockout',
       scenario: 'Pyth or PreStocks reference price timestamp exceeds 120 seconds staleness window',
       expectedBehavior: 'Feed tagged STALE; gap risk score elevated; execution warns user',
-      actualStatus: 'TAGGED: ⚠ PYTH STALE (Risk Score: +10 penalty, execution flagged)',
+      actualStatus: 'TAGGED:  PYTH STALE (Risk Score: +10 penalty, execution flagged)',
       codeSnippet: `// apps/api/src/index.ts:125\\nconst ageSeconds = Date.now() / 1000 - p.publish_time;\\nreturn { source: ageSeconds < 120 ? 'pyth-live' : 'pyth-stale' };`,
       isPassing: true,
     },
@@ -266,7 +266,7 @@ export default async function ProofPage() {
       scenario: 'User connects a wallet with no supported token balances (e.g. empty devnet wallet)',
       expectedBehavior: 'API reads on-chain balances via Solana RPC; falls back to demo portfolio transparently',
       actualStatus: 'VERIFIED: buildPortfolioForWallet() returns demo fallback with wallet override; no silent asset injection',
-      codeSnippet: `// apps/api/src/index.ts\\nasync function buildPortfolioForWallet(wallet) {\\n  // Reads USDC + supported stock SPL balances via RPC\\n  // Falls back to mockPortfolios.demo if no balances found\\n  // NEVER fabricates holdings — empty wallets stay empty\\n}`,
+      codeSnippet: `// apps/api/src/index.ts\\nasync function buildPortfolioForWallet(wallet) {\\n  // Reads USDC + supported stock SPL balances via RPC\\n  // Falls back to mockPortfolios.demo if no balances found\\n  // NEVER fabricates holdings - empty wallets stay empty\\n}`,
       isPassing: true,
     },
     {

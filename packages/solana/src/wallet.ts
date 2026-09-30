@@ -74,7 +74,7 @@ export function createWalletStore(adapter: WalletAdapter): WalletStore {
 }
 
 /**
- * Headless wallet adapter — uses a local keypair for testing/demo.
+ * Headless wallet adapter - uses a local keypair for testing/demo.
  * In production, the browser adapter is used via @solana/wallet-adapter-react.
  */
 export class KeypairWalletAdapter implements WalletAdapter {
