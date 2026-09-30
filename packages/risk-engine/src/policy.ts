@@ -15,12 +15,12 @@ export const DEFAULT_RISK_POLICY: RiskPolicy = {
   minUsdcReservePercent: 10,
   /** Max 3% portfolio loss in a single day before trading is paused */
   maxDailyDrawdownPercent: 3,
-  /** Always require user approval before execution — never autonomous */
+  /** Always require user approval before execution - never autonomous */
   requireUserApproval: true,
 };
 
 /**
- * Policy validation — fail closed on invalid configuration.
+ * Policy validation - fail closed on invalid configuration.
  */
 export function validatePolicy(policy: RiskPolicy): string[] {
   const issues: string[] = [];

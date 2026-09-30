@@ -51,7 +51,7 @@ export function ActivityView({ initialActivities }: ActivityViewProps) {
     } catch {
       const fallback = mergeActivities(local, initialActivities);
       setActivities(fallback);
-      setError('Live sync unavailable — displaying local & cached activity trail');
+      setError('Live sync unavailable - displaying local & cached activity trail');
       setIsLive(false);
     }
   }, [publicKey, initialActivities]);
@@ -68,7 +68,7 @@ export function ActivityView({ initialActivities }: ActivityViewProps) {
       {error && <p style={{ color: 'var(--ink-muted)', fontSize: '0.82rem', marginBottom: '20px' }}>{error}</p>}
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '16px' }}>
         <span style={{ fontSize: '0.72rem', color: 'var(--ink-subtle)', fontFamily: 'SF Mono, monospace' }}>
-          {isLive ? '● Live — polling every 5s' : '○ Offline mode'}
+          {isLive ? '● Live - polling every 5s' : '○ Offline mode'}
         </span>
       </div>
 

@@ -62,7 +62,7 @@ export function NavigationHeader() {
         {navItems.map((item) =>
           item.external ? (
             <a key={item.href} href={item.href} target="_blank" rel="noreferrer">
-              {item.label} ↗
+              {item.label}
             </a>
           ) : (
             <Link
@@ -124,7 +124,7 @@ export function NavigationHeader() {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <span>{item.label}</span>
-                    <span className="external-arrow">↗</span>
+                    <span className="external-arrow"></span>
                   </a>
                 ) : (
                   <Link

@@ -1,11 +1,11 @@
 # Senior Web3 Audit & Contest-Winning Blueprint: AfterHours
 
-**System:** AfterHours (`@afterhours/*`) — 24/7 Intelligence for Tokenized Stocks on Solana  
+**System:** AfterHours (`@afterhours/*`) - 24/7 Intelligence for Tokenized Stocks on Solana
 **Event / Target:** Stocklana Hackathon (Solana Tokenized Equities / DeFi / AI Agents Track)  
 **Auditor:** Senior Web3 Software Engineer & Security Auditor  
 **Operating Standard:** `web3-senior-engineer-auditor` (`deeen_plans/SKILL.md` & `deeen_plans/prd.md`)  
 **Audit Date:** September 20, 2026  
-**Deployment-Readiness Signal:** ⚠️ **WARN** *(Architecture is fundamentally sound; requires fixing 2 high-severity demo-breakers and 1 accounting defect before submitting)*
+**Deployment-Readiness Signal:**  **WARN** *(Architecture is fundamentally sound; requires fixing 2 high-severity demo-breakers and 1 accounting defect before submitting)*
 
 ---
 
@@ -91,7 +91,7 @@ Fixing these three issues turns this project into an airtight, institutional-gra
 
 ## 4. Code-Level Audit Checklist & Findings
 
-### ⚠️ FINDING-01 · HIGH
+###  FINDING-01 · HIGH
 > **File:** `apps/web/app/assets/[symbol]/action/page.tsx:203`  
 > **Title:** Execute button calls relative Next.js path instead of Hono API service (HTTP 404)  
 > **Path:** `apps/web/app/assets/[symbol]/action/page.tsx` line 203:
@@ -107,7 +107,7 @@ Fixing these three issues turns this project into an airtight, institutional-gra
 
 ---
 
-### ⚠️ FINDING-02 · HIGH
+###  FINDING-02 · HIGH
 > **File:** `apps/api/src/index.ts:372-384`  
 > **Title:** Portfolio simulation drops cash on sell without crediting USDC  
 > **Path:** In `updatePortfolio`:
@@ -148,7 +148,7 @@ Fixing these three issues turns this project into an airtight, institutional-gra
 
 ---
 
-### ⚠️ FINDING-03 · MED
+###  FINDING-03 · MED
 > **File:** `apps/web/app/assets/[symbol]/action/page.tsx:1-7`  
 > **Title:** Client Component declared as async function creates React 19 / Next.js warning  
 > **Path:** `page.tsx` starts with `'use client'`, yet exports `export default async function ActionPage(...)`.  
@@ -157,7 +157,7 @@ Fixing these three issues turns this project into an airtight, institutional-gra
 
 ---
 
-### ⚠️ FINDING-04 · MED
+###  FINDING-04 · MED
 > **File:** `apps/api/src/index.ts:179, 312`  
 > **Title:** Unseeded `Math.random()` price calculations cause cross-screen UI state jitter  
 > **Path:**
@@ -169,13 +169,13 @@ Fixing these three issues turns this project into an airtight, institutional-gra
 
 ---
 
-### ⚠️ FINDING-05 · MED
+###  FINDING-05 · MED
 > **File:** `scripts/verify:22-24`  
 > **Title:** Verification script swallows web build failures with `||` error masking  
 > **Path:**
 > ```bash
 > pnpm --filter @afterhours/web build 2>&1 || {
->   echo "⚠ web build had warnings, but continuing"
+>   echo " web build had warnings, but continuing"
 > }
 > ```
 > **Impact:** Masks real Next.js build errors, allowing invalid code to be committed and falsely reporting that the verification gate passed.  
@@ -183,7 +183,7 @@ Fixing these three issues turns this project into an airtight, institutional-gra
 
 ---
 
-### ⚠️ FINDING-06 · MED
+###  FINDING-06 · MED
 > **File:** `packages/agent/src/analyze.ts:173`  
 > **Title:** Hardcoded \$10,000 portfolio multiplier in agent fallback trade sizing  
 > **Path:**
@@ -198,7 +198,7 @@ Fixing these three issues turns this project into an airtight, institutional-gra
 
 ---
 
-### ⚠️ FINDING-07 · LOW
+###  FINDING-07 · LOW
 > **File:** `apps/web/package.json` & `apps/web/app/page.tsx`  
 > **Title:** Solana wallet adapter dependencies installed but UI button is unbonded static mock  
 > **Path:** `@solana/wallet-adapter-react`, `@solana/wallet-adapter-react-ui`, and `@solana/web3.js` are in `package.json`, but `page.tsx` renders a plain button with no event handler:

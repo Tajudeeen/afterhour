@@ -43,7 +43,7 @@ export default function DashboardPage() {
         setAssets(data.assets);
         setError(null);
       } catch {
-        setError('API unavailable — unable to load portfolio');
+        setError('API unavailable - unable to load portfolio');
       }
     };
     fetchPortfolio();
@@ -59,7 +59,7 @@ export default function DashboardPage() {
         setMarketHours(data.marketHours);
         setError(null);
       } catch {
-        setError('API unavailable — unable to load market data');
+        setError('API unavailable - unable to load market data');
       }
     };
     loadRadar();
@@ -117,7 +117,7 @@ export default function DashboardPage() {
           <div className="data-card" style={{ marginTop: 24, marginBottom: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 style={{ margin: 0, fontFamily: 'var(--mono)', fontSize: '0.85rem', fontWeight: 800, color: 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                What's Hot — 7-Day Trending Gaps
+                What's Hot - 7-Day Trending Gaps
               </h3>
               <span style={{ fontSize: '0.72rem', color: 'var(--ink-subtle)', fontFamily: 'var(--mono)' }}>
                 Persistent divergence detected by Pyth dual-feed comparison
@@ -135,7 +135,7 @@ export default function DashboardPage() {
                     </span>
                   </div>
                   <span className={(g.gapPercent ?? 0) > 0 ? 'gap-positive' : 'gap-negative'} style={{ fontSize: '0.95rem', fontFamily: 'var(--mono)' }}>
-                    {formatPercent(g.gapPercent, 2)} — Risk {g.riskScore?.score ?? 0}
+                    {formatPercent(g.gapPercent, 2)} - Risk {g.riskScore?.score ?? 0}
                   </span>
                 </div>
               ))}
@@ -210,7 +210,7 @@ export default function DashboardPage() {
                 }}
                 onClick={() => setIsEvaluationMode(true)}
               >
-                <span>⚡</span> Launch Demo Portfolio ($10,420)
+                Launch Demo Portfolio ($10,420)
               </button>
             </div>
             <p style={{ marginTop: '12px', fontSize: '0.75rem', color: 'var(--ink-subtle)' }}>
@@ -252,7 +252,7 @@ export default function DashboardPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 0 16px', padding: '12px 18px', borderRadius: '12px', background: isEvaluationMode ? 'rgba(216, 255, 79, 0.08)' : 'var(--surface-strong)', border: `1px solid ${isEvaluationMode ? 'var(--lime)' : 'var(--line)'}`, flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <span style={{ fontSize: '0.74rem', fontFamily: 'var(--mono)', fontWeight: 800, color: isEvaluationMode ? 'var(--lime)' : 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            {isEvaluationMode ? '🧪 Hackathon Demo Portfolio Sandbox' : '● Live On-Chain Wallet Mode'}
+            {isEvaluationMode ? ' Hackathon Demo Portfolio Sandbox' : '● Live On-Chain Wallet Mode'}
           </span>
           <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--ink-subtle)' }}>
             {isEvaluationMode
@@ -392,7 +392,7 @@ export default function DashboardPage() {
                   className="button button-primary"
                   onClick={() => setIsEvaluationMode(true)}
                 >
-                  🧪 Load Evaluation Portfolio ($10,420) →
+                   Load Evaluation Portfolio ($10,420) →
                 </button>
                 <Link href="/markets" className="button button-secondary">
                   View Live PreStocks Markets →

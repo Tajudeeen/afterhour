@@ -28,7 +28,7 @@ export function ThemeToggle() {
       title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
     >
       <span className="theme-toggle-icon" aria-hidden="true">
-        {theme === 'dark' ? '☀️' : '🌙'}
+        {theme === 'dark' ? '' : ''}
       </span>
       <span className="theme-toggle-label">{theme === 'dark' ? 'Dark' : 'Light'}</span>
     </button>

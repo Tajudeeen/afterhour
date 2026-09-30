@@ -10,7 +10,7 @@ import { Analytics } from '@vercel/analytics/next';
 
 export const metadata: Metadata = {
   title: {
-    default: 'AfterHours — 24/7 intelligent risk for tokenized stocks',
+    default: 'AfterHours - 24/7 intelligent risk for tokenized stocks',
     template: '%s | AfterHours',
   },
   description:

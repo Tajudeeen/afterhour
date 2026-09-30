@@ -1,7 +1,7 @@
 import { MarketsView, type PreStocksAsset } from '@/components/MarketsView';
 
 export const metadata = {
-  title: 'Markets — Pyth Dual-Feed & PreStocks Intelligence | AfterHours',
+  title: 'Markets - Pyth Dual-Feed & PreStocks Intelligence | AfterHours',
   description: 'Live 24/7 comparison of Pyth underlying equity feeds vs on-chain tokenized stocks on Solana, alongside PreStocks pre-IPO data.',
 };
 
@@ -95,7 +95,7 @@ export default async function MarketsPage() {
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <span className="pyth-badge pyth-live">⬡ Pyth Active</span>
           <span className="source-badge source-live">
-            ⚡ Live · PreStocks Feed
+             Live · PreStocks Feed
           </span>
         </div>
       </div>

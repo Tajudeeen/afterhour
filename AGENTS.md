@@ -6,7 +6,7 @@ Any AI coding agent (Claude, GPT, DeepSeek, a local model, or a subagent) workin
 in this repo MUST read `../deeen_plans/AGENTS.md` first, then follow its read order:
 `PROJECT → ARCHITECTURE → DECISIONS → TASKS → SECURITY → TESTING`.
 
-This repo is **AfterHours** — 24/7 intelligence for tokenized stocks on Solana.
+This repo is **AfterHours** - 24/7 intelligence for tokenized stocks on Solana.
 The product detects price gaps between on-chain markets and traditional reference
 prices, explains them with an AI Analyst, evaluates portfolio risk via a Risk
 Governor, and executes bounded actions on Solana after user approval.

@@ -4,7 +4,7 @@
  * For the hackathon we support 5 major tickers. In a production system this
  * would be dynamically discovered from a registry.
  *
- * Mint addresses are illustrative — in production these would be the actual
+ * Mint addresses are illustrative - in production these would be the actual
  * mint addresses of tokenized stocks on Solana (e.g. from Jupiter token list,
  * Alchemy, or the issuing protocol's on-chain registry).
  */

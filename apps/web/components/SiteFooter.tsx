@@ -54,16 +54,16 @@ export function SiteFooter() {
         <div className="footer-links-col">
           <div className="footer-col-title">GOVERNANCE & DATA</div>
           <a href="https://github.com/Tajudeeen/afterhour" target="_blank" rel="noreferrer">
-            GitHub Repository ↗
+            GitHub Repository
           </a>
           <a href="https://pyth.network" target="_blank" rel="noreferrer">
-            Pyth Network Oracles ↗
+            Pyth Network Oracles
           </a>
           <a href="https://prestocks.com" target="_blank" rel="noreferrer">
-            PreStocks API ↗
+            PreStocks API
           </a>
           <a href="https://explorer.solana.com/?cluster=devnet" target="_blank" rel="noreferrer">
-            Solana Devnet ↗
+            Solana Devnet
           </a>
         </div>
       </div>
@@ -78,7 +78,7 @@ export function SiteFooter() {
           </p>
         </div>
         <div className="footer-copyright">
-          <span>© 2026 AfterHours Protocol · Stocklana_ Edition</span>
+          <span> 2026 AfterHours Protocol · Stocklana_ Edition</span>
           <div className="sponsor-bar">
             <span className="sponsor-item">
               <span className="sponsor-dot" style={{ background: '#7B61FF' }} />

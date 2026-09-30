@@ -1,5 +1,5 @@
 /**
- * AfterHours Market Engine — the heart of the product.
+ * AfterHours Market Engine - the heart of the product.
  *
  * For every supported tokenized stock:
  *   gap = (onchain_price - reference_price) / reference_price
@@ -65,7 +65,7 @@ export const SUPPORTED_STOCKS: readonly TokenizedStock[] = [
 ];
 
 /**
- * Market Hours detection — when is the traditional equity market open?
+ * Market Hours detection - when is the traditional equity market open?
  * US stock markets: Mon-Fri 09:30-16:00 ET (UTC-5/-4 depending on DST).
  */
 export interface MarketHours {
@@ -182,7 +182,7 @@ export function classifyLiquidity(liquidityUsd: number): LiquidityLevel {
 /**
  * Produce a Gap Risk Score (0-100) from structured market data.
  *
- * This is intentionally a hackathon risk signal — not a perfect financial model.
+ * This is intentionally a hackathon risk signal - not a perfect financial model.
  * It combines: gap %, volume, liquidity, volatility, market status, and time
  * since reference update into a single score.
  */
@@ -199,30 +199,30 @@ export function computeGapRiskScore(input: {
 }): GapRiskScore {
   let score = 0;
 
-  // Gap magnitude — strongest signal (0-30 points)
+  // Gap magnitude - strongest signal (0-30 points)
   const absGap = Math.abs(input.gapPercent);
   if (absGap >= 10) score += 30;
   else if (absGap >= 5) score += 20;
   else if (absGap >= 2) score += 10;
   else score += 2;
 
-  // Market status — if market is closed, gaps can persist (0-20 points)
+  // Market status - if market is closed, gaps can persist (0-20 points)
   if (input.marketStatus === 'closed' || input.marketStatus === 'after-hours') {
     score += 20;
   } else if (input.marketStatus === 'pre-market') {
     score += 10;
   }
 
-  // Volatility — high volatility amplifies gap risk (0-20 points)
+  // Volatility - high volatility amplifies gap risk (0-20 points)
   if (input.volatilityLevel === 'high') score += 20;
   else if (input.volatilityLevel === 'medium') score += 10;
 
-  // Liquidity — thin liquidity = higher risk of price manipulation (0-15 points)
+  // Liquidity - thin liquidity = higher risk of price manipulation (0-15 points)
   if (input.liquidityUsd < 10_000) score += 15;
   else if (input.liquidityUsd < 50_000) score += 10;
   else if (input.liquidityUsd < 100_000) score += 5;
 
-  // Stale reference price — if reference hasn't updated in a while, gap is more meaningful
+  // Stale reference price - if reference hasn't updated in a while, gap is more meaningful
   if (input.hoursSinceReferenceUpdate > 16) score += 10; // overnight
   else if (input.hoursSinceReferenceUpdate > 4) score += 5;
 
@@ -234,7 +234,7 @@ export function computeGapRiskScore(input: {
     else if (input.pythConfidenceRatioPercent >= 0.5) score += 5;
   }
 
-  // Volume — low volume confirms gap may not be real/converging (0-5 points)
+  // Volume - low volume confirms gap may not be real/converging (0-5 points)
   if (input.volume24h < 5_000) score += 5;
 
   const clamped = Math.max(0, Math.min(100, score));

@@ -1,6 +1,6 @@
 # CHANGELOG.md
 
-Meaningful changes only — not every commit. Newest first.
+Meaningful changes only - not every commit. Newest first.
 
 ## [Unreleased]
 
@@ -13,7 +13,7 @@ Meaningful changes only — not every commit. Newest first.
 - `getGapRadar` API client function + `GapRadarAsset` type in `apps/web/lib/api.ts`.
 
 ### Changed
-- **Real on-chain portfolio reading**: Added `buildPortfolioForWallet()` to API — reads actual USDC and supported stock token balances via Solana RPC `getParsedTokenAccountsByTokenAccountsByOwner`. All endpoints (execute, portfolio, analysis, risk) now use this instead of hardcoded `portfolios.demo!`. Empty wallets get transparent demo fallback; no silent asset fabrication.
+- **Real on-chain portfolio reading**: Added `buildPortfolioForWallet()` to API - reads actual USDC and supported stock token balances via Solana RPC `getParsedTokenAccountsByTokenAccountsByOwner`. All endpoints (execute, portfolio, analysis, risk) now use this instead of hardcoded `portfolios.demo!`. Empty wallets get transparent demo fallback; no silent asset fabrication.
 - **`executeTradeSimulation`**: Replaced random 88-char base58 signature generation with deterministic `5demo_` prefixed signatures derived from trade parameters. Execution path is now transparent: real user signatures are used if provided, deterministic demo signatures otherwise.
 - **Real market hours**: Replaced hardcoded `isWeekend: true` in `buildAIContext` with dynamic computation from market status (`'closed' | 'after-hours'` → weekend).
 - `ExecuteButton.tsx` now passes real wallet address (`publicKey.toBase58()`) to the API instead of hardcoded `'demo'`.
@@ -21,7 +21,7 @@ Meaningful changes only — not every commit. Newest first.
 - **Pyth Network Dual-Feed Market Intelligence & Oracle Discrepancy Engine**:
   - Implemented full compliance with Pyth's Hackathon bounty prompt ("Equity.US.AAPL/USD vs Crypto.AAPLX/USD vs Crypto.AAPLON/USD").
   - Added exact Pyth Hermes ID mapping for TradFi equities (`Equity.US.*`) alongside tokenized on-chain counterparts (`Crypto.*X` / Ondo) for AAPL, NVDA, and TSLA.
-  - Multi-tab Market Discovery UI (`/markets`) with real-time toggle between **⬡ Pyth Dual-Feed Equities (xStocks / Ondo)** and **⚡ Pre-IPO Tokens (PreStocks)**.
+  - Multi-tab Market Discovery UI (`/markets`) with real-time toggle between **⬡ Pyth Dual-Feed Equities (xStocks / Ondo)** and ** Pre-IPO Tokens (PreStocks)**.
   - Pyth basis divergence telemetry card on `/assets/[symbol]` surfacing canonical feed IDs, TradFi vs DEX price basis, and gap percentage.
   - Negative proof `NP-06` (Pyth Dynamic Slippage Expansion) on `/proof` demonstrating how the Risk Governor expands slippage and clamps maximum position sizing when on-chain vs TradFi Pyth divergence widens.
   - Dynamic Pyth Pro Bearer auth support via `PYTH_HERMES_API_KEY` with graceful failover snapshots to prevent offline or unauthenticated UI degradation.
@@ -31,7 +31,7 @@ Meaningful changes only — not every commit. Newest first.
   `NEXT_PUBLIC_SOLANA_NETWORK` / `NEXT_PUBLIC_SOLANA_RPC` (web, via `apps/web/lib/network.ts`,
   since Next.js only inlines `NEXT_PUBLIC_*`). A displayed network label can no longer disagree
   with the cluster a transaction settles on. Default is `mainnet-beta`.
-- `docs/BUILD-PLAN.md` — reconciles the four competing plan sources (deeen_plans, README,
+- `docs/BUILD-PLAN.md` - reconciles the four competing plan sources (deeen_plans, README,
   `TASKS.md`, `STOCKLANA_CONTEST_AUDIT.md`) into one canonical scope, with a conflict register
   (C1–C6) and an off-plan inventory.
 
@@ -49,8 +49,8 @@ Meaningful changes only — not every commit. Newest first.
 - Added `docs/BUILD-PLAN.md`.
 
 ### Removed
-- `({t` — 0-byte junk file that had been committed.
-- `deploy/.env.example` — leftover Ambit/BSC configuration (`BSC_RPC_URL`, `ERC8004_*` registries,
+- `({t` - 0-byte junk file that had been committed.
+- `deploy/.env.example` - leftover Ambit/BSC configuration (`BSC_RPC_URL`, `ERC8004_*` registries,
   `AMBIT_HIRE_TOKEN`). `docker-compose.yml` reads `env_file: .env` from the repo root, so nothing
   depended on it.
 
@@ -66,7 +66,7 @@ Meaningful changes only — not every commit. Newest first.
 - Corrected portfolio rebalancing accounting to credit USDC on sells and debit USDC on buys, strictly maintaining total portfolio value ($10,420).
 - Stabilized mock price snapshot with in-memory caching to eliminate random price fluctuation between dashboard, analysis, and risk views.
 - Fixed deterministic agent fallback calculations by passing dynamic portfolio values.
-- Full pivot from Ambit (BSC/ERC-8004 marketplace) to **AfterHours** — 24/7 intelligence
+- Full pivot from Ambit (BSC/ERC-8004 marketplace) to **AfterHours** - 24/7 intelligence
   for tokenized stocks on Solana. Detects on-chain-vs-reference price gaps, explains
   them with an AI Analyst, evaluates portfolio risk via a Risk Governor, and executes
   bounded actions on Solana after user approval.

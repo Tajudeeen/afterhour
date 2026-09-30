@@ -9,7 +9,7 @@ export interface StockInfo {
 }
 
 export const STOCK_MINTS: Record<string, StockInfo> = {
-  // Legacy pre-stocks (illustrative mints — production would use real token addresses)
+  // Legacy pre-stocks (illustrative mints - production would use real token addresses)
   NVDA: { mint: 'DezYN7vS56KDyHiLnuW5G9b2doY5xBLk7s6o5YJr4YWr', name: 'NVIDIA Corporation', decimals: 6, referencePrice: 182.4 },
   AAPL: { mint: '6dbRFHr7SxG8i5kHnBLY5YFvU3x5xVJoY5hK5a5qJ8eR', name: 'Apple Inc.', decimals: 6, referencePrice: 214.8 },
   TSLA: { mint: 'Gyu3qZ5b7Kq3e8n1W4c2X6y9J3a5K7b8L4m9N2P1Q6R', name: 'Tesla, Inc.', decimals: 6, referencePrice: 268.5 },

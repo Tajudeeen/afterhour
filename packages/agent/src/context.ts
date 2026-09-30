@@ -1,5 +1,5 @@
 /**
- * Structured context builder — converts deterministic engine output into
+ * Structured context builder - converts deterministic engine output into
  * the JSON payload given to the AI Analyst.
  */
 import type {
@@ -21,7 +21,7 @@ export interface AIContextInput {
 
 /**
  * Build the structured context that gets passed to the LLM.
- * The LLM never sees raw market data — only this curated, typed structure.
+ * The LLM never sees raw market data - only this curated, typed structure.
  */
 export function buildAIContext(input: AIContextInput): AIAnalysisContext {
   const { snapshot, regime, portfolio, policy } = input;
@@ -73,7 +73,7 @@ max $1,500 trade). Return JSON with: explanation (2-3 sentences), primaryRisk (1
 recommendation { action, asset, amountUsd }, confidence (0-1).
 
 The on-chain market is trading while the traditional market is closed.
-Do NOT recommend autonomous trading — this is advisory only.`;
+Do NOT recommend autonomous trading - this is advisory only.`;
 }
 
 function getExposurePercent(portfolio: Portfolio, symbol: string): number {

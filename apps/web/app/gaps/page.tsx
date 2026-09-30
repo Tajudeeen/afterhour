@@ -24,7 +24,7 @@ export default function GapsPage() {
         setLastObserved(data.observedAt);
         setError(null);
       } catch {
-        setError('Unable to load gap data — retrying...');
+        setError('Unable to load gap data - retrying...');
       } finally {
         setLoading(false);
       }
@@ -86,7 +86,7 @@ export default function GapsPage() {
           color: 'var(--ink-heading)',
           fontWeight: 500,
         }}>
-          Live Market Gaps — Tokenized Stocks on Solana
+          Live Market Gaps - Tokenized Stocks on Solana
         </h1>
         <p style={{
           margin: '0 0 24px',
@@ -270,7 +270,7 @@ export default function GapsPage() {
           color: 'var(--ink-subtle)',
           fontFamily: 'var(--mono)',
         }}>
-          Data freshness: {lastObserved ? new Date(lastObserved).toLocaleTimeString() : '—'} · Source: {assets[0]?.source === 'live' ? 'Live' : 'Demo'} · Last full refresh: {new Date().toLocaleTimeString()}
+          Data freshness: {lastObserved ? new Date(lastObserved).toLocaleTimeString() : '-'} · Source: {assets[0]?.source === 'live' ? 'Live' : 'Demo'} · Last full refresh: {new Date().toLocaleTimeString()}
         </div>
       )}
     </div>

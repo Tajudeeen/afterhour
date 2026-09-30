@@ -6,7 +6,7 @@ Execution state, structured by milestone. Mirrors deeen_plans/TASKS.md.
 
 Stocklana hackathon submission.
 
-## D0 — Pivot locked
+## D0 - Pivot locked
 
 - [x] Repo pivoted from Ambit (BSC/ERC-8004 marketplace) to AfterHours
 - [x] Old packages removed (erc8004, trust-engine, execution, contracts,
@@ -16,44 +16,44 @@ Stocklana hackathon submission.
 - [x] New package scaffolds created (types, config, market-engine,
       risk-engine, agent, solana, db)
 
-## D1 — Backend core (completed)
+## D1 - Backend core (completed)
 
-- [x] TypeScript types package (`@afterhours/types`) — all domain types
+- [x] TypeScript types package (`@afterhours/types`) - all domain types
       exported, `RISK_SCORE_BANDS` constant verified
-- [x] Config package (`@afterhours/config`) — Solana RPC/chain env loader
+- [x] Config package (`@afterhours/config`) - Solana RPC/chain env loader
       with int validation (port 1–65535, chainId ≥ 1)
-- [x] Market Gap Engine (`@afterhours/market-engine`) — gap %, Gap Risk
+- [x] Market Gap Engine (`@afterhours/market-engine`) - gap %, Gap Risk
       Score (0–100, 5 bands), Regime Memory, market-hours detection
-- [x] AI Analyst (`@afterhours/agent`) — context builder, structured LLM
+- [x] AI Analyst (`@afterhours/agent`) - context builder, structured LLM
       prompt, deterministic fallback
-- [x] Risk Governor (`@afterhours/risk-engine`) — `evaluateRisk` with
+- [x] Risk Governor (`@afterhours/risk-engine`) - `evaluateRisk` with
       4 hard policy checks (exposure, trade size, USDC reserve, drawdown)
-- [x] Solana (`@afterhours/solana`) — wallet store, Jupiter DEX, balances
-- [x] API (`apps/api`) — Hono REST: /health, /version, /api/portfolio/:w,
+- [x] Solana (`@afterhours/solana`) - wallet store, Jupiter DEX, balances
+- [x] API (`apps/api`) - Hono REST: /health, /version, /api/portfolio/:w,
       /api/assets/:s, /api/assets/:s/analysis, /api/assets/:s/risk,
       /api/execute, /api/activity/:w
 
-## D2 — Frontend (completed)
+## D2 - Frontend (completed)
 
 - [x] Next.js 15 + Tailwind app shell (Bloomberg dark, lime accents,
       Georgia serif)
-- [x] Dashboard — portfolio total + per-asset gap/risk summary
-- [x] Asset page — onchain vs reference price, gap %, risk score pill
-- [x] AI Analysis — regime grid, explanation, recommendation + confidence
-- [x] Action — AI proposal + policy check grid + sign-and-execute button
-- [x] Activity — timeline audit trail with Solscan links
+- [x] Dashboard - portfolio total + per-asset gap/risk summary
+- [x] Asset page - onchain vs reference price, gap %, risk score pill
+- [x] AI Analysis - regime grid, explanation, recommendation + confidence
+- [x] Action - AI proposal + policy check grid + sign-and-execute button
+- [x] Activity - timeline audit trail with Solscan links
 
-## D3 — Data + infra (completed)
+## D3 - Data + infra (completed)
 
-- [x] Prisma schema (`packages/db/prisma/schema.prisma`) — Portfolio,
+- [x] Prisma schema (`packages/db/prisma/schema.prisma`) - Portfolio,
       PriceSnapshot, RegimeState, RiskEvent, AgentDecision, Transaction,
       RiskPolicy tables
 - [x] Dockerfile (Node LTS, pnpm)
 - [x] docker-compose.yml (api + postgres + redis)
-- [x] CI workflow (`.github/workflows/ci.yml`) — lint + typecheck + test + build
+- [x] CI workflow (`.github/workflows/ci.yml`) - lint + typecheck + test + build
 - [x] `.env.example` with all variables documented
 
-## D4 — Tests + verify (completed)
+## D4 - Tests + verify (completed)
 
 - [x] market-engine: 16 tests (gap, regime, liquidity, scoring)
 - [x] risk-engine: 7 tests (evaluate, governor policy enforcement)
@@ -63,26 +63,26 @@ Stocklana hackathon submission.
 - [x] types: 1 test (exports)
 - [x] web: 2 smoke tests (Next.js app router & wallet integration)
 - [x] API: 13 tests (portfolio, asset, execute, health, security, rebalancing accounting)
-- [x] Cross-platform verification gate (`pnpm run verify` / `bash scripts/verify`) passes — lint, typecheck, test (65/65 tests green), web build all green
+- [x] Cross-platform verification gate (`pnpm run verify` / `bash scripts/verify`) passes - lint, typecheck, test (65/65 tests green), web build all green
 - [x] Dual-mode Solana integration: Wallet Adapter (Mainnet-Beta by default; `SOLANA_NETWORK` selects devnet/testnet/localnet) + 1-click Demo mode
 - [x] Pyth Network Dual-Feed Market Intelligence (Equity.US vs Crypto.*X/Ondo feeds) with automated basis divergence calculations
 - [x] On-chain risk governance attestations via SPL Memo program with live Solscan links
 
-## D5 — Ship (completed)
+## D5 - Ship (completed)
 
 - [x] Branch `fix/solana-network-source-of-truth` created
 - [x] Commit pushed to GitHub
 - [x] PR opened: https://github.com/Tajudeeen/afterhour/pull/new/fix/solana-network-source-of-truth
-- [x] **Public Gap Radar** (`/gaps`) — wallet-free, statically-prerendered 24/7 gap monitor with real-time PreStocks+Pyth data, 30s auto-refresh
-- [x] **`GET /api/radar`** endpoint — unified data source for dashboard and gap radar pages
-- [x] **Real on-chain portfolio reading** — `buildPortfolioForWallet()` reads actual SPL token balances via Solana RPC
-- [x] **Deterministic demo signatures** — `5demo_` prefixed signatures replacing random base58 generation
-- [x] **RiskSimulator wired to real engine** — calls `getAssetIntelligence` API for live risk scoring
-- [x] **API cross-verification** on `/proof` page — PreStocks data verified against API radar endpoint
+- [x] **Public Gap Radar** (`/gaps`) - wallet-free, statically-prerendered 24/7 gap monitor with real-time PreStocks+Pyth data, 30s auto-refresh
+- [x] **`GET /api/radar`** endpoint - unified data source for dashboard and gap radar pages
+- [x] **Real on-chain portfolio reading** - `buildPortfolioForWallet()` reads actual SPL token balances via Solana RPC
+- [x] **Deterministic demo signatures** - `5demo_` prefixed signatures replacing random base58 generation
+- [x] **RiskSimulator wired to real engine** - calls `getAssetIntelligence` API for live risk scoring
+- [x] **API cross-verification** on `/proof` page - PreStocks data verified against API radar endpoint
 
 ## Out of scope (hackathon constraints)
 
-- No autonomous trading — AI proposes, Risk Governor enforces, human approves
+- No autonomous trading - AI proposes, Risk Governor enforces, human approves
 - No social feed, copy trading, DAO, token, NFT, mobile app
-- No 50-stock universe — NVDA, AAPL, TSLA only
+- No 50-stock universe - NVDA, AAPL, TSLA only
 - No backtesting engine

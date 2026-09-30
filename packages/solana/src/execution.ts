@@ -1,5 +1,5 @@
 /**
- * Transaction execution — build, sign, and send swap transactions on Solana.
+ * Transaction execution - build, sign, and send swap transactions on Solana.
  *
  * The Risk Governor has already approved the trade. The user has confirmed.
  * This layer executes the actual on-chain transaction.
