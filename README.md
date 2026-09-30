@@ -16,6 +16,9 @@
 
 </div>
 
+
+![Screenshot](docs/Screenshot_20260930-194107.jpg)
+
 ---
 
 ## Receipts
